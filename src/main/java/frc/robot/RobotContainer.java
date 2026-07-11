@@ -54,6 +54,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         configureBindings();
+        configAuto();
     }
 
     private void configureBindings() {
