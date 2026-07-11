@@ -35,10 +35,16 @@ public class Hood extends SubsystemBase{
         public static final double kSupplyCurrentLimitAmps = 0;
 
         //this is wrong, update pls
-        public static final double kReduction = 2706/35.0;
+        public static final double kReduction = 70.2857;
 
         public static final double MIN_ANGLE = 0;
         public static final double MAX_ANGLE = 42.5;
+
+        //Originally 11.5 in^2 lbs, this is in kg m^2
+        public static final double kMOI = 0.00336535601;
+
+        //5.57 inches
+        public static final double kHoodLength = 0.141478;
 
     }
 

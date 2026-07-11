@@ -20,7 +20,7 @@ import edu.wpi.first.units.measure.Voltage;
 
 public class HoodIOTalonFX implements HoodIO{   
     //need to specify upper or lower CAN bus
-    protected final TalonFX hood_motor = new TalonFX(Hood.HoodConstants.kCANID); 
+    protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID); 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
     
     protected StatusSignal<Angle> angleSignal;
@@ -31,11 +31,11 @@ public class HoodIOTalonFX implements HoodIO{
     public HoodIOTalonFX() {
         configMotor();
 
-        angleSignal = hood_motor.getPosition();
-        voltSignal = hood_motor.getMotorVoltage();
+        angleSignal = m_hoodMotor.getPosition();
+        voltSignal = m_hoodMotor.getMotorVoltage();
 
-        statorCurrentSignal = hood_motor.getStatorCurrent();
-        supplyCurrentSignal = hood_motor.getSupplyCurrent();
+        statorCurrentSignal = m_hoodMotor.getStatorCurrent();
+        supplyCurrentSignal = m_hoodMotor.getSupplyCurrent();
     }
 
     public void configMotor() {
@@ -75,12 +75,12 @@ public class HoodIOTalonFX implements HoodIO{
                 .withReverseLimitEnable(true);
 
         //TODO replace this with CtreUtil reportIfNotOk
-        hood_motor.getConfigurator().apply(config);
+        m_hoodMotor.getConfigurator().apply(config);
     }
 
     @Override
     public void resetEncoder() {
-        hood_motor.setPosition(0);
+        m_hoodMotor.setPosition(0);
     }
 
     @Override
@@ -88,14 +88,14 @@ public class HoodIOTalonFX implements HoodIO{
         BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
         inputs.angle = rotationsToAngle(angleSignal.getValueAsDouble());
-        inputs.voltage = voltSignal.getValueAsDouble();
+        inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
     }
 
     @Override
     public void setAngle(double angle) {
-        hood_motor.setControl(positionRequest.withPosition(angleToRotations(angle)));
+        m_hoodMotor.setControl(positionRequest.withPosition(angleToRotations(angle)));
     }
     
     /**
@@ -116,7 +116,7 @@ public class HoodIOTalonFX implements HoodIO{
 
     @Override
     public void stop() {
-        hood_motor.stopMotor();
+        m_hoodMotor.stopMotor();
     }
 
     

@@ -10,7 +10,7 @@ public interface HoodIO {
     public static class HoodIOInputs {
         public double angle;
 
-        public double voltage;
+        public double appliedVolts;
         public double statorCurrent;
         public double supplyCurrent;
 
