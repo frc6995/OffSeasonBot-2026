@@ -11,12 +11,12 @@ public class DyeRotor extends SubsystemBase {
   }
 
   public static final class DyeRotorConstants {
-    public static final double kSpinForwardRPM = 0.0;
-    public static final double kSpinBackwardRPM = 0.0;
-    public static final double kSpinVelocityToleranceRPM = 0.0;
+    public static final double kSpinForwardRPM = 3000.0;
+    public static final double kSpinBackwardRPM = 1000.0;
+    public static final double kSpinVelocityToleranceRPM = 100.0;
 
-    public static final double kIndexForwardVolts = 0.0;
-    public static final double kIndexBackwardVolts = 0.0;
+    public static final double kIndexForwardVolts = 6.0;
+    public static final double kIndexBackwardVolts = 4.0;
 
     private DyeRotorConstants() {
     }
@@ -63,12 +63,29 @@ public class DyeRotor extends SubsystemBase {
     return indexState;
   }
 
+//   public double getSpinPositionRotations() {
+//     return inputs.spinPositionRotations;
+//   }
+
   public double getSpinVelocityRPM() {
     return inputs.spinVelocityRPM;
   }
 
+  public double getSpinAppliedVolts() {
+    return inputs.spinAppliedVolts;
+  }
+  
   public double getIndexVoltage() {
     return inputs.indexAppliedVolts;
+  }
+
+  public boolean isSpinMotorConnected() {
+    return inputs.spinMotorConnected;
+  }
+
+  public boolean areIndexMotorsConnected() {
+    return inputs.indexLeadMotorConnected
+        && inputs.indexFollowerMotorConnected;
   }
 
   public boolean isSpinReady() {
