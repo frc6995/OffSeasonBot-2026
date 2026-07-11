@@ -5,9 +5,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DyeRotor extends SubsystemBase {
   public class DyeRotorConstants {
-    public static final int kSpinMotorCANID = 52;
-    public static final int kLeadIndexMotorCANID = 53;
-    public static final int kFollowIndexMotorCANID = 54;
+    public static final int kSpinMotorCANID = 23;
+    public static final int kLeadIndexMotorCANID = 21;
+    public static final int kFollowIndexMotorCANID = 22;
 
     public static final double kSpinReduction = 2.5;
     public static final double kIndexReduction = 36;
