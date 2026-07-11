@@ -14,7 +14,7 @@ public class Hood extends SubsystemBase{
     private HoodState state = HoodState.DISABLED;
 
     static class HoodConstants {
-        public static int kCANID = 0; //have to figure this out
+        public static int kCANID = 44; //Should be right with doc
 
         //Tune PID/FF constants
         public static final double kP = 0;
