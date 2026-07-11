@@ -35,6 +35,11 @@ public class Turret extends SubsystemBase{
         public static final double kMaxAngle = 360;
 
         public static final double kReduction = 32.5;
+
+        public static final double kMOI = 0.0873236726;
+
+        //6.5 in
+        public static final double kLength = 0.1651;
     }
 
     public enum TurretState {
