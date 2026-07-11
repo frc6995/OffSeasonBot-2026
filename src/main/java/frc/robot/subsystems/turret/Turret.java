@@ -1,6 +1,14 @@
 package frc.robot.subsystems.turret;
 
-public class Turret {
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
+
+public class Turret extends SubsystemBase{
+
+    private TurretState state = TurretState.DISABLED;
+    private double requestedAngle;
+    private TurretIO io;
+    private TurretIOInputs inputs = new TurretIOInputs();
 
     static class TurretConstants {
         public static int kCANID = 0; //have to figure this out
@@ -23,6 +31,50 @@ public class Turret {
         public static final double kStatorCurrentLimitAmps = 0;
         public static final double kSupplyCurrentLimitAmps = 0;
 
+        public static final double kMinAngle = -360;
+        public static final double kMaxAngle = 360;
+
         public static final double kReduction = 32.5;
+    }
+
+    public enum TurretState {
+        DISABLED,
+        POSITION
+    }
+
+    public Turret(TurretIO io) {
+        this.io = io;
+    }
+
+    public void setAngle(double angle) {
+        requestedAngle = angle;
+
+        state = TurretState.POSITION;
+    }
+
+    public void disable() {
+        state = TurretState.DISABLED;
+    }
+
+    @Override
+    public void periodic() {
+        switch (state) {
+            case DISABLED -> io.disable();
+            case POSITION -> io.setAngle(requestedAngle);
+        }
+
+        io.updateInputs(inputs);
+    }
+
+    public TurretState getState() {
+        return state;
+    }
+
+    public double getAngle() {
+        return inputs.angle;
+    }
+
+    public double getRequestedAngle() {
+        return requestedAngle;
     }
 }

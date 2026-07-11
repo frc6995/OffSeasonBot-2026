@@ -12,6 +12,6 @@ public interface TurretIO {
     public void setAngle(double angle);
     public void resetEncoder();
     public void updateInputs(TurretIOInputs inputs);
-    public void stop();
+    public void disable();
 
 }

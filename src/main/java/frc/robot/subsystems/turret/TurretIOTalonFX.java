@@ -14,9 +14,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
+
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
 public class TurretIOTalonFX implements TurretIO{
@@ -66,9 +69,9 @@ public class TurretIOTalonFX implements TurretIO{
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToRotations(angleToRotations(360)))
+                .withForwardSoftLimitThreshold(angleToRotations(angleToRotations(kMaxAngle)))
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(angleToRotations(-360));
+                .withReverseSoftLimitThreshold(angleToRotations(kMinAngle));
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()
@@ -96,7 +99,17 @@ public class TurretIOTalonFX implements TurretIO{
 
     @Override
     public void setAngle(double angle) {
-        m_turretMotor.setControl(positionRequest.withPosition(angleToRotations(angle)));
+        double clampedAngle = MathUtil.clamp(angle, kMinAngle, kMaxAngle);
+
+        if (clampedAngle != angle) {
+            DriverStation.reportWarning(
+              "Angle requested outside of range [-360, 360], clamped to %f degrees"
+                .formatted(clampedAngle),
+                false  
+            );
+        }
+        
+        m_turretMotor.setControl(positionRequest.withPosition(angleToRotations(clampedAngle)));
     }
     
     protected double angleToRotations(double angle) {
@@ -108,8 +121,8 @@ public class TurretIOTalonFX implements TurretIO{
     }
 
     @Override
-    public void stop() {
-        m_turretMotor.stopMotor();
+    public void disable() {
+        this.setAngle(0);
     }
     
 }
