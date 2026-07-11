@@ -1,56 +1,54 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import java.util.Optional;
-
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.networktables.DoubleArrayPublisher;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.DoubleArrayEntry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.networktables.TimestampedDoubleArray;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.vision.apriltag.RealATVision.ATVisionConstants;
-import limelight.Limelight;
-import limelight.networktables.Orientation3d;
-import limelight.networktables.LimelightSettings.ImuMode;
-import limelight.networktables.LimelightSettings.LEDMode;
-import limelight.networktables.PoseEstimate;
-import limelight.networktables.LimelightPoseEstimator.BotPose;
-import limelight.networktables.LimelightPoseEstimator.EstimationMode;
+import frc.robot.util.LimelightHelpers;
 
 /**
  * Wrapper class for a Yet Another Limelight Library {@link limelight.Limelight} object. 
  * Records vision data to NetworkTables for debugging. 
  */
 public class AprilTagModule {
-    private final LimelightHelpers limelight;
+    public static record AprilTagEstimate(Pose2d estimatedPose, double timestampSeconds, boolean isMegaTag2, double avgTagDistMeters, double tagCount, double avgAmbiguity) {}
+    
+    public enum EstimationMode {
+        MEGATAG1, 
+        MEGATAG2;
+    }
+
+    private final String limelightID;
 
     private final NetworkTable moduleSubTable;
 
     private final StructPublisher<Pose3d> robotToCameraPublisher;
     private final StructPublisher<Pose3d> estimatePublisher;
     private final BooleanPublisher isActivePublisher;
+    private final BooleanPublisher isConnectedPublisher;
     private final StringPublisher modePublisher;
     private final StringPublisher defaultModePublisher;
-
-    public final DoubleArrayPublisher rewindPublisher;
-    public final DoubleArraySubscriber rewindSubscriber;
-    private PoseEstimate mt1Pose;
-    private PoseEstimate mt2Pose;
 
     private EstimationMode defaultMode;
     private EstimationMode lastMode;
 
-    public AprilTagModule(String limelightID, Pose3d offset, NetworkTable visionTable) {
-        this.limelight = new Limelight(limelightID);
-        limelight.getSettings()
-            .withLimelightLEDMode(LEDMode.PipelineControl)
-            .withCameraOffset(offset)
-            .withImuMode(ImuMode.ExternalImu)
-            // .withImuAssistAlpha()
-            .save();
+    private double hb = 0;
+    private double lastHb = 0;
 
+    public AprilTagModule(String limelightID, Pose3d offset, NetworkTable visionTable) {
+        this.limelightID = limelightID;
+
+        LimelightHelpers.SetIMUMode(limelightID, 0);
         defaultMode = ATVisionConstants.kDefaultMode;
 
             // Publishers for Limelight data
@@ -60,12 +58,7 @@ public class AprilTagModule {
         isActivePublisher = moduleSubTable.getBooleanTopic("IsActive").publish();
         modePublisher = moduleSubTable.getStringTopic("LastEstimateMode").publish();
         defaultModePublisher = moduleSubTable.getStringTopic("DefaultEstimateMode").publish();
-
-        rewindPublisher = moduleSubTable.getDoubleArrayTopic("capture_rewind").publish();
-        rewindSubscriber = moduleSubTable.getDoubleArrayTopic("capture_rewind").subscribe(new double[] {0,0});
-        
-        mt1Pose = new PoseEstimate(limelight, "botpose_wpiblue", false);
-        mt2Pose = new PoseEstimate(limelight, "botpose_orb_wpiblue", true);
+        isConnectedPublisher = moduleSubTable.getBooleanTopic("IsConnected").publish();
 
         // setDouble(1) to enable rewind, 0 to disable
         moduleSubTable.getEntry("rewind_enable_set").setDouble(1);
@@ -77,34 +70,63 @@ public class AprilTagModule {
      * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}
      */
     public void periodic() {
+        lastHb = hb;
+        hb = LimelightHelpers.getHeartbeat(limelightID);
+
+        if(((int)Timer.getFPGATimestamp()) % 3.0 == 0 && !isConnected()) {
+            DriverStation.reportError(limelightID + " is not connected.", false);
+        }
+
         updateTelemetry();
     }
 
     /**
-     * Updates the {@link edu.wpi.first.networktables.NetworkTable} subtable for the Limelight.
+     * Updates the {@link edu.wpi.first.networktables.NetworkTable NetworkTable} subtable for the Limelight.
      * Records the latest pose estimate, whether or not the Limelight has estimate data, the current
-     * {@link limelight.networktables.LimelightPoseEstimator.EstimationMode} for the robot, and the default
-     * {@link limelight.networktables.LimelightPoseEstimator.EstimationMode}.
+     * {@link limelight.networktables.LimelightPoseEstimator.EstimationMode EstimationMode} for the robot, and the default
+     * {@link limelight.networktables.LimelightPoseEstimator.EstimationMode EstimationMode}.
      */
     private void updateTelemetry() {
-        if(RobotContainer.kTelemetryVerbosity.compareTo(TelemetryVerbosity.MID) >= 0) {
-            var poseSupp = getPose();
-            estimatePublisher.accept(poseSupp.isPresent() ? poseSupp.get().pose : Pose3d.kZero);
-            isActivePublisher.accept(isActive());
+        if(true) {
+            var poseOpt = getPose();
+            estimatePublisher.accept(poseOpt.isPresent() ? new Pose3d(poseOpt.get().estimatedPose) : Pose3d.kZero);
+            isActivePublisher.accept(hasTargets());
             modePublisher.accept(lastMode.toString());
             defaultModePublisher.accept(defaultMode.toString());
         }
+        isConnectedPublisher.accept(isConnected());
+    }
+
+    public Pose3d getOffset() {
+        return LimelightHelpers.getCameraPose3d_RobotSpace(limelightID);
+    }
+
+    public void updateOffset(Pose3d offset) {
+        Rotation3d cameraRot = offset.getRotation();
+        LimelightHelpers.setCameraPose_RobotSpace(
+            limelightID,
+            offset.getX(),
+            offset.getY(),
+            offset.getZ(),
+            Math.toDegrees(cameraRot.getX()),
+            Math.toDegrees(cameraRot.getY()),
+            Math.toDegrees(cameraRot.getZ())
+        );
     }
 
     /**
-     * Checks if there is an AprilTag pose estimation.
+     * Checks if the heartbeat value of the limelight has updated
      * 
-     * @return Whether or not the Limelight is estimating a robot pose.
+     * @return Whether or not the Limelight is connected
      */
-    public boolean isActive() {
-        var posemt1 = getPoseMT1();
-        return posemt1.isPresent() && posemt1.get().hasData;
+    public boolean isConnected() {
+        return hb != lastHb;
     }
+
+    public boolean hasTargets() {
+        return LimelightHelpers.getTV(limelightID);
+    }
+    
 
     /**
      * Retrieves the pose of the robot. Automatically swaps between MegaTag1 and MegaTag2 depending on the  
@@ -113,36 +135,52 @@ public class AprilTagModule {
      * 
      * @return The estimated pose if the Limelight has targets
      */
-    public Optional<PoseEstimate> getPose() {
-        if(!isActive()) return Optional.empty();
+    public Optional<AprilTagEstimate> getPose() {
+        return getPose(defaultMode == EstimationMode.MEGATAG2);
+    }
 
-        switch(defaultMode) {
-            case MEGATAG1:
-                return getPoseMT1();
-            default:
-                return getPoseMT2();
+    // modified version of LL Helpers getPose method
+    public Optional<AprilTagEstimate> getPose(boolean isMegaTag2) {
+        DoubleArrayEntry poseEntry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, isMegaTag2 ? "botpose_orb" : "botpose");
+        
+        TimestampedDoubleArray tsValue = poseEntry.getAtomic();
+        double[] poseArray = tsValue.value;
+        long timestamp = tsValue.timestamp;
+        
+        if (poseArray.length == 0) {
+            // Handle the case where no data is available
+            return Optional.empty();
         }
-    }
+    
+        var pose = LimelightHelpers.toPose2D(poseArray);
+        double latency = LimelightHelpers.extractArrayEntry(poseArray, 6);
+        int tagCount = (int) LimelightHelpers.extractArrayEntry(poseArray, 7);
+        // double tagSpan = LimelightHelpers.extractArrayEntry(poseArray, 8);
+        double tagDist = LimelightHelpers.extractArrayEntry(poseArray, 9);
+        // double tagArea = LimelightHelpers.extractArrayEntry(poseArray, 10);
+        
+        // Convert server timestamp from microseconds to seconds and adjust for latency
+        double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+    
+        double avgAmbiguity = 0;
 
-    /**
-     * Retrieves the pose of the robot using MegaTag2. Must be seeded with an initial orientation before
-     * use.
-     * 
-     * @return The estimated pose if the Limelight has targets and the initial orientation is seeded.
-     */
-    public Optional<PoseEstimate> getPoseMT2() {
-        lastMode = EstimationMode.MEGATAG2;
-        return mt2Pose.getPoseEstimate();
-    }
+        int valsPerFiducial = 7;
+        int expectedTotalVals = 11 + valsPerFiducial * tagCount;
 
-    /**
-     * Retrieves the pose of the robot using MegaTag1.
-     * 
-     * @return The estimated pose if the Limelight has targets
-     */
-    public Optional<PoseEstimate> getPoseMT1() {
-        lastMode = EstimationMode.MEGATAG1;
-        return mt1Pose.getPoseEstimate();
+        if (poseArray.length != expectedTotalVals) {
+            // Array size mismatch - return empty array instead of null-filled array
+            return Optional.empty();
+        } else {
+            for(int i = 0; i < tagCount; i++) {
+                int baseIndex = 11 + (i * valsPerFiducial);
+                avgAmbiguity += poseArray[baseIndex + 6];
+            }
+        }
+
+        avgAmbiguity /= tagCount;
+
+        lastMode = isMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
+        return Optional.of(new AprilTagEstimate(pose, adjustedTimestamp, isMegaTag2, tagDist, tagCount, avgAmbiguity));
     }
 
     /**
@@ -150,7 +188,19 @@ public class AprilTagModule {
      * 
      * @param orientation3d The rotation and angular velocity of the robot.
      */
-    public void seedOrientation(Orientation3d orientation3d) {
-        limelight.getSettings().withRobotOrientation(orientation3d);
+    public void seedOrientation(Rotation3d rot) {
+        LimelightHelpers.SetRobotOrientation(
+            limelightID,
+            rot.getZ(),
+            0,
+            rot.getY(),
+            0,
+            rot.getX(),
+            0
+        );
+    }
+
+    public void captureRewind(double seconds) {
+        LimelightHelpers.triggerRewindCapture(limelightID, seconds);
     }
 }

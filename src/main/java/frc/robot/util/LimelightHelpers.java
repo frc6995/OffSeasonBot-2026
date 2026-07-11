@@ -900,7 +900,7 @@ public class LimelightHelpers {
         return result;
     }
 
-    private static double extractArrayEntry(double[] inData, int position){
+    public static double extractArrayEntry(double[] inData, int position){
         if(inData.length < position+1)
         {
             return 0;

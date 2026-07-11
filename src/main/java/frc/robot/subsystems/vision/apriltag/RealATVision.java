@@ -1,62 +1,56 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.Inches;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
-import com.fasterxml.jackson.databind.node.TreeTraversingParser;
-
-import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import limelight.networktables.AngularVelocity3d;
-import limelight.networktables.Orientation3d;
-import limelight.networktables.PoseEstimate;
-import limelight.networktables.LimelightPoseEstimator.EstimationMode;
+import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 
 public class RealATVision extends AprilTagVision {
     public static class ATVisionConstants {
         public static final String[] LL_IDS = {
-            "limelight-turret",
+            "limelight-climb", 
+            "limelight-right", 
+            "limelight-left",
+            "limelight-front"
         };
 
 
         public static final Pose3d[] LL_OFFSETS = {
-            new Pose3d( // turret (need to edit)
+            new Pose3d( // climb
                 new Translation3d(Inches.of(-11.0672),Inches.of(-10.432), Inches.of(8.674)),
                 new Rotation3d(Degrees.zero(), Degrees.of(22.5), Degrees.of(180))),
+            new Pose3d( // right
+                new Translation3d(Inches.of(2.550), Inches.of(12.987),Inches.of(7.435)),
+                new Rotation3d(Degrees.zero(), Degrees.of(22.5), Degrees.of(-90))),
+            new Pose3d( // left
+                new Translation3d(Inches.of(2.550), Inches.of(-12.987), Inches.of(7.435)),
+                new Rotation3d(Degrees.zero(), Degrees.of(22.5), Degrees.of(90))),
+            new Pose3d( // front
+                new Translation3d(Inches.of(-11.213), Inches.of(7.375), Inches.of(20.849)),
+                new Rotation3d(Degrees.zero(), Degrees.of(30), Degrees.zero())
             )
         };
         public static final EstimationMode kDefaultMode = EstimationMode.MEGATAG2;
 
-        public static final double[] kStdDevCoefficients = {0.085, 0.03}; // deviation order is [xy, theta]
-        public static final double[] kDisabledStdDevCoefficients = {0.1, 0.075};
+        public static final double[] kMT2StdDevCoefficients = {0.085, 0.0}; // deviation order is [xy, theta]
+        public static final double[] kMT1StdDevCoefficients = {0.1, 0.075};
 
     }
-    
 
     private AprilTagModule[] limelights;
 
@@ -66,9 +60,6 @@ public class RealATVision extends AprilTagVision {
     private final NetworkTable visionTable;
 
     private boolean headingSeeded = false;
-
-    private boolean wasAuto = false;
-    private boolean wasTele = false;
 
     private final BooleanPublisher headingSeededPublisher;
     private final StructPublisher<Pose3d> seededPosePublisher;
@@ -93,8 +84,8 @@ public class RealATVision extends AprilTagVision {
         if(DriverStation.isDisabled() || !headingSeeded) {
             for(AprilTagModule limelight : limelights) {
                 limelight.periodic();
-                var result = limelight.getPoseMT1();
-                if(result.isPresent() && result.get().pose.getTranslation().getDistance(Translation3d.kZero) > 0.05) {
+                var result = limelight.getPose(false);
+                if(result.isPresent() && result.get().estimatedPose().getTranslation().getDistance(Translation2d.kZero) > 0.05) {
                     estimates.add(result.get());
                     headingSeeded = true;
                 }
@@ -102,15 +93,12 @@ public class RealATVision extends AprilTagVision {
             seededPosePublisher.accept(new Pose3d(Translation3d.kZero, gyroRotation.get()));
         } else {
             if(!headingSeeded) headingSeeded = true;
-            Orientation3d newOrientation = new Orientation3d(
-                        gyroRotation.get(),
-                        zeroAngularVelocity);
                         
             for(AprilTagModule limelight : limelights) {
                 limelight.periodic();
                 
                 limelight.seedOrientation(
-                    newOrientation
+                    gyroRotation.get()
                 );
                 var estSupp = limelight.getPose();
 
@@ -120,32 +108,24 @@ public class RealATVision extends AprilTagVision {
             }
         }
         headingSeededPublisher.accept(headingSeeded);
-
-        if (RobotModeTriggers.autonomous().getAsBoolean()) {
-            wasTele = false;
-            wasAuto = true;
-        } else if (!RobotModeTriggers.autonomous().getAsBoolean() && wasAuto == true) {
-            wasAuto = false;
-            captureRewinds(20);
-        }
-        else if (RobotModeTriggers.teleop().getAsBoolean()) {
-            wasAuto = false;
-            wasTele = true;
-        } else if (!RobotModeTriggers.teleop().getAsBoolean() && wasTele == true) {
-            wasTele = false;
-            captureRewinds(140);
-        }
     }
 
     @Override
-    public List<PoseEstimate> getAllEstimates() {
-        return estimates;
+    public void updateOffsets(Pose3d[] offsets) {
+        if(offsets.length != limelights.length) return;
+        for(int i = 0; i < limelights.length; i++) {
+            if(offsets[i] == null || ATVisionConstants.LL_OFFSETS[i].equals(limelights[i].getOffset())) continue;
+            limelights[i].updateOffset(offsets[i]);
+        }
     }
 
-    public void captureRewinds(double seconds) {
-            for(int i = 0; i < limelights.length; i++) {
-                double[] lastRecord = limelights[i].rewindSubscriber.get();
-                limelights[i].rewindPublisher.set(new double[] {lastRecord[0] + 1, seconds});
-            }
+    public Command captureRewindsCommand(double seconds) {
+        return Commands.runOnce(() -> captureRewinds(seconds));
+    }
+
+    protected void captureRewinds(double seconds) {
+        for(AprilTagModule cam : limelights) {
+            cam.captureRewind(seconds);
+        }
     }
 }
