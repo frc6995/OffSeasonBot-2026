@@ -11,7 +11,7 @@ public class Turret extends SubsystemBase{
     private TurretIOInputs inputs = new TurretIOInputs();
 
     static class TurretConstants {
-        public static int kCANID = 0; //have to figure this out
+        public static int kCANID = 45; 
 
         //Tune PID/FF constants
         public static final double kP = 0;
