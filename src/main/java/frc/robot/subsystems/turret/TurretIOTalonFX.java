@@ -66,9 +66,9 @@ public class TurretIOTalonFX implements TurretIO{
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToRotations(0)) //fix
+                .withForwardSoftLimitThreshold(angleToRotations(angleToRotations(360)))
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(0);
+                .withReverseSoftLimitThreshold(angleToRotations(-360));
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()
@@ -88,7 +88,7 @@ public class TurretIOTalonFX implements TurretIO{
     public void updateInputs(TurretIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        // inputs.angle = rotationsToAngle(angleSignal.getValueAsDouble());
+        inputs.angle = rotationsToAngle(angleSignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
@@ -96,17 +96,15 @@ public class TurretIOTalonFX implements TurretIO{
 
     @Override
     public void setAngle(double angle) {
-
+        m_turretMotor.setControl(positionRequest.withPosition(angleToRotations(angle)));
     }
     
-    //fix
     protected double angleToRotations(double angle) {
-        return 0.0;
+        return (angle/360)*(kReduction);
     }
 
-    //fix
     protected double rotationsToAngle(double rotations) {
-        return 0.0;
+        return rotations*(1/kReduction)*360;
     }
 
     @Override
