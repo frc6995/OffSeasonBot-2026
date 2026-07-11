@@ -72,7 +72,7 @@ public class Hood extends SubsystemBase{
         }
     }
 
-    public void stop() {
+    public void disable() {
         state = HoodState.DISABLED;
     }
 
