@@ -34,7 +34,6 @@ public class Hood extends SubsystemBase{
         public static final double kStatorCurrentLimitAmps = 0;
         public static final double kSupplyCurrentLimitAmps = 0;
 
-        //this is wrong, update pls
         public static final double kReduction = 70.2857;
 
         public static final double MIN_ANGLE = 0;
