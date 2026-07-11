@@ -67,7 +67,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         spinConfig.MotorOutput =
             new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
-                .withInverted(InvertedValue.Clockwise_Positive);
+                .withInverted(InvertedValue.CounterClockwise_Positive);
         spinConfig.CurrentLimits =
             new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(DyeRotorConstants.kSpinStatorCurrentLimit)
