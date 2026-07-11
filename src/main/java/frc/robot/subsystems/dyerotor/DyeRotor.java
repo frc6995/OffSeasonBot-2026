@@ -4,22 +4,38 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DyeRotor extends SubsystemBase {
+  public class DyeRotorConstants {
+    public static final int kSpinMotorCANID = 52;
+    public static final int kLeadIndexMotorCANID = 53;
+    public static final int kFollowIndexMotorCANID = 54;
+
+    public static final double kSpinReduction = 2.5;
+    public static final double kIndexReduction = 36;
+
+    public static final double kSpinSupplyCurrentLimit = 80;
+    public static final double kSpinStatorCurrentLimit = 60;
+    public static final double kIndexSupplyCurrentLimit = 80;
+    public static final double kIndexStatorCurrentLimit = 60;
+
+    public static final double kSpinKP = 4.0;
+    public static final double kSpinKV = 0.0;
+    public static final double kSpinKS = 0.0;
+
+    public static final double SpinMOI = 0.091011;
+    public static final double IndexMOI = 0.000534;
+
+    public static final double kSpinForwardRPM = 3000.0;
+    public static final double kSpinBackwardRPM = -1000.0;
+    public static final double kSpinVelocityToleranceRPM = 100.0;
+
+    public static final double kIndexForwardVolts = 8.0;
+    public static final double kIndexBackwardVolts = -4.0;
+  }
+
   public enum State {
     IDLE,
     SPIN,
     SPIN_BACKWARDS
-  }
-
-  public static final class DyeRotorConstants {
-    public static final double kSpinForwardRPM = 3000.0;
-    public static final double kSpinBackwardRPM = 1000.0;
-    public static final double kSpinVelocityToleranceRPM = 100.0;
-
-    public static final double kIndexForwardVolts = 6.0;
-    public static final double kIndexBackwardVolts = 4.0;
-
-    private DyeRotorConstants() {
-    }
   }
 
   private final DyeRotorIO io;
@@ -29,8 +45,7 @@ public class DyeRotor extends SubsystemBase {
   private State indexState = State.IDLE;
 
   public DyeRotor() {
-    this(new DyeRotorIO() {
-    });
+    this(new DyeRotorIO() {});
   }
 
   public DyeRotor(DyeRotorIO io) {
@@ -62,10 +77,6 @@ public class DyeRotor extends SubsystemBase {
   public State getIndexState() {
     return indexState;
   }
-
-//   public double getSpinPositionRotations() {
-//     return inputs.spinPositionRotations;
-//   }
 
   public double getSpinVelocityRPM() {
     return inputs.spinVelocityRPM;
@@ -107,7 +118,8 @@ public class DyeRotor extends SubsystemBase {
     return switch (state) {
       case IDLE -> 0.0;
       case SPIN -> DyeRotorConstants.kSpinForwardRPM;
-      case SPIN_BACKWARDS -> -DyeRotorConstants.kSpinBackwardRPM;
+      case SPIN_BACKWARDS -> DyeRotorConstants.kSpinBackwardRPM;
+      default -> 0.0;
     };
   }
 
@@ -115,7 +127,8 @@ public class DyeRotor extends SubsystemBase {
     return switch (state) {
       case IDLE -> 0.0;
       case SPIN -> DyeRotorConstants.kIndexForwardVolts;
-      case SPIN_BACKWARDS -> -DyeRotorConstants.kIndexBackwardVolts;
+      case SPIN_BACKWARDS -> DyeRotorConstants.kIndexBackwardVolts;
+      default -> 0.0;
     };
   }
 }

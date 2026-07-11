@@ -12,9 +12,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 // import frc.robot.DyeRotorConstants;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
 
 public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
-  private static final double dtSeconds = 0.02;
   private final FlywheelSim spinSim =
       new FlywheelSim(LinearSystemId.createFlywheelSystem(
           DCMotor.getKrakenX60(1),
@@ -27,11 +27,7 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
           DCMotor.getKrakenX60(2),
           DyeRotorConstants.IndexMOI,
           DyeRotorConstants.kIndexReduction),
-
           DCMotor.getKrakenX60(2));
-
-  private double spinMechanismPositionRotations;
-  private double indexMechanismPositionRotations;
 
   public DyeRotorIOSimTalonFX() {
     super();
@@ -39,7 +35,7 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
   }
 
   private void configureSim() {
-    configureKrakenSim(m_spindexer.getSimState(), ChassisReference.Clockwise_Positive);
+    configureKrakenSim(m_spinMotor.getSimState(), ChassisReference.Clockwise_Positive);
     configureKrakenSim(m_indexerLead.getSimState(), ChassisReference.CounterClockwise_Positive);
     configureKrakenSim(m_indexerFollow.getSimState(), ChassisReference.CounterClockwise_Positive);
 
@@ -52,69 +48,41 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
 
   @Override
   public void updateInputs(DyeRotorInputs inputs) {
-    TalonFXSimState spinState = m_spindexer.getSimState();
-    TalonFXSimState indexLeadState = m_indexerLead.getSimState();
-    TalonFXSimState indexFollowerState = m_indexerFollow.getSimState();
+    TalonFXSimState spinState = m_spinMotor.getSimState();
+    TalonFXSimState indexState = m_indexerLead.getSimState();
 
     double batteryVoltage = RobotController.getBatteryVoltage();
 
     spinState.setSupplyVoltage(batteryVoltage);
-    indexLeadState.setSupplyVoltage(batteryVoltage);
-    indexFollowerState.setSupplyVoltage(batteryVoltage);
-
-    double previousSpinVelocityRPS = spinSim.getAngularVelocityRPM() / 60.0;
-    double previousIndexVelocityRPS = indexSim.getAngularVelocityRPM() / 60.0;
+    indexState.setSupplyVoltage(batteryVoltage);
 
     double spinAppliedVolts = spinState.getMotorVoltageMeasure().baseUnitMagnitude();
     spinSim.setInputVoltage(spinAppliedVolts);
 
-    double indexAppliedVolts = indexLeadState.getMotorVoltageMeasure().baseUnitMagnitude();
+    double indexAppliedVolts = indexState.getMotorVoltageMeasure().baseUnitMagnitude();
     indexSim.setInputVoltage(indexAppliedVolts);
 
-    spinSim.update(dtSeconds);
-    indexSim.update(dtSeconds);
+    spinSim.update(0.02);
+    indexSim.update(0.02);
 
-    double spinVelocityRPS = spinSim.getAngularVelocityRPM() / 60.0;
+    double spinVelocityRPM = spinSim.getAngularVelocityRPM();
 
-    double indexVelocityRPS = indexSim.getAngularVelocityRPM() / 60.0;
-
-    spinMechanismPositionRotations += 0.5 * (previousSpinVelocityRPS + spinVelocityRPS) * dtSeconds;
-    indexMechanismPositionRotations += 0.5 * (previousIndexVelocityRPS + indexVelocityRPS) * dtSeconds;
-    // Deleted: double spinPos = spinSim.getSpinPositionRotations();
-    /*
-     * 
-     * 
-     * I need help on updating I honestly don't know and can't find the format:
-     */
-
-    updateSpinSim(spinState, spinVelocityRPS);
-    updateIndexSim(indexLeadState, indexFollowerState, indexVelocityRPS);
-
-    super.updateInputs((inputs));
-
-
-    private void updateSpinSim(TalonFXSimState spinState, double mechanismVelocityRPS) {
-
-    }
-
-    private void updateIndexSim(TalonFXSimState indexLeadState, talonFXSimState indexFollowerState, double mechanismVelocityRPS) {
-
-    }
+    double indexVelocityRPM = indexSim.getAngularVelocityRPM();
     
-    // double spinVelocityRPM = spinSim.getAngularVelocityRPM();
-    // double spinVelocityRPS = spinVelocityRPM / 60.0;
-    
-    // spinState.setRawRotorPosition(mechanismRotationsToSpinMotorRotations(spinPos));
-    // spinState.setRotorVelocity(
-    //     spinVelocityRPS * DyeRotorConstants.kSpinReduction);    
-    // inputs.indexAppliedVolts = indexAppliedVolts;
-    // inputs.indexStatorCurrentAmps = Math.abs(indexSim.getCurrentDrawAmps());
-    // inputs.indexSupplyCurrentAmps = inputs.indexStatorCurrentAmps;
-    
-    // inputs.spinPositionRotations = spinPos;
-    // inputs.spinVelocityRPM = spinVel;
-    // inputs.spinAppliedVolts = spinAppliedVolts;
-    // inputs.spinStatorCurrentAmps = Math.abs(spinSim.getCurrentDrawAmps());
-    // inputs.spinSupplyCurrentAmps = inputs.spinStatorCurrentAmps;
+    spinState.setRotorVelocity(spinVelocityRPM / 60.0);
+    indexState.setRotorVelocity(indexVelocityRPM / 60.0);
+
+    inputs.spinVelocityRPM = spinVelocityRPM;
+    inputs.spinAppliedVolts = spinAppliedVolts;
+    inputs.spinStatorCurrentAmps = spinState.getTorqueCurrent();
+    inputs.spinSupplyCurrentAmps = spinState.getSupplyCurrent();
+    inputs.spinMotorConnected = true;
+
+    inputs.indexVelocityRPM = indexVelocityRPM;
+    inputs.indexAppliedVolts = indexAppliedVolts;
+    inputs.indexStatorCurrentAmps = indexState.getTorqueCurrent();
+    inputs.indexSupplyCurrentAmps = indexState.getSupplyCurrent();
+    inputs.indexLeadMotorConnected = true;
+    inputs.indexFollowerMotorConnected = true;
   }
 }

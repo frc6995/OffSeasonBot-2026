@@ -16,20 +16,16 @@ public interface DyeRotorIO {
   }
 
   class DyeRotorInputs {
-    // public double spinPositionRotations;
     public double spinVelocityRPM;
     public double spinAppliedVolts;
     public double spinStatorCurrentAmps;
     public double spinSupplyCurrentAmps;
     public boolean spinMotorConnected;
 
-    // public double indexPositionRotations;
-    // public double indexVelocityRPM;
+    public double indexVelocityRPM;
     public double indexAppliedVolts;
-
     public double indexStatorCurrentAmps;
-    public double indexSupplyCurrentAmps;
-
+    public double indexSupplyCurrentAmps; 
     public boolean indexLeadMotorConnected;
     public boolean indexFollowerMotorConnected;
   }

@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.DegreesPerSecond;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -22,49 +24,34 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 // import frc.robot.Constants;
 // import frc.robot.util.CtreUtil;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
 
 public class DyeRotorIOTalonFX implements DyeRotorIO {
-    public class DyeRotorConstants {
-        public static final int kSpinMotorCANID = 52;
-        public static final int kLeadIndexMotorCANID = 53;
-        public static final int kFollowIndexMotorCANID = 54;
-
-        public static final double kSpinReduction = 2.5;
-        public static final double kIndexReduction = 36;
-
-        public static final double kSpinSupplyCurrentLimit = 200; // are you sure peyton
-        public static final double kSpinStatorCurrentLimit = 80;
-        public static final double kIndexSupplyCurrentLimit = 350; // are you sure peyton
-        public static final double kIndexStatorCurrentLimit = 80;
-
-        public static final double kSpinKP = 4.0;
-        public static final double kSpinKV = 0.0;
-        public static final double kSpinKS = 0.0;
-
-        public static final double SpinMOI = 321.925;
-        public static final double IndexMOI = 14.934; // guess
-    }
-    /* Once there is an actual Constants.java file, please uncomment this section of the code to add these 3 motors to the lower CANBus */
-    
-    // protected final TalonFX m_spindexer =
-    //     new TalonFX(DyeRotorConstants.kSpinMotorCANID, Constants.CanBuses.kLowerCANBus);
-    // protected final TalonFX m_indexerLead =
-    //     new TalonFX(DyeRotorConstants.kLeadIndexMotorCANID, Constants.CanBuses.kLowerCANBus);
-    // protected final TalonFX m_indexerFollow =
-    //     new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID, Constants.CanBuses.kLowerCANBus);
-    protected final TalonFX m_spindexer =
-        new TalonFX(DyeRotorConstants.kSpinMotorCANID);
+    protected final TalonFX m_spinMotor =
+        new TalonFX(DyeRotorConstants.kSpinMotorCANID, Constants.CANBuses.LowerBus);
     protected final TalonFX m_indexerLead =
-        new TalonFX(DyeRotorConstants.kLeadIndexMotorCANID);
+        new TalonFX(DyeRotorConstants.kLeadIndexMotorCANID, Constants.CANBuses.LowerBus);
     protected final TalonFX m_indexerFollow =
-        new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID);
+        new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID, Constants.CANBuses.LowerBus);
 
     private final VoltageOut m_indexerRequest = new VoltageOut(0);
     private final VelocityVoltage m_spindexerRequest = new VelocityVoltage(0);
+
+    final StatusSignal<AngularVelocity> m_spinVelocity = m_spinMotor.getVelocity();
+    final StatusSignal<Voltage> m_spinVoltage = m_spinMotor.getMotorVoltage();
+    final StatusSignal<Current> m_spinSupCurrent = m_spinMotor.getSupplyCurrent();
+    final StatusSignal<Current> m_spinStatCurrent = m_spinMotor.getStatorCurrent();
+
+    final StatusSignal<Voltage> m_indexVoltage = m_indexerLead.getMotorVoltage();
+    final StatusSignal<Current> m_indexSupCurrent = m_indexerLead.getSupplyCurrent();
+    final StatusSignal<Current> m_indexStatCurrent = m_indexerLead.getStatorCurrent();
+
     
     public DyeRotorIOTalonFX() {
         configureMotors();
@@ -94,7 +81,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
                 .withKP(DyeRotorConstants.kSpinKP)
                 .withKS(DyeRotorConstants.kSpinKS)
                 .withKV(DyeRotorConstants.kSpinKV);
-        m_spindexer.getConfigurator().apply(spinConfig);
+        m_spinMotor.getConfigurator().apply(spinConfig);
     }
 
     private void configureIndexMotors() {
@@ -119,24 +106,21 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
     @Override
     public void updateInputs(DyeRotorInputs inputs) {
+        BaseStatusSignal.refreshAll(
+            m_spinVelocity, m_spinVoltage, m_spinSupCurrent, m_spinStatCurrent,
+            m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent);
 
-        inputs.indexAppliedVolts = m_indexerLead.getMotorVoltage().refresh().getValueAsDouble();
-        inputs.indexStatorCurrentAmps = m_indexerLead.getStatorCurrent().refresh().getValueAsDouble();
-        inputs.indexSupplyCurrentAmps = m_indexerLead.getSupplyCurrent().refresh().getValueAsDouble();
-        /*
-         * inputs.indexAppliedVolts = m_indexerLead.getMotorVoltage().refresh().getValueAsDouble() + m_indexerFollow?;
-         * inputs.indexStatorCurrentAmps = m_indexerLead.getStatorCurrent().refresh().getValueAsDouble() + m_indexerFollow?;
-         * inputs.indexSupplyCurrentAmps = m_indexerLead.getSupplyCurrent().refresh().getValueAsDouble() + m_indexerFollow?;
-         */
-        // inputs.spinPositionRotations =
-        //     m_spindexer.getPosition().refresh().getValueAsDouble();
-            // motorRotationsToSpinMechanismRotations(m_spindexer.getPosition().refresh().getValueAsDouble());
-        inputs.spinVelocityRPM =
-            m_spindexer.getVelocity().refresh().getValueAsDouble() * 60.0;
-            // motorRotationsToSpinMechanismRotations(m_spindexer.getVelocity().refresh().getValueAsDouble());
-        inputs.spinAppliedVolts = m_spindexer.getMotorVoltage().refresh().getValueAsDouble();
-        inputs.spinStatorCurrentAmps = m_spindexer.getStatorCurrent().refresh().getValueAsDouble();
-        inputs.spinSupplyCurrentAmps = m_spindexer.getSupplyCurrent().refresh().getValueAsDouble();
+        inputs.spinVelocityRPM = m_spinVelocity.getValueAsDouble() * 60.0;
+        inputs.spinAppliedVolts = m_spinVoltage.getValueAsDouble();
+        inputs.spinStatorCurrentAmps = m_spinStatCurrent.getValueAsDouble();
+        inputs.spinSupplyCurrentAmps = m_spinSupCurrent.getValueAsDouble();
+        inputs.spinMotorConnected = m_spinMotor.isConnected();
+
+        inputs.indexAppliedVolts = m_indexVoltage.getValueAsDouble();
+        inputs.indexStatorCurrentAmps = m_indexStatCurrent.getValueAsDouble();
+        inputs.indexSupplyCurrentAmps = m_indexSupCurrent.getValueAsDouble();
+        inputs.indexLeadMotorConnected = m_indexerLead.isConnected();
+        inputs.indexFollowerMotorConnected = m_indexerFollow.isConnected();
     }
 
     @Override
@@ -144,7 +128,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     // Apparently this expects rotations per second
     public void setSpinVelocity(double velocityRPM) {
         double velocityRPS = velocityRPM / 60.0;
-        m_spindexer.setControl(m_spindexerRequest.withVelocity(velocityRPS));
+        m_spinMotor.setControl(m_spindexerRequest.withVelocity(velocityRPS));
     }
 
     @Override
@@ -154,7 +138,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
     @Override
     public void stop() {
-        m_spindexer.stopMotor();
+        m_spinMotor.stopMotor();
         m_indexerLead.stopMotor();
     }
     
