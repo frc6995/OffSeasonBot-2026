@@ -115,8 +115,8 @@ public class HoodIOTalonFX implements HoodIO{
     }
 
     @Override
-    public void stop() {
-        m_hoodMotor.stopMotor();
+    public void disable() {
+        this.setAngle(0);
     }
 
     

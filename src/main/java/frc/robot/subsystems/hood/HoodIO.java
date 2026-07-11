@@ -5,7 +5,7 @@ public interface HoodIO {
     public void setAngle(double angle);
     public void resetEncoder();
     public void updateInputs(HoodIOInputs inputs);
-    public void stop();
+    public void disable();
     
     public static class HoodIOInputs {
         public double angle;

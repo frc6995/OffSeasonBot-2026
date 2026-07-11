@@ -62,7 +62,7 @@ public class Hood extends SubsystemBase{
 
         switch(state) {
             case DISABLED:
-                io.stop();
+                io.disable();
             case POSITION:
 
                 double clampedAngle = MathUtil.clamp(requestedAngle, 0, Hood.HoodConstants.MAX_ANGLE);
