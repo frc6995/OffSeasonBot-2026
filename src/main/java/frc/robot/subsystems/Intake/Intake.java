@@ -1,21 +1,19 @@
 package frc.robot.subsystems.Intake;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
 
     public class IntakeConstants {
-    public static final int kKICK_MOTOR_ID = 34;
+    public static final int kKICKER_MOTOR_ID = 34;
     public static final int kROLLER_LEAD_MOTOR_ID = 30;
     public static final int kROLLER_FOLLOWER_MOTOR_ID = 31;
     public static final int kEXTENSION_LEAD_MOTOR_ID = 32;
     public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
 
-    public static final double kKickStatorCurrentLimit = 80.0;
-    public static final double kKickSupplyCurrentLimit = 40.0;
-    public static final double kKickReduction = 1.5;
+    public static final double kKickerStatorCurrentLimit = 80.0;
+    public static final double kKickerSupplyCurrentLimit = 40.0;
+    public static final double kKickerReduction = 1.5;
 
     public static final double kRollerStatorCurrentLimit = 80.0;
     public static final double kRollerSupplyCurrentLimit = 40.0;
@@ -37,7 +35,7 @@ public class Intake extends SubsystemBase {
     public static final double kDrumCircumferenceMeters = 0.0;
 
     public static final double kRollerForwardVelocity = 50.0;
-    public static final double kKickForwardVelocity = 50.0;
+    public static final double kKickerForwardVelocity = 50.0;
     }
 
     public enum States {
@@ -85,15 +83,15 @@ public class Intake extends SubsystemBase {
     }
 
     public double getKickAppliedVolts() {
-        return inputs.kickAppliedVolts;
+        return inputs.kickerAppliedVolts;
     }
 
     public double getKickStatorCurrentAmps() {
-        return inputs.kickStatorCurrentAmps;
+        return inputs.kickerStatorCurrentAmps;
     } 
 
     public double getKickSupplyCurrentAmps() {
-        return inputs.kickSupplyCurrentAmps;
+        return inputs.kickerSupplyCurrentAmps;
     }
 
     public double getExtensionAppliedVolts() {
@@ -119,14 +117,14 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean isKickMotorConnected() {
-        return inputs.kickMotorConnected;
+        return inputs.kickerMotorConnected;
     }
 
     @Override
     public void periodic() {
     io.updateInputs(inputs);
 
-    io.setKickVoltage(resolveKickTargetVelocity(intakeState));
+    io.setKickerVoltage(resolveKickerTargetVelocity(intakeState));
     io.setRollerVoltage(resolveRollerTargetVelocity(intakeState));
     io.setExtensionVoltage(resolveExtensionTargetPosition(intakeState));
   }
@@ -151,11 +149,11 @@ public class Intake extends SubsystemBase {
         };
     }
 
-    private static double resolveKickTargetVelocity(States state) {
+    private static double resolveKickerTargetVelocity(States state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case DEPLOYED -> IntakeConstants.kKickForwardVelocity;
+            case DEPLOYED -> IntakeConstants.kKickerForwardVelocity;
             case AGITATING -> 0.0;
             default -> 0.0;
         };

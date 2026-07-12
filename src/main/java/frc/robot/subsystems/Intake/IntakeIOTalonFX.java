@@ -2,10 +2,7 @@ package frc.robot.subsystems.Intake;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -33,12 +30,12 @@ public class IntakeIOTalonFX implements IntakeIO {
     = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID);
     // = new TalonFX(IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
 
-   protected final TalonFX m_kickMotor
-    = new TalonFX(Intake.IntakeConstants.kKICK_MOTOR_ID);
-   // = new TalonFX(IntakeConstants.kKICK_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
+   protected final TalonFX m_kickerMotor
+    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID);
+   // = new TalonFX(IntakeConstants.kKICKER_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
 
     private final VoltageOut m_rollerRequest = new VoltageOut(0);
-    private final VoltageOut m_kickRequest = new VoltageOut(0);
+    private final VoltageOut m_kickerRequest = new VoltageOut(0);
 
     protected final MotionMagicVoltage m_extensionRequest =
     new MotionMagicVoltage(0.0).withEnableFOC(true);
@@ -61,13 +58,13 @@ public class IntakeIOTalonFX implements IntakeIO {
                 .withInverted(InvertedValue.Clockwise_Positive);
         kickConfig.CurrentLimits =
             new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IntakeConstants.kKickStatorCurrentLimit)
+                .withStatorCurrentLimit(IntakeConstants.kKickerStatorCurrentLimit)
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(IntakeConstants.kKickSupplyCurrentLimit)
+                .withSupplyCurrentLimit(IntakeConstants.kKickerSupplyCurrentLimit)
                 .withSupplyCurrentLimitEnable(true);
         kickConfig.Feedback =
-            new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kKickReduction);
-        m_kickMotor.getConfigurator().apply(kickConfig);
+            new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kKickerReduction);
+        m_kickerMotor.getConfigurator().apply(kickConfig);
     }
 
     private void configureRollerMotors() {
@@ -121,14 +118,14 @@ public class IntakeIOTalonFX implements IntakeIO {
         inputs.extensionStatorCurrentAmps = m_extensionLeadMotor.getStatorCurrent().refresh().getValueAsDouble();
         inputs.extensionSupplyCurrentAmps = m_extensionLeadMotor.getSupplyCurrent().refresh().getValueAsDouble();
 
-        inputs.kickAppliedVolts = m_kickMotor.getMotorVoltage().refresh().getValueAsDouble();
-        inputs.kickStatorCurrentAmps = m_kickMotor.getStatorCurrent().refresh().getValueAsDouble();
-        inputs.kickSupplyCurrentAmps = m_kickMotor.getSupplyCurrent().refresh().getValueAsDouble();
+        inputs.kickerAppliedVolts = m_kickerMotor.getMotorVoltage().refresh().getValueAsDouble();
+        inputs.kickerStatorCurrentAmps = m_kickerMotor.getStatorCurrent().refresh().getValueAsDouble();
+        inputs.kickerSupplyCurrentAmps = m_kickerMotor.getSupplyCurrent().refresh().getValueAsDouble();
     }
 
     @Override
-    public void setKickVoltage(double voltage) {
-        m_kickMotor.setControl(m_kickRequest.withOutput(voltage));
+    public void setKickerVoltage(double voltage) {
+        m_kickerMotor.setControl(m_kickerRequest.withOutput(voltage));
     }
 
     @Override
@@ -157,6 +154,6 @@ public class IntakeIOTalonFX implements IntakeIO {
     public void stop() {
         m_extensionLeadMotor.stopMotor();
         m_rollerLeadMotor.stopMotor();
-        m_kickMotor.stopMotor();
+        m_kickerMotor.stopMotor();
     }
 }

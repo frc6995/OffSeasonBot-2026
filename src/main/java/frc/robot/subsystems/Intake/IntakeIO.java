@@ -1,26 +1,27 @@
 package frc.robot.subsystems.Intake;
 
 public interface IntakeIO {
-    
-    default void updateInputs (IntakeInputs inputs) {
 
-    }
+    default void updateInputs(IntakeInputs inputs) {}
 
-    default void setRollerVoltage(double volts) {
+    default void setRollerVelocity(double velocityRadPerSec) {}
 
-    }
+    default void setKickerVelocity(double velocityRadPerSec) {}
 
-    default void setKickVoltage(double volts) {
+    default void setExtensionPosition(double positionMeters) {}
 
-    }
+    default void setRollerVoltage(double volts) {}
 
-    default void setExtensionVoltage(double meters) {
-        
-    }
+    default void setKickerVoltage(double volts) {}
+
+    default void setExtensionVoltage(double volts) {}
 
     default void stop() {
-
+        setRollerVoltage(0.0);
+        setKickerVoltage(0.0);
+        setExtensionVoltage(0.0);
     }
+
 
 
     class IntakeInputs {
@@ -31,10 +32,10 @@ public interface IntakeIO {
         public boolean rollerLeadMotorConnected;
         public boolean rollerFollowerMotorConnected;
 
-        public double kickAppliedVolts;
-        public double kickStatorCurrentAmps;
-        public double kickSupplyCurrentAmps;
-        public boolean kickMotorConnected;
+        public double kickerAppliedVolts;
+        public double kickerStatorCurrentAmps;
+        public double kickerSupplyCurrentAmps;
+        public boolean kickerMotorConnected;
 
         public double extensionAppliedVolts;
         public double extensionStatorCurrentAmps;
