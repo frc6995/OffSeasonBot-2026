@@ -12,10 +12,10 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class Autos {
     private Path.PathConstraints constraints = new Path.PathConstraints()
-        .setMaxVelocityMetersPerSec(1.0)
-        .setMaxAccelerationMetersPerSec2(2.0)
+        .setMaxVelocityMetersPerSec(4.5)
+        .setMaxAccelerationMetersPerSec2(9.0)
         .setEndTranslationToleranceMeters(0.08)
-        .setEndRotationToleranceDeg(2.0);
+        .setEndRotationToleranceDeg(5.0);
 
     private SendableChooser<Command> auto_chooser = new SendableChooser<>();
     private FollowPath.Builder pathBuilder;
@@ -26,9 +26,9 @@ public class Autos {
             drivetrain::getPose,            // Supplier<Pose2d>
             drivetrain::getChassisSpeeds,   // Supplier<ChassisSpeeds> (robot-relative)
             drivetrain::drive,              // Consumer<ChassisSpeeds>  (robot-relative)
-            new PIDController(5.0, 0.0, 0.0),   // translation — minimizes remaining distance
-            new PIDController(3.0, 0.0, 0.0),   // rotation    — minimizes heading error
-            new PIDController(2.0, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
+            new PIDController(3.0, 0.0, 0.0),   // translation — minimizes remaining distance
+            new PIDController(7.0, 0.0, 0.0),   // rotation    — minimizes heading error
+            new PIDController(0, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
         )
         .withDefaultShouldFlip()                // auto-flip when on the red alliance
         .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
