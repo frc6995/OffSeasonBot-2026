@@ -27,9 +27,21 @@
   },
   "active_path_file_name": "Direction_test.json",
   "active_path_group_id": null,
-  "path_groups": [],
+  "path_groups": [
+    {
+      "group_id": "group-2f65a409-0436-406f-b8db-056c36b7ab79",
+      "display_name": "Test",
+      "path_file_names": [
+        "new-path1.json"
+      ]
+    }
+  ],
   "linked_targets": [],
   "paths": {
+    "new-path1.json": {
+      "display_name": "new_path1",
+      "editor_metadata": null
+    },
     "Direction_test.json": {
       "display_name": "Direction test",
       "editor_metadata": null

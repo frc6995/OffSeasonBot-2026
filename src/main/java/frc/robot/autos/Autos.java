@@ -22,9 +22,9 @@ public class Autos {
             drivetrain::getPose,            // Supplier<Pose2d>
             drivetrain::getChassisSpeeds,   // Supplier<ChassisSpeeds> (robot-relative)
             drivetrain::drive,              // Consumer<ChassisSpeeds>  (robot-relative)
-            new PIDController(4.0, 0.0, 0.0),   // translation — minimizes remaining distance
-            new PIDController(6.0, 0.0, 0.0),   // rotation    — minimizes heading error
-            new PIDController(2, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
+            new PIDController(5.0, 0.0, 0.0),   // translation — minimizes remaining distance
+            new PIDController(7.0, 0.0, 0.0),   // rotation    — minimizes heading error
+            new PIDController(0.5, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
         )
         .withDefaultShouldFlip()                // auto-flip when on the red alliance
         .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
