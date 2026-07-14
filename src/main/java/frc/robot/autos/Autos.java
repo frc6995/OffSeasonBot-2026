@@ -11,11 +11,7 @@ import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class Autos {
-    private Path.PathConstraints constraints = new Path.PathConstraints()
-        .setMaxVelocityMetersPerSec(4.5)
-        .setMaxAccelerationMetersPerSec2(9.0)
-        .setEndTranslationToleranceMeters(0.08)
-        .setEndRotationToleranceDeg(5.0);
+   
 
     private SendableChooser<Command> auto_chooser = new SendableChooser<>();
     private FollowPath.Builder pathBuilder;
@@ -26,9 +22,9 @@ public class Autos {
             drivetrain::getPose,            // Supplier<Pose2d>
             drivetrain::getChassisSpeeds,   // Supplier<ChassisSpeeds> (robot-relative)
             drivetrain::drive,              // Consumer<ChassisSpeeds>  (robot-relative)
-            new PIDController(3.0, 0.0, 0.0),   // translation — minimizes remaining distance
-            new PIDController(7.0, 0.0, 0.0),   // rotation    — minimizes heading error
-            new PIDController(0, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
+            new PIDController(4.0, 0.0, 0.0),   // translation — minimizes remaining distance
+            new PIDController(6.0, 0.0, 0.0),   // rotation    — minimizes heading error
+            new PIDController(2, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
         )
         .withDefaultShouldFlip()                // auto-flip when on the red alliance
         .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
@@ -45,8 +41,6 @@ public class Autos {
 
         for (String path : paths) {
                 Path bline_path = new Path(path);
-
-                bline_path.setPathConstraints(constraints);
 
                 auto_chooser.addOption(path, pathBuilder.build(bline_path));
         }
