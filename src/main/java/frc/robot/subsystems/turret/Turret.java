@@ -28,8 +28,8 @@ public class Turret extends SubsystemBase{
         public static final double kSimV = 0;
         public static final double kSimA = 0;
 
-        public static final double kStatorCurrentLimitAmps = 0;
-        public static final double kSupplyCurrentLimitAmps = 0;
+        public static final double kStatorCurrentLimitAmps = 80;
+        public static final double kSupplyCurrentLimitAmps = 40;
 
         public static final double kMinAngle = -360;
         public static final double kMaxAngle = 360;
@@ -44,17 +44,15 @@ public class Turret extends SubsystemBase{
 
     public enum TurretState {
         DISABLED,
-        POSITION
+        ACTIVE
     }
 
     public Turret(TurretIO io) {
         this.io = io;
     }
 
-    public void setAngle(double angle) {
-        requestedAngle = angle;
-
-        state = TurretState.POSITION;
+    public void activate() {
+        this.state = TurretState.ACTIVE;
     }
 
     public void disable() {
@@ -65,7 +63,9 @@ public class Turret extends SubsystemBase{
     public void periodic() {
         switch (state) {
             case DISABLED -> io.disable();
-            case POSITION -> io.setAngle(requestedAngle);
+
+            //logic for requestedAngle should be handled somewhere else
+            case ACTIVE -> io.setAngle(requestedAngle);
         }
 
         io.updateInputs(inputs);

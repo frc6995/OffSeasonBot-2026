@@ -47,7 +47,7 @@ public class TurretIOTalonFX implements TurretIO{
 
         config.MotorOutput = 
             new MotorOutputConfigs()
-                .withNeutralMode(NeutralModeValue.Coast)
+                .withNeutralMode(NeutralModeValue.Brake)
                 .withInverted(InvertedValue.CounterClockwise_Positive);
         
         config.CurrentLimits = 
@@ -64,7 +64,8 @@ public class TurretIOTalonFX implements TurretIO{
             new Slot0Configs()
                 .withKP(kP)
                 .withKV(kV)
-                .withKA(kA);
+                .withKA(kA)
+                .withKS(kS);
         
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
@@ -75,8 +76,8 @@ public class TurretIOTalonFX implements TurretIO{
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()
-                .withForwardLimitEnable(true)
-                .withReverseLimitEnable(true);
+                .withForwardLimitEnable(false)
+                .withReverseLimitEnable(false);
 
         //TODO replace this with CtreUtil reportIfNotOk
         m_turretMotor.getConfigurator().apply(config);
@@ -95,6 +96,7 @@ public class TurretIOTalonFX implements TurretIO{
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
+        inputs.turretMotorConnected = m_turretMotor.isConnected();
     }
 
     @Override

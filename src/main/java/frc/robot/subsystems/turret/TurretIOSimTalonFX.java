@@ -6,16 +6,16 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class TurretIOSimTalonFX extends TurretIOTalonFX{
-    private final SingleJointedArmSim m_turretsim = new SingleJointedArmSim(
-    DCMotor.getKrakenX44(1), 
-    Turret.TurretConstants.kReduction, 
-    Turret.TurretConstants.kMOI, //Need MOI
-    Turret.TurretConstants.kLength, 
-    Math.toRadians(0), 
-    Math.toRadians(720), 
-    false, 
-    0, 
-    null);
+    private final SingleJointedArmSim m_TurretSim = new SingleJointedArmSim(
+        DCMotor.getKrakenX44(1), 
+        Turret.TurretConstants.kReduction, 
+        Turret.TurretConstants.kMOI, //Need MOI
+        Turret.TurretConstants.kLength, 
+        Math.toRadians(Turret.TurretConstants.kMinAngle), 
+        Math.toRadians(Turret.TurretConstants.kMaxAngle), 
+        false, 
+        0, 
+        null);
 
 
 
@@ -38,11 +38,18 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX{
 
     double appliedVolts = simState.getMotorVoltageMeasure().baseUnitMagnitude();
 
-    m_turretsim.setInputVoltage(appliedVolts);
+    m_TurretSim.setInputVoltage(appliedVolts);
+
+    double turretPosition = Math.toDegrees(m_TurretSim.getAngleRads());
+
+    simState.setRawRotorPosition(angleToRotations(turretPosition));
+
+    inputs.angle = turretPosition;
     inputs.appliedVolts =  appliedVolts;
-    inputs.statorCurrent = Math.abs(m_turretsim.getCurrentDrawAmps());
-    inputs.supplyCurrent = inputs.supplyCurrent;
-    m_turretsim.update(0.02);
+    inputs.supplyCurrent = simState.getSupplyCurrent();
+    inputs.statorCurrent = simState.getTorqueCurrent();
+
+    m_TurretSim.update(0.02);
 
   }
 }
