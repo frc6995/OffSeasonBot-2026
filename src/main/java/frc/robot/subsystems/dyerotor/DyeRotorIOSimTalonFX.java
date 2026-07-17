@@ -22,12 +22,12 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
           DyeRotorConstants.kSpinReduction),
           
           DCMotor.getKrakenX60(1));
-  private final FlywheelSim indexSim =
-      new FlywheelSim(LinearSystemId.createFlywheelSystem(
-          DCMotor.getKrakenX60(2),
-          DyeRotorConstants.IndexMOI,
-          DyeRotorConstants.kIndexReduction),
-          DCMotor.getKrakenX60(2));
+  // private final FlywheelSim indexSim =
+  //     new FlywheelSim(LinearSystemId.createFlywheelSystem(
+  //         DCMotor.getKrakenX60(2),
+  //         DyeRotorConstants.IndexMOI,
+  //         DyeRotorConstants.kIndexReduction),
+  //         DCMotor.getKrakenX60(2));
 
   public DyeRotorIOSimTalonFX() {
     super();
@@ -49,28 +49,28 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
   @Override
   public void updateInputs(DyeRotorInputs inputs) {
     TalonFXSimState spinState = m_spinMotor.getSimState();
-    TalonFXSimState indexState = m_indexerLead.getSimState();
+    // TalonFXSimState indexState = m_indexerLead.getSimState();
 
     double batteryVoltage = RobotController.getBatteryVoltage();
 
     spinState.setSupplyVoltage(batteryVoltage);
-    indexState.setSupplyVoltage(batteryVoltage);
+    // indexState.setSupplyVoltage(batteryVoltage);
 
     double spinAppliedVolts = spinState.getMotorVoltageMeasure().baseUnitMagnitude();
     spinSim.setInputVoltage(spinAppliedVolts);
 
-    double indexAppliedVolts = indexState.getMotorVoltageMeasure().baseUnitMagnitude();
-    indexSim.setInputVoltage(indexAppliedVolts);
+    // double indexAppliedVolts = indexState.getMotorVoltageMeasure().baseUnitMagnitude();
+    // indexSim.setInputVoltage(indexAppliedVolts);
 
     spinSim.update(0.02);
-    indexSim.update(0.02);
+    // indexSim.update(0.02);
 
     double spinVelocityRPM = spinSim.getAngularVelocityRPM();
 
-    double indexVelocityRPM = indexSim.getAngularVelocityRPM();
+    // double indexVelocityRPM = indexSim.getAngularVelocityRPM();
     
     spinState.setRotorVelocity(spinVelocityRPM / 60.0);
-    indexState.setRotorVelocity(indexVelocityRPM / 60.0);
+    // indexState.setRotorVelocity(indexVelocityRPM / 60.0);
 
     inputs.spinVelocityRPM = spinVelocityRPM;
     inputs.spinAppliedVolts = spinAppliedVolts;
@@ -78,10 +78,16 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
     inputs.spinSupplyCurrentAmps = spinState.getSupplyCurrent();
     inputs.spinMotorConnected = true;
 
-    inputs.indexVelocityRPM = indexVelocityRPM;
-    inputs.indexAppliedVolts = indexAppliedVolts;
-    inputs.indexStatorCurrentAmps = indexState.getTorqueCurrent();
-    inputs.indexSupplyCurrentAmps = indexState.getSupplyCurrent();
+    // inputs.indexVelocityRPM = indexVelocityRPM;
+    // inputs.indexAppliedVolts = indexAppliedVolts;
+    // inputs.indexStatorCurrentAmps = indexState.getTorqueCurrent();
+    // inputs.indexSupplyCurrentAmps = indexState.getSupplyCurrent();
+    // inputs.indexLeadMotorConnected = true;
+    // inputs.indexFollowerMotorConnected = true;
+    inputs.indexVelocityRPM = 0.0;
+    inputs.indexAppliedVolts = 0.0;
+    inputs.indexStatorCurrentAmps = 0.0;
+    inputs.indexSupplyCurrentAmps = 0.0;
     inputs.indexLeadMotorConnected = true;
     inputs.indexFollowerMotorConnected = true;
   }

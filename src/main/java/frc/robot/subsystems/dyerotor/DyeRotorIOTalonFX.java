@@ -40,7 +40,8 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     protected final TalonFX m_indexerFollow =
         new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID, Constants.CANBuses.LowerBus);
 
-    private final VoltageOut m_indexerRequest = new VoltageOut(0);
+    // private final VoltageOut m_indexerRequest = new VoltageOut(0);
+    private final VelocityVoltage m_indexerRequest = new VelocityVoltage(0);
     private final VelocityVoltage m_spindexerRequest = new VelocityVoltage(0);
 
     final StatusSignal<AngularVelocity> m_spinVelocity = m_spinMotor.getVelocity();
@@ -48,6 +49,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     final StatusSignal<Current> m_spinSupCurrent = m_spinMotor.getSupplyCurrent();
     final StatusSignal<Current> m_spinStatCurrent = m_spinMotor.getStatorCurrent();
 
+    final StatusSignal<AngularVelocity> m_indexVelocity = m_indexerLead.getVelocity();
     final StatusSignal<Voltage> m_indexVoltage = m_indexerLead.getMotorVoltage();
     final StatusSignal<Current> m_indexSupCurrent = m_indexerLead.getSupplyCurrent();
     final StatusSignal<Current> m_indexStatCurrent = m_indexerLead.getStatorCurrent();
@@ -98,6 +100,11 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
                 .withSupplyCurrentLimitEnable(true);
         indexConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(DyeRotorConstants.kIndexReduction);
+        indexConfig.Slot0 =
+            new Slot0Configs()
+                .withKP(DyeRotorConstants.kIndexKP)
+                .withKS(DyeRotorConstants.kIndexKS)
+                .withKV(DyeRotorConstants.kIndexKV);
         m_indexerLead.getConfigurator().apply(indexConfig);
         m_indexerFollow.getConfigurator().apply(indexConfig);
 
@@ -107,8 +114,8 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     @Override
     public void updateInputs(DyeRotorInputs inputs) {
         BaseStatusSignal.refreshAll(
-            m_spinVelocity, m_spinVoltage, m_spinSupCurrent, m_spinStatCurrent,
-            m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent);
+            m_spinVelocity, m_spinVoltage, m_spinSupCurrent, m_spinStatCurrent, 
+            m_indexVelocity, m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent);
 
         inputs.spinVelocityRPM = m_spinVelocity.getValueAsDouble() * 60.0;
         inputs.spinAppliedVolts = m_spinVoltage.getValueAsDouble();
@@ -116,6 +123,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         inputs.spinSupplyCurrentAmps = m_spinSupCurrent.getValueAsDouble();
         inputs.spinMotorConnected = m_spinMotor.isConnected();
 
+        inputs.indexVelocityRPM = m_indexVelocity.getValueAsDouble() * 60.0;
         inputs.indexAppliedVolts = m_indexVoltage.getValueAsDouble();
         inputs.indexStatorCurrentAmps = m_indexStatCurrent.getValueAsDouble();
         inputs.indexSupplyCurrentAmps = m_indexSupCurrent.getValueAsDouble();
@@ -131,9 +139,14 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         m_spinMotor.setControl(m_spindexerRequest.withVelocity(velocityRPS));
     }
 
+    // @Override
+    // public void setIndexVoltage(double voltage) {
+    //     m_indexerLead.setControl(m_indexerRequest.withOutput(voltage));
+    // }
     @Override
-    public void setIndexVoltage(double voltage) {
-        m_indexerLead.setControl(m_indexerRequest.withOutput(voltage));
+    public void setIndexVelocity(double velocityRPM) {
+        double velocityRPS = velocityRPM / 60.0;
+        m_indexerLead.setControl(m_indexerRequest.withVelocity(velocityRPS));
     }
 
     @Override

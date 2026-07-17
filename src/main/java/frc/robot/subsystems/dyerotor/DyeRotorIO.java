@@ -7,12 +7,14 @@ public interface DyeRotorIO {
   default void setSpinVelocity(double velocityRPM) {
   }
 
-  default void setIndexVoltage(double volts) {
+  // default void setIndexVoltage(double volts) {
+  // }
+  default void setIndexVelocity(double velocityRPM) {
   }
 
   default void stop() {
     setSpinVelocity(0.0);
-    setIndexVoltage(0.0);
+    setIndexVelocity(0.0);
   }
 
   class DyeRotorInputs {
