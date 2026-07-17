@@ -49,8 +49,8 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX{
 
         inputs.angle = hoodPosition;
         inputs.appliedVolts = appliedVolts;
-        inputs.statorCurrent = Math.abs(m_HoodSim.getCurrentDrawAmps());
-        inputs.supplyCurrent = inputs.statorCurrent;
+        inputs.statorCurrent = simState.getSupplyCurrent();
+        inputs.supplyCurrent = simState.getTorqueCurrent();
 
         m_HoodSim.update(0.02);
 

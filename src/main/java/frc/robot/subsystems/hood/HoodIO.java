@@ -13,6 +13,6 @@ public interface HoodIO {
         public double appliedVolts;
         public double statorCurrent;
         public double supplyCurrent;
-
+        public boolean hoodMotorConnected;
     }
 }

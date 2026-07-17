@@ -23,19 +23,13 @@ public class HoodIOTalonFX implements HoodIO{
     protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID); 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
     
-    protected StatusSignal<Angle> angleSignal;
-    protected StatusSignal<Voltage> voltSignal;
-    protected StatusSignal<Current> statorCurrentSignal;
-    protected StatusSignal<Current> supplyCurrentSignal;
+    protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
+    protected final StatusSignal<Voltage> voltSignal = m_hoodMotor.getMotorVoltage();
+    protected final StatusSignal<Current> statorCurrentSignal = m_hoodMotor.getStatorCurrent();
+    protected final StatusSignal<Current> supplyCurrentSignal = m_hoodMotor.getSupplyCurrent();
 
     public HoodIOTalonFX() {
         configMotor();
-
-        angleSignal = m_hoodMotor.getPosition();
-        voltSignal = m_hoodMotor.getMotorVoltage();
-
-        statorCurrentSignal = m_hoodMotor.getStatorCurrent();
-        supplyCurrentSignal = m_hoodMotor.getSupplyCurrent();
     }
 
     public void configMotor() {
@@ -43,7 +37,7 @@ public class HoodIOTalonFX implements HoodIO{
 
         config.MotorOutput = 
             new MotorOutputConfigs()
-                .withNeutralMode(NeutralModeValue.Coast)
+                .withNeutralMode(NeutralModeValue.Brake)
                 .withInverted(InvertedValue.CounterClockwise_Positive);
         
         config.CurrentLimits = 
@@ -60,19 +54,21 @@ public class HoodIOTalonFX implements HoodIO{
             new Slot0Configs()
                 .withKP(Hood.HoodConstants.kP)
                 .withKV(Hood.HoodConstants.kV)
-                .withKA(Hood.HoodConstants.kA);
+                .withKG(Hood.HoodConstants.kG)
+                .withKD(Hood.HoodConstants.kD)
+                .withKS(Hood.HoodConstants.kS);
         
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToRotations(42.5))
+                .withForwardSoftLimitThreshold(angleToRotations(Hood.HoodConstants.MAX_ANGLE))
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(0);
+                .withReverseSoftLimitThreshold(angleToRotations(Hood.HoodConstants.MIN_ANGLE));
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()
-                .withForwardLimitEnable(true)
-                .withReverseLimitEnable(true);
+                .withForwardLimitEnable(false)
+                .withReverseLimitEnable(false);
 
         //TODO replace this with CtreUtil reportIfNotOk
         m_hoodMotor.getConfigurator().apply(config);
@@ -91,6 +87,7 @@ public class HoodIOTalonFX implements HoodIO{
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
+        inputs.hoodMotorConnected = m_hoodMotor.isConnected();
     }
 
     @Override
