@@ -17,10 +17,11 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 
 public class HoodIOTalonFX implements HoodIO{   
     //need to specify upper or lower CAN bus
-    protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID); 
+    protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus); 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
     
     protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
