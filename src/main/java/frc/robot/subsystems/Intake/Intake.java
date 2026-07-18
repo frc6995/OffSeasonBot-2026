@@ -34,11 +34,14 @@ public class Intake extends SubsystemBase {
 
     public static final double kDrumCircumferenceMeters = 0.0;
 
-    public static final double kRollerForwardVelocity = 50.0;
-    public static final double kKickerForwardVelocity = 50.0;
+    public static final double kRollerForwardVolts = 50.0;
+    public static final double kKickerForwardVolts = 50.0;
+
+    public static final double kRollerForwardVelocity = kRollerForwardVolts;
+    public static final double kKickerForwardVelocity = kKickerForwardVolts;
     }
 
-    public enum States {
+    public enum IntakeState {
         RETRACTED,
         DEPLOYED,
         IDLE,
@@ -48,7 +51,7 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIO.IntakeInputs inputs = new IntakeIO.IntakeInputs();
 
-    private States intakeState = States.IDLE;
+    private IntakeState intakeState = IntakeState.IDLE;
 
     public Intake() {
     this(new IntakeIO() {});
@@ -59,15 +62,36 @@ public class Intake extends SubsystemBase {
     }
 
     public void stop() {
-        intakeState = States.IDLE;
+        intakeState = IntakeState.IDLE;
+        io.stop();
     }
 
-    public void setState(States state) {
+    public void setState(IntakeState state) {
         intakeState = state;
     }
 
-    public States getState() {
+    public IntakeState getState() {
         return intakeState;
+    }
+
+    public void retract() {
+        setState(IntakeState.RETRACTED);
+    }
+
+    public void deploy() {
+        setState(IntakeState.DEPLOYED);
+    }
+
+    public void setIdle() {
+        setState(IntakeState.IDLE);
+    }
+
+    public void agitate() {
+        setState(IntakeState.AGITATING);
+    }
+
+    public void resetEncoder() {
+        io.resetEncoder();
     }
 
     public double getRollerAppliedVolts() {
@@ -124,38 +148,35 @@ public class Intake extends SubsystemBase {
     public void periodic() {
     io.updateInputs(inputs);
 
-    io.setKickerVoltage(resolveKickerTargetVelocity(intakeState));
-    io.setRollerVoltage(resolveRollerTargetVelocity(intakeState));
-    io.setExtensionVoltage(resolveExtensionTargetPosition(intakeState));
+    io.setKickerVoltage(resolveKickerTargetVoltage(intakeState));
+    io.setRollerVoltage(resolveRollerTargetVoltage(intakeState));
+    io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
   }
 
-    private static double resolveExtensionTargetPosition(States state) {
+    private static double resolveExtensionTargetPosition(IntakeState state) {
         return switch (state) {
-            case IDLE -> 0.0;
+            case IDLE -> IntakeConstants.kExtensionMinMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
             case DEPLOYED -> IntakeConstants.kExtensionMaxMeters;
-            case AGITATING -> 0.0;
-            default -> 0.0;
+            case AGITATING -> IntakeConstants.kExtensionMinMeters;
         };
     }
 
-    private static double resolveRollerTargetVelocity(States state) {
+    private static double resolveRollerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case DEPLOYED -> IntakeConstants.kRollerForwardVelocity;
+            case DEPLOYED -> IntakeConstants.kRollerForwardVolts;
             case AGITATING -> 0.0;
-            default -> 0.0;
         };
     }
 
-    private static double resolveKickerTargetVelocity(States state) {
+    private static double resolveKickerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case DEPLOYED -> IntakeConstants.kKickerForwardVelocity;
+            case DEPLOYED -> IntakeConstants.kKickerForwardVolts;
             case AGITATING -> 0.0;
-            default -> 0.0;
         };
     }
 }

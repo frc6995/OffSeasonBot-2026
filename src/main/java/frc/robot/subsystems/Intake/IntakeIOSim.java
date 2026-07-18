@@ -53,9 +53,7 @@ public class IntakeIOSim extends IntakeIOTalonFX {
 
     private void configureSim() {
         configureKrakenSim(m_rollerLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
-        configureKrakenSim(m_rollerFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
         configureKrakenSim(m_extensionLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
-        configureKrakenSim(m_extensionFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
         configureKrakenSim(m_kickerMotor.getSimState(), ChassisReference.Clockwise_Positive);
     }
 
@@ -67,16 +65,12 @@ public class IntakeIOSim extends IntakeIOTalonFX {
     @Override
     public void updateInputs(IntakeInputs inputs) {
         TalonFXSimState rollerState = m_rollerLeadMotor.getSimState();
-        TalonFXSimState rollerFollowerState = m_rollerFollowerMotor.getSimState();
         TalonFXSimState extensionState = m_extensionLeadMotor.getSimState();
-        TalonFXSimState extensionFollowerState = m_extensionFollowerMotor.getSimState();
         TalonFXSimState kickerState = m_kickerMotor.getSimState();
 
         double batteryVoltage = RobotController.getBatteryVoltage();
         rollerState.setSupplyVoltage(batteryVoltage);
-        rollerFollowerState.setSupplyVoltage(batteryVoltage);
         extensionState.setSupplyVoltage(batteryVoltage);
-        extensionFollowerState.setSupplyVoltage(batteryVoltage);
         kickerState.setSupplyVoltage(batteryVoltage);
 
         double rollerAppliedVolts = rollerState.getMotorVoltageMeasure().baseUnitMagnitude();
@@ -97,13 +91,10 @@ public class IntakeIOSim extends IntakeIOTalonFX {
         double extensionVelocityMetersPerSecond = extensionSim.getVelocityMetersPerSecond();
 
         rollerState.setRotorVelocity(rollerVelocityRPM / 60.0);
-        rollerFollowerState.setRotorVelocity(-rollerVelocityRPM / 60.0);
         kickerState.setRotorVelocity(kickerVelocityRPM / 60.0);
 
-        extensionState.setRawRotorPosition(metersToMotorRotations(extensionPositionMeters));
-        extensionState.setRotorVelocity(metersToMotorRotations(extensionVelocityMetersPerSecond));
-        extensionFollowerState.setRawRotorPosition(-metersToMotorRotations(extensionPositionMeters));
-        extensionFollowerState.setRotorVelocity(-metersToMotorRotations(extensionVelocityMetersPerSecond));
+        extensionState.setRawRotorPosition(simMetersToMotorRotations(extensionPositionMeters));
+        extensionState.setRotorVelocity(simMetersToMotorRotations(extensionVelocityMetersPerSecond));
 
         inputs.rollerAppliedVolts = rollerAppliedVolts;
         inputs.rollerStatorCurrentAmps = rollerState.getTorqueCurrent();
@@ -121,5 +112,16 @@ public class IntakeIOSim extends IntakeIOTalonFX {
         inputs.kickerStatorCurrentAmps = kickerState.getTorqueCurrent();
         inputs.kickerSupplyCurrentAmps = kickerState.getSupplyCurrent();
         inputs.kickerMotorConnected = true;
+    }
+
+    @Override
+    public void resetEncoder() {
+        super.resetEncoder();
+        extensionSim.setState(IntakeConstants.kExtensionMinMeters, 0.0);
+    }
+
+    private static double simMetersToMotorRotations(double meters) {
+        return meters / (2.0 * Math.PI * kExtensionDrumRadiusMeters)
+            * IntakeConstants.kExtensionReduction;
     }
 }

@@ -4,22 +4,17 @@ public interface IntakeIO {
 
     default void updateInputs(IntakeInputs inputs) {}
 
-    default void setRollerVelocity(double velocityRadPerSec) {}
-
-    default void setKickerVelocity(double velocityRadPerSec) {}
-
-    default void setExtensionPosition(double positionMeters) {}
-
     default void setRollerVoltage(double volts) {}
 
     default void setKickerVoltage(double volts) {}
 
-    default void setExtensionVoltage(double volts) {}
+    default void setExtensionPosition(double positionMeters) {}
+
+    default void resetEncoder() {}
 
     default void stop() {
         setRollerVoltage(0.0);
         setKickerVoltage(0.0);
-        setExtensionVoltage(0.0);
     }
 
 
