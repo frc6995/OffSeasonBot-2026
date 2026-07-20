@@ -29,7 +29,8 @@ public class Autos {
     private final Map<String, Supplier<Command>> autos = new LinkedHashMap<>();
     private final FollowPath.Builder pathBuilder;
 
-    // BLINE PATHS
+    // ============= BLINE PATHS =============
+
     private final Path directionTestPath = new Path("Direction_test");
     private final Path newPath1Path = new Path("new-path1");
 
