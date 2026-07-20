@@ -17,6 +17,7 @@ import com.therekrab.autopilot.Autopilot.APResult;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -130,6 +131,28 @@ public class AutoAlign extends Command {
 
     public AutoAlign(Pose2d targetPose, CommandSwerveDrivetrain drivetrain, APProfile profile) {
         this(new APTarget(targetPose), drivetrain, profile);
+    }
+
+    /**
+     * Creates an AutoAlign command that cancels once the robot is within the given
+     * radius of the target pose.
+     *
+     * @param profile    APProfile to use for this alignment
+     * @param targetPose Pose2d to align to
+     * @param drivetrain Drivetrain subsystem
+     * @param distance   Distance from the target pose where the command should cancel
+     * @return AutoAlign command with a radius-based cancel condition
+     */
+    public static Command toPoseUntilWithinDistance(
+            APProfile profile,
+            Pose2d targetPose,
+            CommandSwerveDrivetrain drivetrain,
+            Distance distance) {
+        return new AutoAlign(targetPose, drivetrain, profile)
+                .until(TriggerUtil.isWithinRadius(
+                        () -> targetPose.getTranslation(),
+                        () -> drivetrain.state().Pose,
+                        () -> distance));
     }
 
     /**
