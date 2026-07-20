@@ -156,6 +156,30 @@ public class AutoAlign extends Command {
     }
 
     /**
+     * Creates an AutoAlign command that respects an entry angle and cancels once
+     * the robot is within the given radius of the target pose.
+     *
+     * @param profile    APProfile to use for this alignment
+     * @param targetPose Pose2d to align to
+     * @param entryAngle Entry angle to modify approach
+     * @param drivetrain Drivetrain subsystem
+     * @param distance   Distance from the target pose where the command should cancel
+     * @return AutoAlign command with an entry angle and radius-based cancel condition
+     */
+    public static Command toPoseUntilWithinDistance(
+            APProfile profile,
+            Pose2d targetPose,
+            Rotation2d entryAngle,
+            CommandSwerveDrivetrain drivetrain,
+            Distance distance) {
+        return new AutoAlign(targetPose, entryAngle, drivetrain, profile)
+                .until(TriggerUtil.isWithinRadius(
+                        () -> targetPose.getTranslation(),
+                        () -> drivetrain.state().Pose,
+                        () -> distance));
+    }
+
+    /**
      * Auto align constructor with full parameters
      * 
      * @param target     APTarget to align to

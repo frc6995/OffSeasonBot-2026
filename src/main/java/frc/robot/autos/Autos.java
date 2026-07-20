@@ -23,6 +23,7 @@ import frc.robot.util.AutoAlign;
 public class Autos {
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
+    private static final Rotation2d kAutoAlignTestEntryAngle = Rotation2d.k180deg;
 
     private final CommandSwerveDrivetrain drivetrain;
     private final SendableChooser<Supplier<Command>> autoChooser = new SendableChooser<>();
@@ -59,6 +60,16 @@ public class Autos {
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(
                             AutoAlign.kDefaultVelocityLimitedProfile,
                             kAutoAlignTestTargetPose,
+                            drivetrain,
+                            Meters.of(0.05)));
+                }));
+
+        autos.put("Test AutoAlign Entry Angle Distance Cancel",
+                () -> auto(kAutoAlignTestStartPose, c -> {
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(
+                            AutoAlign.kDefaultVelocityLimitedProfile,
+                            kAutoAlignTestTargetPose,
+                            kAutoAlignTestEntryAngle,
                             drivetrain,
                             Meters.of(0.05)));
                 }));
