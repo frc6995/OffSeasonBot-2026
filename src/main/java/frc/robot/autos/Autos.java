@@ -29,6 +29,10 @@ public class Autos {
     private final Map<String, Supplier<Command>> autos = new LinkedHashMap<>();
     private final FollowPath.Builder pathBuilder;
 
+    // BLINE PATHS
+    private final Path directionTestPath = new Path("Direction_test");
+    private final Path newPath1Path = new Path("new-path1");
+
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
 
@@ -61,16 +65,14 @@ public class Autos {
 
         autos.put("Direction_test",
                 () -> auto(c -> {
-                    Path directionTest = new Path("Direction_test");
-                    Command directionTestAuto = pathBuilder.build(directionTest);
+                    Command directionTestAuto = pathBuilder.build(directionTestPath);
 
                     c.addCommands(directionTestAuto);
                 }));
 
         autos.put("new-path1",
                 () -> auto(c -> {
-                    Path newPath1 = new Path("new-path1");
-                    Command newPath1Auto = pathBuilder.build(newPath1);
+                    Command newPath1Auto = pathBuilder.build(newPath1Path);
 
                     c.addCommands(newPath1Auto);
                 }));
