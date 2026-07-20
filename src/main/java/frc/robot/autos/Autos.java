@@ -19,11 +19,13 @@ import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.AutoAlign;
+import frc.robot.util.AutoAlignFixedHeading;
 
 public class Autos {
-    private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
+    private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, new Rotation2d(2));
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
     private static final Rotation2d kAutoAlignTestEntryAngle = Rotation2d.k180deg;
+    private static final Rotation2d kAutoAlignTestFixedHeading = Rotation2d.fromDegrees(90);
 
     private final CommandSwerveDrivetrain drivetrain;
     private final SendableChooser<Supplier<Command>> autoChooser = new SendableChooser<>();
@@ -72,6 +74,14 @@ public class Autos {
                             kAutoAlignTestEntryAngle,
                             drivetrain,
                             Meters.of(0.05)));
+                }));
+
+        autos.put("Test AutoAlign Fixed Heading",
+                () -> auto(kAutoAlignTestStartPose, c -> {
+                    c.addCommands(new AutoAlignFixedHeading(
+                            kAutoAlignTestStartPose,
+                            drivetrain,
+                            kAutoAlignTestFixedHeading));
                 }));
 
         autos.put("Direction_test",
