@@ -7,11 +7,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -26,7 +25,7 @@ public class Autos {
     private static final Rotation2d kAutoAlignTestEntryAngle = Rotation2d.k180deg;
 
     private final CommandSwerveDrivetrain drivetrain;
-    private final SendableChooser<Supplier<Command>> autoChooser = new SendableChooser<>();
+    private final AutoChooser autoChooser = new AutoChooser();
     private final Map<String, Supplier<Command>> autos = new LinkedHashMap<>();
     private final FollowPath.Builder pathBuilder;
 
@@ -88,16 +87,14 @@ public class Autos {
                     c.addCommands(newPath1Auto);
                 }));
 
-        autos.forEach((name, sup) -> autoChooser.addOption(name, sup));
-        SmartDashboard.putData(autoChooser);
+        autos.forEach(autoChooser::addCmd);
     }
 
     public Command selectedCommand() {
-        Supplier<Command> selected = autoChooser.getSelected();
-        return selected == null ? Commands.none() : selected.get();
+        return autoChooser.selectedCommand();
     }
 
-    public SendableChooser<Supplier<Command>> getAutoChooser() {
+    public AutoChooser getAutoChooser() {
         return autoChooser;
     }
 

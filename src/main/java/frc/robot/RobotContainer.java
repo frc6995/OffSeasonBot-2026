@@ -11,6 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
@@ -43,6 +44,8 @@ public class RobotContainer {
     public final Autos autos = new Autos(drivetrain);
 
     public RobotContainer() {
+        SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
+
         configureBindings();
         SignalLogger.enableAutoLogging(false);
 
