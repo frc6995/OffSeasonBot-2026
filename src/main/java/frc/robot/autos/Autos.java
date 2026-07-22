@@ -20,7 +20,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.AutoAlign;
 
 public class Autos {
-    //Just for testing AutoAlign
+    // Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
 
@@ -32,20 +32,23 @@ public class Autos {
     // ============= BLINE PATHS =============
 
     private final Path directionTestPath = new Path("Direction_test");
+    private final Path workshopTest1 = new Path("workshop-test-1");
+    private final Path workshopTest2 = new Path("workshop-test-2");
+
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
 
         pathBuilder = new FollowPath.Builder(
-                drivetrain,                     // Subsystem requirement
-                drivetrain::getPose,            // Supplier<Pose2d>
-                drivetrain::getChassisSpeeds,   // Supplier<ChassisSpeeds> (robot-relative)
-                drivetrain::drive,              // Consumer<ChassisSpeeds>  (robot-relative)
-                new PIDController(5.0, 0.0, 0.0),   // translation — minimizes remaining distance
-                new PIDController(7.0, 0.0, 0.0),   // rotation    — minimizes heading error
-                new PIDController(0.5, 0.0, 0.0)    // cross-track — minimizes perpendicular deviation
+                drivetrain, // Subsystem requirement
+                drivetrain::getPose, // Supplier<Pose2d>
+                drivetrain::getChassisSpeeds, // Supplier<ChassisSpeeds> (robot-relative)
+                drivetrain::drive, // Consumer<ChassisSpeeds> (robot-relative)
+                new PIDController(5.0, 0.0, 0.0), // translation — minimizes remaining distance
+                new PIDController(7.0, 0.0, 0.0), // rotation — minimizes heading error
+                new PIDController(0.5, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
-                .withDefaultShouldFlip()                // auto-flip when on the red alliance
+                .withDefaultShouldFlip() // auto-flip when on the red alliance
                 .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
 
         registerAutos();
@@ -55,7 +58,7 @@ public class Autos {
 
     private void registerAutos() {
         autos.put("Test AutoAlign Distance Cancel",
-        // In actual use, this pose will need to be flipped
+                // In actual use, this pose will need to be flipped
                 () -> auto(kAutoAlignTestStartPose, c -> {
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(
                             AutoAlign.kDefaultVelocityLimitedProfile,
@@ -71,6 +74,18 @@ public class Autos {
                     c.addCommands(directionTestAuto);
                 }));
 
+        autos.put("Workshop_test1",
+                () -> auto(c -> {
+                    Command workshopTest1Auto = pathBuilder.build(workshopTest1);
+
+                    c.addCommands(workshopTest1Auto);
+                }));
+       autos.put("Workshop_test2",
+                () -> auto(c -> {
+                    Command workshopTest2Auto = pathBuilder.build(workshopTest2);
+
+                    c.addCommands(workshopTest2Auto);
+                }));
 
         autos.forEach(autoChooser::addCmd);
     }
