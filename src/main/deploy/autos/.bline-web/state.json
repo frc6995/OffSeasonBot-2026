@@ -30,16 +30,16 @@
   "path_groups": [],
   "linked_targets": [],
   "paths": {
+    "workshop-test-1.json": {
+      "display_name": "Workshop_test_1",
+      "editor_metadata": null
+    },
     "workshop-test-2.json": {
       "display_name": "Workshop-test-2",
       "editor_metadata": null
     },
     "Direction_test.json": {
       "display_name": "Direction test",
-      "editor_metadata": null
-    },
-    "workshop-test-1.json": {
-      "display_name": "Workshop_test_1",
       "editor_metadata": null
     }
   },

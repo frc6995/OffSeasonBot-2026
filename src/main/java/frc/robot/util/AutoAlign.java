@@ -15,7 +15,6 @@ import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.APTarget;
 import com.therekrab.autopilot.Autopilot.APResult;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Distance;
@@ -28,16 +27,6 @@ public class AutoAlign extends Command {
     public enum RotationControlMode {
         UNPROFILED_PID,
         VELOCITY_LIMITED_PROFILE
-    }
-
-    public static class RotationConstraints {
-        public final double maxVelocity;
-        public final double maxAcceleration;
-
-        public RotationConstraints(double maxVelocity, double maxAcceleration) {
-            this.maxVelocity = maxVelocity;
-            this.maxAcceleration = maxAcceleration;
-        }
     }
 
     public static class AutoAlignConstants {
@@ -57,7 +46,7 @@ public class AutoAlign extends Command {
         public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
         public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
         public static APConstraints DEFAULT_CONSTRAINTS = new APConstraints(DEFAULT_ACCELERATION, DEFAULT_JERK);
-        public static RotationConstraints DEFAULT_ROTATION_CONSTRAINTS = new RotationConstraints(
+        public static PrimitiveRotationProfile.Constraints DEFAULT_ROTATION_CONSTRAINTS = new PrimitiveRotationProfile.Constraints(
                 DEFAULT_ROTATION_MAX_VELOCITY,
                 DEFAULT_ROTATION_MAX_ACCELERATION);
     }
@@ -92,7 +81,8 @@ public class AutoAlign extends Command {
     protected final CommandSwerveDrivetrain m_drivetrain;
     protected final APProfile m_profile; // Store the profile being used
     protected final RotationControlMode m_rotationControlMode;
-    protected final RotationConstraints m_rotationConstraints;
+    protected final PrimitiveRotationProfile.Constraints m_rotationConstraints;
+    protected final PrimitiveRotationProfile m_rotationProfile;
     protected final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric();
     protected final SwerveRequest.FieldCentricFacingAngle m_request = new SwerveRequest.FieldCentricFacingAngle()
             .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance)
@@ -100,9 +90,6 @@ public class AutoAlign extends Command {
             .withHeadingPID(5, 0, 0); // Replace with constants later
 
     protected SwerveDriveState swerveState = new SwerveDriveState();
-    protected double m_rotationSetpointRadians = 0;
-    protected double m_rotationSetpointVelocity = 0;
-    private double m_lastRotationProfileTimestamp;
 
     /**
      * Uses default constraints, beeline path
@@ -266,12 +253,16 @@ public class AutoAlign extends Command {
             CommandSwerveDrivetrain drivetrain,
             APProfile profile,
             RotationControlMode rotationControlMode,
-            RotationConstraints rotationConstraints) {
+            PrimitiveRotationProfile.Constraints rotationConstraints) {
         this.m_target = target;
         this.m_drivetrain = drivetrain;
         this.m_profile = profile;
         this.m_rotationControlMode = rotationControlMode;
         this.m_rotationConstraints = rotationConstraints;
+        this.m_rotationProfile = new PrimitiveRotationProfile(
+                rotationConstraints,
+                AutoAlignConstants.ROTATION_PROFILE_PERIOD,
+                AutoAlignConstants.ROTATION_PROFILE_MAX_PERIOD);
 
         kAutopilot = new Autopilot(profile);
 
@@ -298,7 +289,7 @@ public class AutoAlign extends Command {
         return withRotationControlMode(RotationControlMode.VELOCITY_LIMITED_PROFILE);
     }
 
-    public AutoAlign withVelocityLimitedRotation(RotationConstraints rotationConstraints) {
+    public AutoAlign withVelocityLimitedRotation(PrimitiveRotationProfile.Constraints rotationConstraints) {
         return new AutoAlign(
                 m_target,
                 m_drivetrain,
@@ -330,13 +321,10 @@ public class AutoAlign extends Command {
     @Override
     public void initialize() {
         swerveState = m_drivetrain.getState();
-        double maxVelocity = Math.max(0, m_rotationConstraints.maxVelocity);
-        m_rotationSetpointRadians = swerveState.Pose.getRotation().getRadians();
-        m_rotationSetpointVelocity = MathUtil.clamp(
+        m_rotationProfile.reset(
+                swerveState.Pose.getRotation().getRadians(),
                 swerveState.Speeds.omegaRadiansPerSecond,
-                -maxVelocity,
-                maxVelocity);
-        m_lastRotationProfileTimestamp = swerveState.Timestamp;
+                swerveState.Timestamp);
     }
 
     @Override
@@ -362,54 +350,14 @@ public class AutoAlign extends Command {
     }
 
     private void applyVelocityLimitedRotationRequest(APResult out) {
-        calculateRotationSetpoint(out.targetAngle());
+        m_rotationProfile.update(out.targetAngle().getRadians(), swerveState.Timestamp);
 
-        double maxVelocity = Math.max(0, m_rotationConstraints.maxVelocity);
         m_drivetrain.setControl(m_request
                 .withVelocityX(out.vx())
                 .withVelocityY(out.vy())
-                .withTargetDirection(Rotation2d.fromRadians(m_rotationSetpointRadians))
-                .withTargetRateFeedforward(m_rotationSetpointVelocity)
-                .withMaxAbsRotationalRate(maxVelocity));
-    }
-
-    private void calculateRotationSetpoint(Rotation2d targetAngle) {
-        double dt = swerveState.Timestamp - m_lastRotationProfileTimestamp;
-        m_lastRotationProfileTimestamp = swerveState.Timestamp;
-
-        if (dt <= 0) {
-            dt = AutoAlignConstants.ROTATION_PROFILE_PERIOD;
-        }
-        dt = MathUtil.clamp(dt, AutoAlignConstants.ROTATION_PROFILE_PERIOD, AutoAlignConstants.ROTATION_PROFILE_MAX_PERIOD);
-
-        double goalRadians = m_rotationSetpointRadians
-                + MathUtil.inputModulus(
-                        targetAngle.getRadians() - m_rotationSetpointRadians,
-                        -Math.PI,
-                        Math.PI);
-
-        double maxVelocity = Math.max(0, m_rotationConstraints.maxVelocity);
-        double maxAcceleration = Math.max(0, m_rotationConstraints.maxAcceleration);
-        double error = goalRadians - m_rotationSetpointRadians;
-        double desiredVelocity = 0;
-        if (Math.abs(error) > 1e-6 && maxVelocity > 0 && maxAcceleration > 0) {
-            double maxVelocityForStopping = Math.sqrt(
-                    2 * maxAcceleration * Math.abs(error));
-            desiredVelocity = Math.copySign(
-                    Math.min(maxVelocity, maxVelocityForStopping),
-                    error);
-        }
-
-        m_rotationSetpointVelocity = MathUtil.clamp(
-                desiredVelocity,
-                m_rotationSetpointVelocity - maxAcceleration * dt,
-                m_rotationSetpointVelocity + maxAcceleration * dt);
-        m_rotationSetpointRadians += m_rotationSetpointVelocity * dt;
-
-        if (Math.signum(goalRadians - m_rotationSetpointRadians) != Math.signum(error)) {
-            m_rotationSetpointRadians = goalRadians;
-            m_rotationSetpointVelocity = 0;
-        }
+                .withTargetDirection(Rotation2d.fromRadians(m_rotationProfile.positionRadians()))
+                .withTargetRateFeedforward(m_rotationProfile.velocityRadiansPerSecond())
+                .withMaxAbsRotationalRate(m_rotationProfile.maxVelocity()));
     }
 
     @Override
