@@ -1,5 +1,6 @@
 package frc.robot.autos;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
 import java.util.LinkedHashMap;
@@ -23,7 +24,7 @@ public class Autos {
     // Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
-    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(11.0, 0.0, Rotation2d.k180deg);
+    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(11.0, 0.0, new Rotation2d(Degrees.of(70)));
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
