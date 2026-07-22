@@ -20,9 +20,9 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.AutoAlign;
 
 public class Autos {
+    //Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
-    private static final Rotation2d kAutoAlignTestEntryAngle = Rotation2d.k180deg;
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -32,7 +32,6 @@ public class Autos {
     // ============= BLINE PATHS =============
 
     private final Path directionTestPath = new Path("Direction_test");
-    private final Path newPath1Path = new Path("new-path1");
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -56,6 +55,7 @@ public class Autos {
 
     private void registerAutos() {
         autos.put("Test AutoAlign Distance Cancel",
+        // In actual use, this pose will need to be flipped
                 () -> auto(kAutoAlignTestStartPose, c -> {
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(
                             AutoAlign.kDefaultVelocityLimitedProfile,
@@ -64,29 +64,13 @@ public class Autos {
                             Meters.of(0.05)));
                 }));
 
-        autos.put("Test AutoAlign Entry Angle Distance Cancel",
-                () -> auto(kAutoAlignTestStartPose, c -> {
-                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(
-                            AutoAlign.kDefaultVelocityLimitedProfile,
-                            kAutoAlignTestTargetPose,
-                            kAutoAlignTestEntryAngle,
-                            drivetrain,
-                            Meters.of(0.05)));
-                }));
-
-        autos.put("Direction_test",
+        autos.put("BLINE_test",
                 () -> auto(c -> {
                     Command directionTestAuto = pathBuilder.build(directionTestPath);
 
                     c.addCommands(directionTestAuto);
                 }));
 
-        autos.put("new-path1",
-                () -> auto(c -> {
-                    Command newPath1Auto = pathBuilder.build(newPath1Path);
-
-                    c.addCommands(newPath1Auto);
-                }));
 
         autos.forEach(autoChooser::addCmd);
     }
