@@ -8,20 +8,21 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import frc.robot.subsystems.Flywheel.Flywheel;
+import frc.robot.subsystems.Flywheel.Flywheel.FlywheelConstants;
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.subsystems.Flywheel.RealFlywheel;
-import frc.robot.subsystems.Flywheel.RealFlywheel.FlywheelConstants;
+
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-public class Flywheelsim extends FlywheelIOTalonFX{
-    private final FlywheelSim flywheelSim =
-      new FlywheelSim (LinearSystemId.createFlywheelSystem(
-          DCMotor.getKrakenX60(1),
-          FlywheelConstants.FlywheelMOI,
-          FlywheelConstants.kReduction),
-          DCMotor.getKrakenX60(1));
+public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX{
+  private final FlywheelSim flywheelSim =
+    new FlywheelSim (LinearSystemId.createFlywheelSystem(
+        DCMotor.getKrakenX44(4),
+        FlywheelConstants.FlywheelMOI,
+        FlywheelConstants.kReduction),
+        DCMotor.getKrakenX44(4));
 
 
-     public Flywheelsim() {
+  public FlywheelIOSimTalonFX() {
     super();
     configureSim();
   }
@@ -36,27 +37,27 @@ public class Flywheelsim extends FlywheelIOTalonFX{
 
  private static void configureKrakenSim(TalonFXSimState simState, ChassisReference orientation) {
     simState.Orientation = orientation;
-    simState.setMotorType(TalonFXSimState.MotorType.KrakenX60);
+    simState.setMotorType(TalonFXSimState.MotorType.KrakenX44);
   }
 
    @Override
   public void updateInputs(FlywheelInputs inputs) {
     var flywheelState = m_flywheelLeadMotor.getSimState();
   
-  double batteryVoltage = RobotController.getBatteryVoltage();
-  flywheelState.setSupplyVoltage(batteryVoltage);
+    double batteryVoltage = RobotController.getBatteryVoltage();
+    flywheelState.setSupplyVoltage(batteryVoltage);
 
-   double appliedVolts = flywheelState.getMotorVoltageMeasure().baseUnitMagnitude();
+    double appliedVolts = flywheelState.getMotorVoltageMeasure().baseUnitMagnitude();
     flywheelSim.setInputVoltage(appliedVolts);
 
     flywheelSim.update(0.02);
 
-  double velocityRPM = flywheelSim.getAngularVelocityRPM();
+    double velocityRPM = flywheelSim.getAngularVelocityRPM();
 
-  flywheelState.setRotorVelocity(velocityRPM/60);
+    flywheelState.setRotorVelocity(velocityRPM/60);
 
 
-     inputs.velocityRPM = velocityRPM;
+    inputs.velocityRPM = velocityRPM;
     inputs.appliedVolts = appliedVolts;
     inputs.statorCurrentAmps = flywheelState.getTorqueCurrent();
     inputs.supplyCurrentAmps = flywheelState.getSupplyCurrent();
