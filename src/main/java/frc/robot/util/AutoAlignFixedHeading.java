@@ -98,10 +98,7 @@ public class AutoAlignFixedHeading extends AutoAlign {
                 out = kAutopilot.calculate(swerveState.Pose, swerveState.Speeds, m_target);
             }
 
-            m_drivetrain.setControl(m_request
-                    .withVelocityX(out.vx())
-                    .withVelocityY(out.vy())
-                    .withTargetDirection(out.targetAngle()));
+            applyDriveRequest(out);
     }
 
     @Override

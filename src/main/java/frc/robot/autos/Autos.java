@@ -23,6 +23,7 @@ public class Autos {
     // Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
+    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(11.0, 0.0, Rotation2d.k180deg);
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -34,7 +35,6 @@ public class Autos {
     private final Path directionTestPath = new Path("Direction_test");
     private final Path workshopTest1 = new Path("workshop-test-1");
     private final Path workshopTest2 = new Path("workshop-test-2");
-
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -67,6 +67,15 @@ public class Autos {
                             Meters.of(0.05)));
                 }));
 
+        autos.put("Test AutoAlign Profiled Rotation",
+                () -> auto(kAutoAlignTestStartPose, c -> {
+                    c.addCommands(new AutoAlign(
+                            kAutoAlignProfiledRotationTestTargetPose,
+                            drivetrain,
+                            AutoAlign.kDefaultVelocityLimitedProfile,
+                            AutoAlign.RotationControlMode.VELOCITY_LIMITED_PROFILE));
+                }));
+
         autos.put("BLINE_test",
                 () -> auto(c -> {
                     Command directionTestAuto = pathBuilder.build(directionTestPath);
@@ -80,7 +89,7 @@ public class Autos {
 
                     c.addCommands(workshopTest1Auto);
                 }));
-       autos.put("Workshop_test2",
+        autos.put("Workshop_test2",
                 () -> auto(c -> {
                     Command workshopTest2Auto = pathBuilder.build(workshopTest2);
 
