@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -27,6 +28,9 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.subsystems.vision.apriltag.AprilTagVision;
+import frc.robot.subsystems.vision.apriltag.NoneATVision;
+import frc.robot.subsystems.vision.apriltag.RealATVision;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -51,6 +55,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision() : new RealATVision(getPigeon2()::getRotation3d, this::resetPose);
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -132,6 +138,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+    ;
+
     }
 
     /**
@@ -156,6 +164,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+         ;
+
     }
 
     /**
@@ -184,10 +194,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Matrix<N3, N1> visionStandardDeviation,
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
+     
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
         if (Utils.isSimulation()) {
             startSimThread();
         }
+;
     }
 
     /**
@@ -246,25 +258,45 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     @Override
-    public void periodic() {
+   public void periodic() {
         /*
          * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
-         * This allows us to correct the perspective in case the robot code restarts mid-match.
-         * Otherwise, only check and apply the operator perspective if the DS is disabled.
-         * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
+         * If we haven't applied the operator perspective before, then we should apply
+         * it regardless of DS state.
+         * This allows us to correct the perspective in case the robot code restarts
+         * mid-match.
+         * Otherwise, only check and apply the operator perspective if the DS is
+         * disabled.
+         * This ensures driving behavior doesn't change until an explicit disable event
+         * occurs during testing.
          */
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
                 setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
-                        ? kRedAlliancePerspectiveRotation
-                        : kBlueAlliancePerspectiveRotation
-                );
+                        allianceColor == Alliance.Red
+                                ? kRedAlliancePerspectiveRotation
+                                : kBlueAlliancePerspectiveRotation);
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        m_vision.periodic();
+
+        if (Math.abs(state().Speeds.omegaRadiansPerSecond) < (Math.PI/2)) {
+ 
+        var estimates = m_vision.getAllEstimates();
+        var gyroRotation = getPigeon2().getRotation3d();
+        for(var estimate : estimates) {
+            if(estimate.avgAmbiguity() < 0.65 && !(Math.abs(gyroRotation.getX()) > Math.toRadians(20) || Math.abs(gyroRotation.getY()) > Math.toRadians(20))) {
+                if(DriverStation.isEnabled()) {
+                    addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(), AprilTagVision.getStdDevs(estimate));
+                } else {
+                    addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(), AprilTagVision.getDisabledStdDevs(estimate));
+                }
+            }
+        }
     }
+}
 
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();

@@ -32,6 +32,14 @@ public abstract class AprilTagVision {
         return estimate.isMegaTag2() ? getStdDevsMT2(estimate) : getStdDevsMT1(estimate);
     }
 
+    public static Matrix<N3,N1> getDisabledStdDevs(AprilTagEstimate estimate) {
+        return VecBuilder.fill(
+            0.1,
+            0.1,
+            0.1
+        );
+    }
+
     private static Matrix<N3,N1> getStdDevsMT2(AprilTagEstimate estimate) {
         double xydevs = ATVisionConstants.kMT2StdDevCoefficients[0] * Math.pow(estimate.avgTagDistMeters(), 2.0) / Math.pow(estimate.tagCount(), 2.0);
         return VecBuilder.fill(
