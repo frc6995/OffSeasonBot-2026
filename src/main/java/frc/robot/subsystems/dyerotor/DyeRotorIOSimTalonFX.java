@@ -18,7 +18,7 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
   private final FlywheelSim spinSim =
       new FlywheelSim(LinearSystemId.createFlywheelSystem(
           DCMotor.getKrakenX60(1),
-          DyeRotorConstants.SpinMOI,
+          DyeRotorConstants.kSpinMOI,
           DyeRotorConstants.kSpinReduction),
           
           DCMotor.getKrakenX60(1));
@@ -35,7 +35,7 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
   }
 
   private void configureSim() {
-    configureKrakenSim(m_spinMotor.getSimState(), ChassisReference.Clockwise_Positive);
+    configureKrakenSim(m_spinMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
     configureKrakenSim(m_indexerLead.getSimState(), ChassisReference.CounterClockwise_Positive);
     configureKrakenSim(m_indexerFollow.getSimState(), ChassisReference.CounterClockwise_Positive);
 

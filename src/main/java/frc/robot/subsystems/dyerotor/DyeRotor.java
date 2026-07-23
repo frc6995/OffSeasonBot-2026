@@ -4,7 +4,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DyeRotor extends SubsystemBase {
-  public class DyeRotorConstants {
+  public static final class DyeRotorConstants {
     public static final int kSpinMotorCANID = 23;
     public static final int kLeadIndexMotorCANID = 21;
     public static final int kFollowIndexMotorCANID = 22;
@@ -21,8 +21,8 @@ public class DyeRotor extends SubsystemBase {
     public static final double kSpinKV = 0.0; // Tune
     public static final double kSpinKS = 0.0; // Tune
 
-    public static final double SpinMOI = 0.091011;
-    public static final double IndexMOI = 0.000534;
+    public static final double kSpinMOI = 0.091011;
+    public static final double kIndexMOI = 0.000534;
 
     public static final double kSpinForwardRPM = 3000.0; // Tune
     public static final double kSpinBackwardRPM = -1000.0; // Tune
@@ -31,12 +31,12 @@ public class DyeRotor extends SubsystemBase {
     public static final double kIndexForwardRPM = 100.0; // Tune
     public static final double kIndexBackwardRPM = -50.0; // Tune
 
-    public static final double kIndexKP = 0.0; // Tune
+    public static final double kIndexKP = 0.1; // Tune
     public static final double kIndexKV = 0.0; // Tune
     public static final double kIndexKS = 0.0; // Tune
 
-    // public static final double kIndexForwardVolts = 8.0;
-    // public static final double kIndexBackwardVolts = -4.0;
+    public static final double kIndexForwardVolts = 8.0;
+    public static final double kIndexBackwardVolts = -4.0;
   }
 
   public enum State {
