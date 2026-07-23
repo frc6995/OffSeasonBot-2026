@@ -12,7 +12,7 @@ public class Hood extends SubsystemBase{
 
     private double requestedAngle;
 
-    private HoodState state = HoodState.DISABLED;
+    private HoodState hoodState = HoodState.DISABLED;
 
     static class HoodConstants {
         public static int kCANID = 44; //Should be right with doc
@@ -59,7 +59,7 @@ public class Hood extends SubsystemBase{
     public void periodic() {
         io.updateInputs(hoodIOInputs);
 
-        switch(state) {
+        switch(hoodState) {
             case DISABLED:
                 io.disable();
                 return;
@@ -73,23 +73,27 @@ public class Hood extends SubsystemBase{
     }
 
     public void disable() {
-        state = HoodState.DISABLED;
+        hoodState = HoodState.DISABLED;
     }
 
     public double getRequestedAngle() {
         return requestedAngle;
     }
 
-    public HoodState getState() {
-        return state;
+    public HoodState getHoodState() {
+        return hoodState;
     }
+
+    public void setState(HoodState state) {
+  hoodState = state;
+  }
 
     public double getAngle() {
         return hoodIOInputs.angle;
     }
 
     public void setAngle(double angle) {
-        state = HoodState.ACTIVE;
+        hoodState = HoodState.ACTIVE;
 
         requestedAngle = angle;
     }

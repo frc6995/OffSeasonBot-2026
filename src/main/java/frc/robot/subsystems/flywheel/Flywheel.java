@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 // import frc.robot.util.CtreUtil;
 
 public class Flywheel extends SubsystemBase{
-  
   public static class FlywheelConstants {
     // PID Constants
     public static final double kP = 0.70;
@@ -43,26 +42,26 @@ public class Flywheel extends SubsystemBase{
   private final FlywheelIO io;
   private final FlywheelIO.FlywheelInputs inputs = new FlywheelIO.FlywheelInputs();
 
-  public enum State {
+  public enum FlywheelState {
    
     DISABLED,
     
     ACTIVE
   }
 
-private State flywheelState = State.DISABLED;
+private FlywheelState flywheelState = FlywheelState.DISABLED;
 
-public void setState(State state) {
+public void setState(FlywheelState state) {
   flywheelState = state;
 
   }
 
-  public State getShootState() {
+  public FlywheelState getShootState() {
     return flywheelState;
   }
 
   public void stop() {
-    flywheelState = State.DISABLED;
+    flywheelState = FlywheelState.DISABLED;
   
   }
 
@@ -90,7 +89,7 @@ public void periodic() {
 
 }
 //shoot is NOT 10000 rpm
-private static double resolveTargetRPM(State state) {
+private static double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
       case ACTIVE -> 10000;

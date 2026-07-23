@@ -1,11 +1,12 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 
 public class Turret extends SubsystemBase {
 
-    private TurretState state = TurretState.DISABLED;
+    private TurretState turretState = TurretState.DISABLED;
     private double requestedAngle;
     private TurretIO io;
     private TurretIOInputs inputs = new TurretIOInputs();
@@ -52,16 +53,16 @@ public class Turret extends SubsystemBase {
     }
 
     public void activate() {
-        this.state = TurretState.ACTIVE;
+        this.turretState = TurretState.ACTIVE;
     }
 
     public void disable() {
-        state = TurretState.DISABLED;
+        turretState = TurretState.DISABLED;
     }
 
     @Override
     public void periodic() {
-        switch (state) {
+        switch (turretState) {
             case DISABLED -> io.disable();
 
             //logic for requestedAngle should be handled somewhere else
@@ -71,8 +72,12 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
     }
 
-    public TurretState getState() {
-        return state;
+    public TurretState getTurretState() {
+        return turretState;
+    }
+
+      public void setState(TurretState state) {
+        turretState = state;
     }
 
     public double getAngle() {

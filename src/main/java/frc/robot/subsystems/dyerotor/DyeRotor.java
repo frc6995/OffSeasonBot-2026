@@ -39,7 +39,7 @@ public class DyeRotor extends SubsystemBase {
     public static final double kIndexBackwardVolts = -4.0;
   }
 
-  public enum State {
+  public enum DyeRotorState {
     IDLE,
     SPIN,
     SPIN_BACKWARDS
@@ -48,8 +48,8 @@ public class DyeRotor extends SubsystemBase {
   private final DyeRotorIO io;
   private final DyeRotorIO.DyeRotorInputs inputs = new DyeRotorIO.DyeRotorInputs();
 
-  private State spinState = State.IDLE;
-  private State indexState = State.IDLE;
+  private DyeRotorState spinState = DyeRotorState.IDLE;
+  private DyeRotorState indexState = DyeRotorState.IDLE;
 
   public DyeRotor() {
     this(new DyeRotorIO() {});
@@ -60,28 +60,28 @@ public class DyeRotor extends SubsystemBase {
   }
 
   public void stop() {
-    spinState = State.IDLE;
-    indexState = State.IDLE;
+    spinState = DyeRotorState.IDLE;
+    indexState = DyeRotorState.IDLE;
   }
 
-  public void setState(State state) {
+  public void setState(DyeRotorState state) {
     spinState = state;
     indexState = state;
   }
 
-  public void setSpinState(State state) {
+  public void setSpinState(DyeRotorState state) {
     spinState = state;
   }
 
-  public void setIndexState(State state) {
+  public void setIndexState(DyeRotorState state) {
     indexState = state;
   }
 
-  public State getSpinState() {
+  public DyeRotorState getSpinState() {
     return spinState;
   }
 
-  public State getIndexState() {
+  public DyeRotorState getIndexState() {
     return indexState;
   }
 
@@ -125,7 +125,7 @@ public class DyeRotor extends SubsystemBase {
     io.setIndexVelocity(resolveIndexTargetRPM(indexState));
   }
 
-  private static double resolveSpinTargetRPM(State state) {
+  private static double resolveSpinTargetRPM(DyeRotorState state) {
     return switch (state) {
       case IDLE -> 0.0;
       case SPIN -> DyeRotorConstants.kSpinForwardRPM;
@@ -133,7 +133,7 @@ public class DyeRotor extends SubsystemBase {
       default -> 0.0;
     };
   }
-  private static double resolveIndexTargetRPM(State state) {
+  private static double resolveIndexTargetRPM(DyeRotorState state) {
     return switch (state) {
       case IDLE -> 0.0;
       case SPIN -> DyeRotorConstants.kIndexForwardRPM;
