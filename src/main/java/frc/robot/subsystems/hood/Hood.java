@@ -62,6 +62,7 @@ public class Hood extends SubsystemBase{
         switch(state) {
             case DISABLED:
                 io.disable();
+                return;
             case ACTIVE:
 
                 double clampedAngle = applyLimits(requestedAngle);

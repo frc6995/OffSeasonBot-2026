@@ -13,8 +13,8 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX{
         new SingleJointedArmSim(
             DCMotor.getKrakenX44(1), 
             Hood.HoodConstants.kReduction, 
-            Hood.HoodConstants.kMOI, //in^2 lbs 
-            Hood.HoodConstants.kHoodLength,//in 
+            Hood.HoodConstants.kMOI, // kg m^2 
+            Hood.HoodConstants.kHoodLength,// m
             Math.toRadians(Hood.HoodConstants.MIN_ANGLE), 
             Math.toRadians(Hood.HoodConstants.MAX_ANGLE), 
             true, 
@@ -36,6 +36,8 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX{
 
     @Override
     public void updateInputs(HoodIOInputs inputs){
+        m_HoodSim.update(0.02);
+
         var simState = m_hoodMotor.getSimState();
             simState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
@@ -49,10 +51,7 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX{
 
         inputs.angle = hoodPosition;
         inputs.appliedVolts = appliedVolts;
-        inputs.statorCurrent = simState.getSupplyCurrent();
-        inputs.supplyCurrent = simState.getTorqueCurrent();
-
-        m_HoodSim.update(0.02);
-
+        inputs.statorCurrent = simState.getTorqueCurrent();
+        inputs.supplyCurrent = simState.getSupplyCurrent();
     }
 }

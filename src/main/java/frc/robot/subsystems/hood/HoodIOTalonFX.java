@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
@@ -20,7 +21,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
 public class HoodIOTalonFX implements HoodIO{   
-    //need to specify upper or lower CAN bus
+
     protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus); 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
     
@@ -71,7 +72,13 @@ public class HoodIOTalonFX implements HoodIO{
                 .withForwardLimitEnable(false)
                 .withReverseLimitEnable(false);
 
-        //TODO replace this with CtreUtil reportIfNotOk
+        // need to set these
+        config.MotionMagic = 
+            new MotionMagicConfigs()
+                .withMotionMagicAcceleration(0)
+                .withMotionMagicCruiseVelocity(0);
+
+        // TODO replace this with CtreUtil reportIfNotOk
         m_hoodMotor.getConfigurator().apply(config);
     }
 
@@ -105,11 +112,11 @@ public class HoodIOTalonFX implements HoodIO{
      */
 
     protected double angleToRotations(double angle) {
-        return (angle/360)*(Hood.HoodConstants.kReduction);
+        return (angle/360.0);
     }
 
     protected double rotationsToAngle(double rotations) {
-        return rotations*(1/Hood.HoodConstants.kReduction)*360;
+        return rotations*360;
     }
 
     @Override
