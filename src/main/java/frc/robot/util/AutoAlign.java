@@ -20,8 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 /**
- * Drives the robot to an Autopilot target while controlling heading with either
- * direct CTRE heading PID or a velocity-limited rotation profile.
+ * Drives the robot to an Autopilot target.
  */
 public class AutoAlign extends Command {
     /**
@@ -30,7 +29,9 @@ public class AutoAlign extends Command {
     public enum RotationControlMode {
         /** Let the drivetrain heading PID move directly to the target angle. */
         UNPROFILED_PID,
-        /** Limit the heading setpoint velocity before sending it to the drivetrain PID. */
+        /**
+         * Limit the heading setpoint velocity before sending it to the drivetrain PID.
+         */
         VELOCITY_LIMITED_PROFILE
     }
 
@@ -126,10 +127,10 @@ public class AutoAlign extends Command {
     /**
      * Creates an AutoAlign command with velocity-limited profiled rotation.
      *
-     * @param targetPose                 The desired field-relative target pose.
-     * @param drivetrain                 The drivetrain subsystem to command.
-     * @param profile                    The Autopilot profile used for translation
-     *                                   and completion tolerances.
+     * @param targetPose                  The desired field-relative target pose.
+     * @param drivetrain                  The drivetrain subsystem to command.
+     * @param profile                     The Autopilot profile used for translation
+     *                                    and completion tolerances.
      * @param profiledRotationMaxVelocity Max profiled heading velocity, in rad/s.
      */
     public AutoAlign(
@@ -211,7 +212,8 @@ public class AutoAlign extends Command {
     }
 
     /**
-     * Creates an AutoAlign command with direct drivetrain heading PID that ends once
+     * Creates an AutoAlign command with direct drivetrain heading PID that ends
+     * once
      * the robot is within a distance of the target translation.
      *
      * @param profile    The Autopilot profile used for translation and completion
@@ -235,15 +237,16 @@ public class AutoAlign extends Command {
     }
 
     /**
-     * Creates an AutoAlign command with velocity-limited profiled rotation that ends
+     * Creates an AutoAlign command with velocity-limited profiled rotation that
+     * ends
      * once the robot is within a distance of the target translation.
      *
-     * @param profile                    The Autopilot profile used for translation
-     *                                   and completion tolerances.
-     * @param targetPose                 The desired field-relative target pose.
-     * @param drivetrain                 The drivetrain subsystem to command.
-     * @param distance                   The distance from the target translation
-     *                                   that ends the command.
+     * @param profile                     The Autopilot profile used for translation
+     *                                    and completion tolerances.
+     * @param targetPose                  The desired field-relative target pose.
+     * @param drivetrain                  The drivetrain subsystem to command.
+     * @param distance                    The distance from the target translation
+     *                                    that ends the command.
      * @param profiledRotationMaxVelocity Max profiled heading velocity, in rad/s.
      * @return AutoAlign command decorated with the distance end condition.
      */
