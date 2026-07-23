@@ -2,17 +2,15 @@ package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
 
-import com.therekrab.autopilot.Autopilot;
-
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.therekrab.autopilot.APConstraints;
 import com.therekrab.autopilot.APProfile;
 import com.therekrab.autopilot.APTarget;
+import com.therekrab.autopilot.Autopilot;
 import com.therekrab.autopilot.Autopilot.APResult;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -22,19 +20,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class AutoAlign extends Command {
-    // Static factory methods with profile parameters
-
     public enum RotationControlMode {
         UNPROFILED_PID,
         VELOCITY_LIMITED_PROFILE
     }
 
     public static class AutoAlignConstants {
-        public static double DEFAULT_MAX_VELOCITY = 5.5; // physical max is 5.5 m/s^2
+        public static double DEFAULT_MAX_VELOCITY = 5.5; // physical max is 5.5 m/s
         public static double DEFAULT_ACCELERATION = 23; // Calculated from swerve slip current
         public static double DEFAULT_JERK = 6.0;
-        public static double DEFAULT_ROTATION_MAX_VELOCITY = Math.PI *2; // rad/s
-        public static double DEFAULT_ROTATION_MAX_ACCELERATION = 6 * Math.PI; // rad/s^2
+
+        public static double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI * 2; // rad/s
+                public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 5; // rad/s
+
+        public static double PROFILED_ROTATION_DEFAULT_ACCELERATION = 6 * Math.PI; // rad/s^2
         public static double ROTATION_PROFILE_PERIOD = 0.020; // seconds
         public static double ROTATION_PROFILE_MAX_PERIOD = 0.060; // seconds
 
@@ -43,15 +42,16 @@ public class AutoAlign extends Command {
         public static APConstraints SLOW_DRIVE_CONSTRAINTS = new APConstraints(1.3, DEFAULT_ACCELERATION, 20);
         public static APConstraints SLOW_CRAWL_CONSTRAINTS = new APConstraints(0.5, DEFAULT_ACCELERATION, 20);
 
-        public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
+        public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(
+                DEFAULT_MAX_VELOCITY,
+                DEFAULT_ACCELERATION,
+                DEFAULT_JERK);
         public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
         public static APConstraints DEFAULT_CONSTRAINTS = new APConstraints(DEFAULT_ACCELERATION, DEFAULT_JERK);
         public static PrimitiveRotationProfile.Constraints DEFAULT_ROTATION_CONSTRAINTS = new PrimitiveRotationProfile.Constraints(
-                DEFAULT_ROTATION_MAX_VELOCITY,
-                DEFAULT_ROTATION_MAX_ACCELERATION);
+                PROFILED_ROTATION_DEFAULT_ACCELERATION);
     }
 
-    // Make profiles public so they can be accessed and modified
     public static APProfile kDefaultProfile = new APProfile(AutoAlignConstants.DEFAULT_CONSTRAINTS)
             .withErrorXY(Centimeters.of(6))
             .withErrorTheta(Degrees.of(1.5))
@@ -62,7 +62,7 @@ public class AutoAlign extends Command {
             .withErrorXY(Centimeters.of(12))
             .withErrorTheta(Degrees.of(1.5))
             .withBeelineRadius(Centimeters.of(8));
-    
+
     public static APProfile kSlowDriveProfile = new APProfile(
             AutoAlignConstants.SLOW_DRIVE_CONSTRAINTS)
             .withErrorXY(Centimeters.of(8))
@@ -79,9 +79,10 @@ public class AutoAlign extends Command {
 
     protected final APTarget m_target;
     protected final CommandSwerveDrivetrain m_drivetrain;
-    protected final APProfile m_profile; // Store the profile being used
+    protected final APProfile m_profile;
     protected final RotationControlMode m_rotationControlMode;
     protected final PrimitiveRotationProfile.Constraints m_rotationConstraints;
+    protected final double m_profiledRotationMaxVelocity;
     protected final PrimitiveRotationProfile m_rotationProfile;
     protected final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric();
     protected final SwerveRequest.FieldCentricFacingAngle m_request = new SwerveRequest.FieldCentricFacingAngle()
@@ -91,48 +92,19 @@ public class AutoAlign extends Command {
 
     protected SwerveDriveState swerveState = new SwerveDriveState();
 
-    /**
-     * Uses default constraints, beeline path
-     * 
-     * @param targetPose Pose2d to align to
-     * @param drivetrain Drivetrain subsystem
-     */
-    public AutoAlign(Pose2d targetPose, CommandSwerveDrivetrain drivetrain) {
-        this(new APTarget(targetPose), drivetrain, kDefaultProfile);
-    }
-
-    /**
-     * Uses default constraints, beeline path with custom profile
-     * 
-     * @param target Pose2d to align to
-     * @param drivetrain Drivetrain subsystem
-     * @param constraints    APProfile to use for this alignment
-     */
-    public AutoAlign(APTarget target, CommandSwerveDrivetrain drivetrain, APConstraints constraints) {
-        this(target, drivetrain, new APProfile(constraints));
-    }
-
-    /**
-     * Uses default constraints, path respects entry angle
-     * 
-     * @param targetPose Pose2d to align to
-     * @param entryAngle Entry angle to modify approach
-     * @param drivetrain Drivetrain subsystem
-     */
-    public AutoAlign(Pose2d targetPose, Rotation2d entryAngle, CommandSwerveDrivetrain drivetrain) {
-        this(targetPose, entryAngle, drivetrain, kDefaultProfile);
-    }
-
-    /**
-     * Uses custom profile, path respects entry angle
-     * 
-     * @param targetPose Pose2d to align to
-     * @param entryAngle Entry angle to modify approach
-     * @param drivetrain Drivetrain subsystem
-     * @param profile    APProfile to use for this alignment
-     */
-    public AutoAlign(Pose2d targetPose, Rotation2d entryAngle, CommandSwerveDrivetrain drivetrain, APProfile profile) {
-        this(new APTarget(targetPose).withEntryAngle(entryAngle), drivetrain, profile);
+    public AutoAlign(
+            Pose2d targetPose,
+            CommandSwerveDrivetrain drivetrain,
+            APProfile profile,
+            RotationControlMode rotationControlMode,
+            double profiledRotationMaxVelocity) {
+        this(
+                new APTarget(targetPose),
+                drivetrain,
+                profile,
+                rotationControlMode,
+                AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS,
+                profiledRotationMaxVelocity);
     }
 
     public AutoAlign(
@@ -140,112 +112,24 @@ public class AutoAlign extends Command {
             Rotation2d entryAngle,
             CommandSwerveDrivetrain drivetrain,
             APProfile profile,
-            RotationControlMode rotationControlMode) {
-        this(new APTarget(targetPose).withEntryAngle(entryAngle), drivetrain, profile, rotationControlMode);
-    }
-
-    public AutoAlign(Pose2d targetPose, CommandSwerveDrivetrain drivetrain, APProfile profile) {
-        this(new APTarget(targetPose), drivetrain, profile);
-    }
-
-    public AutoAlign(
-            Pose2d targetPose,
-            CommandSwerveDrivetrain drivetrain,
-            APProfile profile,
-            RotationControlMode rotationControlMode) {
-        this(new APTarget(targetPose), drivetrain, profile, rotationControlMode);
-    }
-
-    /**
-     * Creates an AutoAlign command that cancels once the robot is within the given
-     * radius of the target pose.
-     *
-     * @param profile    APProfile to use for this alignment
-     * @param targetPose Pose2d to align to
-     * @param drivetrain Drivetrain subsystem
-     * @param distance   Distance from the target pose where the command should cancel
-     * @return AutoAlign command with a radius-based cancel condition
-     */
-    public static Command toPoseUntilWithinDistance(
-            APProfile profile,
-            Pose2d targetPose,
-            CommandSwerveDrivetrain drivetrain,
-            Distance distance) {
-        return new AutoAlign(targetPose, drivetrain, profile)
-                .until(TriggerUtil.isWithinRadius(
-                        () -> targetPose.getTranslation(),
-                        () -> drivetrain.state().Pose,
-                        () -> distance));
-    }
-
-    public static Command toPoseUntilWithinDistance(
-            APProfile profile,
-            Pose2d targetPose,
-            CommandSwerveDrivetrain drivetrain,
-            Distance distance,
-            RotationControlMode rotationControlMode) {
-        return new AutoAlign(targetPose, drivetrain, profile, rotationControlMode)
-                .until(TriggerUtil.isWithinRadius(
-                        () -> targetPose.getTranslation(),
-                        () -> drivetrain.state().Pose,
-                        () -> distance));
-    }
-
-    /**
-     * Creates an AutoAlign command that respects an entry angle and cancels once
-     * the robot is within the given radius of the target pose.
-     *
-     * @param profile    APProfile to use for this alignment
-     * @param targetPose Pose2d to align to
-     * @param entryAngle Entry angle to modify approach
-     * @param drivetrain Drivetrain subsystem
-     * @param distance   Distance from the target pose where the command should cancel
-     * @return AutoAlign command with an entry angle and radius-based cancel condition
-     */
-    public static Command toPoseUntilWithinDistance(
-            APProfile profile,
-            Pose2d targetPose,
-            Rotation2d entryAngle,
-            CommandSwerveDrivetrain drivetrain,
-            Distance distance) {
-        return new AutoAlign(targetPose, entryAngle, drivetrain, profile)
-                .until(TriggerUtil.isWithinRadius(
-                        () -> targetPose.getTranslation(),
-                        () -> drivetrain.state().Pose,
-                        () -> distance));
-    }
-
-    public static Command toPoseUntilWithinDistance(
-            APProfile profile,
-            Pose2d targetPose,
-            Rotation2d entryAngle,
-            CommandSwerveDrivetrain drivetrain,
-            Distance distance,
-            RotationControlMode rotationControlMode) {
-        return new AutoAlign(targetPose, entryAngle, drivetrain, profile, rotationControlMode)
-                .until(TriggerUtil.isWithinRadius(
-                        () -> targetPose.getTranslation(),
-                        () -> drivetrain.state().Pose,
-                        () -> distance));
-    }
-
-    /**
-     * Auto align constructor with full parameters
-     * 
-     * @param target     APTarget to align to
-     * @param drivetrain Drivetrain subsystem
-     * @param profile    APProfile to use for this alignment
-     */
-    public AutoAlign(APTarget target, CommandSwerveDrivetrain drivetrain, APProfile profile) {
-        this(target, drivetrain, profile, RotationControlMode.UNPROFILED_PID);
+            RotationControlMode rotationControlMode,
+            double profiledRotationMaxVelocity) {
+        this(
+                new APTarget(targetPose).withEntryAngle(entryAngle),
+                drivetrain,
+                profile,
+                rotationControlMode,
+                AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS,
+                profiledRotationMaxVelocity);
     }
 
     public AutoAlign(
             APTarget target,
             CommandSwerveDrivetrain drivetrain,
-            APProfile profile,
-            RotationControlMode rotationControlMode) {
-        this(target, drivetrain, profile, rotationControlMode, AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS);
+            APConstraints constraints,
+            RotationControlMode rotationControlMode,
+            double profiledRotationMaxVelocity) {
+        this(target, drivetrain, new APProfile(constraints), rotationControlMode, profiledRotationMaxVelocity);
     }
 
     public AutoAlign(
@@ -253,14 +137,32 @@ public class AutoAlign extends Command {
             CommandSwerveDrivetrain drivetrain,
             APProfile profile,
             RotationControlMode rotationControlMode,
-            PrimitiveRotationProfile.Constraints rotationConstraints) {
-        this.m_target = target;
-        this.m_drivetrain = drivetrain;
-        this.m_profile = profile;
-        this.m_rotationControlMode = rotationControlMode;
-        this.m_rotationConstraints = rotationConstraints;
-        this.m_rotationProfile = new PrimitiveRotationProfile(
+            double profiledRotationMaxVelocity) {
+        this(
+                target,
+                drivetrain,
+                profile,
+                rotationControlMode,
+                AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS,
+                profiledRotationMaxVelocity);
+    }
+
+    public AutoAlign(
+            APTarget target,
+            CommandSwerveDrivetrain drivetrain,
+            APProfile profile,
+            RotationControlMode rotationControlMode,
+            PrimitiveRotationProfile.Constraints rotationConstraints,
+            double profiledRotationMaxVelocity) {
+        m_target = target;
+        m_drivetrain = drivetrain;
+        m_profile = profile;
+        m_rotationControlMode = rotationControlMode;
+        m_rotationConstraints = rotationConstraints;
+        m_profiledRotationMaxVelocity = profiledRotationMaxVelocity;
+        m_rotationProfile = new PrimitiveRotationProfile(
                 rotationConstraints,
+                profiledRotationMaxVelocity,
                 AutoAlignConstants.ROTATION_PROFILE_PERIOD,
                 AutoAlignConstants.ROTATION_PROFILE_MAX_PERIOD);
 
@@ -269,12 +171,46 @@ public class AutoAlign extends Command {
         addRequirements(drivetrain);
     }
 
-    /**
-     * Creates a new AutoAlign with a modified version of the current profile
-     * Useful for runtime adjustments
-     * 
-     * @param profileModifier Function to modify the profile
-     */
+    public static Command toPoseUntilWithinDistance(
+            APProfile profile,
+            Pose2d targetPose,
+            CommandSwerveDrivetrain drivetrain,
+            Distance distance,
+            RotationControlMode rotationControlMode,
+            double profiledRotationMaxVelocity) {
+        return new AutoAlign(
+                targetPose,
+                drivetrain,
+                profile,
+                rotationControlMode,
+                profiledRotationMaxVelocity)
+                .until(TriggerUtil.isWithinRadius(
+                        () -> targetPose.getTranslation(),
+                        () -> drivetrain.state().Pose,
+                        () -> distance));
+    }
+
+    public static Command toPoseUntilWithinDistance(
+            APProfile profile,
+            Pose2d targetPose,
+            Rotation2d entryAngle,
+            CommandSwerveDrivetrain drivetrain,
+            Distance distance,
+            RotationControlMode rotationControlMode,
+            double profiledRotationMaxVelocity) {
+        return new AutoAlign(
+                targetPose,
+                entryAngle,
+                drivetrain,
+                profile,
+                rotationControlMode,
+                profiledRotationMaxVelocity)
+                .until(TriggerUtil.isWithinRadius(
+                        () -> targetPose.getTranslation(),
+                        () -> drivetrain.state().Pose,
+                        () -> distance));
+    }
+
     public AutoAlign withModifiedProfile(java.util.function.Function<APProfile, APProfile> profileModifier) {
         APProfile modifiedProfile = profileModifier.apply(m_profile);
         return new AutoAlign(
@@ -282,40 +218,30 @@ public class AutoAlign extends Command {
                 m_drivetrain,
                 modifiedProfile,
                 m_rotationControlMode,
-                m_rotationConstraints);
+                m_rotationConstraints,
+                m_profiledRotationMaxVelocity);
     }
 
-    public AutoAlign withVelocityLimitedRotation() {
-        return withRotationControlMode(RotationControlMode.VELOCITY_LIMITED_PROFILE);
-    }
-
-    public AutoAlign withVelocityLimitedRotation(PrimitiveRotationProfile.Constraints rotationConstraints) {
+    public AutoAlign withVelocityLimitedRotation(double profiledRotationMaxVelocity) {
         return new AutoAlign(
                 m_target,
                 m_drivetrain,
                 m_profile,
                 RotationControlMode.VELOCITY_LIMITED_PROFILE,
-                rotationConstraints);
+                m_rotationConstraints,
+                profiledRotationMaxVelocity);
     }
 
-    public AutoAlign withRotationControlMode(RotationControlMode rotationControlMode) {
-        return new AutoAlign(
-                m_target,
-                m_drivetrain,
-                m_profile,
-                rotationControlMode,
-                m_rotationConstraints);
-    }
-
-    /**
-     * Gets the current profile being used
-     */
     public APProfile getProfile() {
         return m_profile;
     }
 
     public RotationControlMode getRotationControlMode() {
         return m_rotationControlMode;
+    }
+
+    public double getProfiledRotationMaxVelocity() {
+        return m_profiledRotationMaxVelocity;
     }
 
     @Override
@@ -337,7 +263,13 @@ public class AutoAlign extends Command {
 
     protected void applyDriveRequest(APResult out) {
         if (m_rotationControlMode == RotationControlMode.VELOCITY_LIMITED_PROFILE) {
-            applyVelocityLimitedRotationRequest(out);
+            m_rotationProfile.update(out.targetAngle().getRadians(), swerveState.Timestamp);
+            m_drivetrain.setControl(m_request
+                    .withVelocityX(out.vx())
+                    .withVelocityY(out.vy())
+                    .withTargetDirection(Rotation2d.fromRadians(m_rotationProfile.positionRadians()))
+                    .withTargetRateFeedforward(m_rotationProfile.velocityRadiansPerSecond())
+                    .withMaxAbsRotationalRate(m_rotationProfile.maxVelocity()));
             return;
         }
 
@@ -347,17 +279,6 @@ public class AutoAlign extends Command {
                 .withTargetRateFeedforward(0)
                 .withMaxAbsRotationalRate(0)
                 .withTargetDirection(out.targetAngle()));
-    }
-
-    private void applyVelocityLimitedRotationRequest(APResult out) {
-        m_rotationProfile.update(out.targetAngle().getRadians(), swerveState.Timestamp);
-
-        m_drivetrain.setControl(m_request
-                .withVelocityX(out.vx())
-                .withVelocityY(out.vy())
-                .withTargetDirection(Rotation2d.fromRadians(m_rotationProfile.positionRadians()))
-                .withTargetRateFeedforward(m_rotationProfile.velocityRadiansPerSecond())
-                .withMaxAbsRotationalRate(m_rotationProfile.maxVelocity()));
     }
 
     @Override
@@ -372,5 +293,4 @@ public class AutoAlign extends Command {
     public boolean isFinished() {
         return kAutopilot.atTarget(m_drivetrain.getState().Pose, m_target);
     }
-
 }

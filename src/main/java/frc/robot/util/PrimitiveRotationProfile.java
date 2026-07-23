@@ -4,16 +4,15 @@ import edu.wpi.first.math.MathUtil;
 
 public class PrimitiveRotationProfile {
     public static class Constraints {
-        public final double maxVelocity;
         public final double maxAcceleration;
 
-        public Constraints(double maxVelocity, double maxAcceleration) {
-            this.maxVelocity = maxVelocity;
+        public Constraints(double maxAcceleration) {
             this.maxAcceleration = maxAcceleration;
         }
     }
 
     private final Constraints m_constraints;
+    private final double m_maxVelocity;
     private final double m_defaultDt;
     private final double m_maxDt;
 
@@ -21,19 +20,19 @@ public class PrimitiveRotationProfile {
     private double m_velocityRadiansPerSecond;
     private double m_lastTimestamp;
 
-    public PrimitiveRotationProfile(Constraints constraints, double defaultDt, double maxDt) {
+    public PrimitiveRotationProfile(Constraints constraints, double maxVelocity, double defaultDt, double maxDt) {
         m_constraints = constraints;
+        m_maxVelocity = Math.max(0, maxVelocity);
         m_defaultDt = defaultDt;
         m_maxDt = maxDt;
     }
 
     public void reset(double positionRadians, double velocityRadiansPerSecond, double timestamp) {
-        double maxVelocity = maxVelocity();
         m_positionRadians = positionRadians;
         m_velocityRadiansPerSecond = MathUtil.clamp(
                 velocityRadiansPerSecond,
-                -maxVelocity,
-                maxVelocity);
+                -m_maxVelocity,
+                m_maxVelocity);
         m_lastTimestamp = timestamp;
     }
 
@@ -50,8 +49,8 @@ public class PrimitiveRotationProfile {
                 + MathUtil.inputModulus(targetRadians - m_positionRadians, -Math.PI, Math.PI);
         double error = goalRadians - m_positionRadians;
         double desiredVelocity = calculateDesiredVelocity(error);
+        double maxAcceleration = Math.max(0, m_constraints.maxAcceleration);
 
-        double maxAcceleration = maxAcceleration();
         m_velocityRadiansPerSecond = MathUtil.clamp(
                 desiredVelocity,
                 m_velocityRadiansPerSecond - maxAcceleration * dt,
@@ -73,22 +72,17 @@ public class PrimitiveRotationProfile {
     }
 
     public double maxVelocity() {
-        return Math.max(0, m_constraints.maxVelocity);
-    }
-
-    private double maxAcceleration() {
-        return Math.max(0, m_constraints.maxAcceleration);
+        return m_maxVelocity;
     }
 
     private double calculateDesiredVelocity(double error) {
-        double maxVelocity = maxVelocity();
-        double maxAcceleration = maxAcceleration();
+        double maxAcceleration = Math.max(0, m_constraints.maxAcceleration);
 
-        if (Math.abs(error) <= 1e-6 || maxVelocity <= 0 || maxAcceleration <= 0) {
+        if (Math.abs(error) <= 1e-6 || m_maxVelocity <= 0 || maxAcceleration <= 0) {
             return 0;
         }
 
         double maxVelocityForStopping = Math.sqrt(2 * maxAcceleration * Math.abs(error));
-        return Math.copySign(Math.min(maxVelocity, maxVelocityForStopping), error);
+        return Math.copySign(Math.min(m_maxVelocity, maxVelocityForStopping), error);
     }
 }

@@ -19,12 +19,14 @@ import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.AutoAlign;
+import frc.robot.util.AutoAlignFixedHeading;
 
 public class Autos {
     // Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(11.0, 0.0, new Rotation2d(Degrees.of(70)));
+    private static final Rotation2d kAutoAlignFixedHeadingRotationTestHeading = Rotation2d.fromDegrees(90);
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -65,7 +67,9 @@ public class Autos {
                             AutoAlign.kDefaultVelocityLimitedProfile,
                             kAutoAlignTestTargetPose,
                             drivetrain,
-                            Meters.of(0.05)));
+                            Meters.of(0.05),
+                            AutoAlign.RotationControlMode.UNPROFILED_PID,
+                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_DEFAULT_VELOCITY));
                 }));
 
         autos.put("Test AutoAlign Profiled Rotation",
@@ -74,6 +78,16 @@ public class Autos {
                             kAutoAlignProfiledRotationTestTargetPose,
                             drivetrain,
                             AutoAlign.kDefaultVelocityLimitedProfile,
+                            AutoAlign.RotationControlMode.VELOCITY_LIMITED_PROFILE,
+                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
+                }));
+
+        autos.put("Test AutoAlign Fixed Heading 90",
+                () -> auto(kAutoAlignTestStartPose, c -> {
+                    c.addCommands(new AutoAlignFixedHeading(
+                            kAutoAlignTestStartPose,
+                            drivetrain,
+                            kAutoAlignFixedHeadingRotationTestHeading,
                             AutoAlign.RotationControlMode.VELOCITY_LIMITED_PROFILE));
                 }));
 
