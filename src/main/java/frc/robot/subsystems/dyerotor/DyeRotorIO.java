@@ -7,28 +7,26 @@ public interface DyeRotorIO {
   default void setSpinVelocity(double velocityRPM) {
   }
 
-  // default void setIndexVoltage(double volts) {
-  // }
-  default void setIndexVelocity(double velocityRPM) {
+  default void setIndexVoltage(double volts) {
   }
 
   default void stop() {
-    setSpinVelocity(0.0);
-    setIndexVelocity(0.0);
   }
 
   class DyeRotorInputs {
+    public double spinPositionRotations;
     public double spinVelocityRPM;
     public double spinAppliedVolts;
     public double spinStatorCurrentAmps;
     public double spinSupplyCurrentAmps;
-    public boolean spinMotorConnected;
+    public boolean spinMotorConnected = true;
 
+    public double indexPositionRotations;
     public double indexVelocityRPM;
     public double indexAppliedVolts;
     public double indexStatorCurrentAmps;
-    public double indexSupplyCurrentAmps; 
-    public boolean indexLeadMotorConnected;
-    public boolean indexFollowerMotorConnected;
+    public double indexSupplyCurrentAmps;
+    public boolean indexLeadMotorConnected = true;
+    public boolean indexFollowerMotorConnected = true;
   }
 }
