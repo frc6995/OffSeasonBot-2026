@@ -1,5 +1,8 @@
 package frc.robot.subsystems.turret;
 
+import java.util.ArrayList;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 
@@ -44,15 +47,20 @@ public class Turret extends SubsystemBase {
 
     public enum TurretState {
         DISABLED,
-        ACTIVE
+        AIM_CLOSEST,
+        AIM_CENTRAL
     }
 
     public Turret(TurretIO io) {
         this.io = io;
     }
 
-    public void activate() {
-        this.state = TurretState.ACTIVE;
+    public void aimClosest() {
+        state = TurretState.AIM_CLOSEST;
+    }
+
+    public void aimCentral() {
+        state = TurretState.AIM_CENTRAL;
     }
 
     public void disable() {
@@ -64,8 +72,9 @@ public class Turret extends SubsystemBase {
         switch (state) {
             case DISABLED -> io.disable();
 
-            //logic for requestedAngle should be handled somewhere else
-            case ACTIVE -> io.setAngle(requestedAngle);
+            // need to fix this because currently this will only command 0 degrees
+            case AIM_CENTRAL -> selectCentralAngle(requestedAngle);
+            case AIM_CLOSEST -> selectClosestAngle(requestedAngle);
         }
 
         io.updateInputs(inputs);
@@ -81,5 +90,43 @@ public class Turret extends SubsystemBase {
 
     public double getRequestedAngle() {
         return requestedAngle;
+    }
+
+    public void selectClosestAngle(double angle) {
+        double currentAngle = this.getAngle();
+
+        angle = MathUtil.inputModulus(angle, -180, 180);
+
+        ArrayList<Double> possibleAngles = new ArrayList<>(2);
+
+        possibleAngles.add(angle);
+
+        if (angle >= 0) {
+            possibleAngles.add(angle-360);
+        }
+
+        if (angle <= 0) {
+            possibleAngles.add(angle+360);
+        }
+
+        double smallestAngle = angle;
+        double smallestDifference = Math.abs(angle-currentAngle);
+
+        for (int i = 1; i < possibleAngles.size(); i++) {
+            double diff = Math.abs(possibleAngles.get(i)-currentAngle);
+
+            if (diff < smallestDifference) {
+                smallestDifference = diff;
+                smallestAngle = possibleAngles.get(i);
+            }
+        }
+
+        io.setAngle(smallestAngle);
+    }
+
+    public void selectCentralAngle(double angle) {
+        angle = MathUtil.inputModulus(angle, -180, 180);
+
+        io.setAngle(angle);
     }
 }
