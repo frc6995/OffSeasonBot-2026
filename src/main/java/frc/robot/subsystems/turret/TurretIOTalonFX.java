@@ -126,7 +126,7 @@ public class TurretIOTalonFX implements TurretIO {
     }
 
     protected double rotationsToAngle(double rotations) {
-        return rotations*(1/kReduction)*360;
+        return rotations*360;
     }
 
     @Override
