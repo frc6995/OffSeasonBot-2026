@@ -120,9 +120,8 @@ public class IntakeIOTalonFX implements IntakeIO {
         m_extensionLeadMotor.getConfigurator().apply(extensionConfig);
         m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
 
-        extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration);
-
-        extensionConfig.MotionMagic.withMotionMagicCruiseVelocity(IntakeConstants.velocity);
+        extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration)
+                                .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
 
         m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
