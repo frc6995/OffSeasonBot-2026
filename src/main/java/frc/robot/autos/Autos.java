@@ -1,5 +1,6 @@
 package frc.robot.autos;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
 import java.util.LinkedHashMap;
@@ -23,6 +24,8 @@ public class Autos {
     // Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
+    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(11.0, 0.0,
+            new Rotation2d(Degrees.of(70)));
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -34,7 +37,6 @@ public class Autos {
     private final Path directionTestPath = new Path("Direction_test");
     private final Path workshopTest1 = new Path("workshop-test-1");
     private final Path workshopTest2 = new Path("workshop-test-2");
-
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -67,6 +69,25 @@ public class Autos {
                             Meters.of(0.05)));
                 }));
 
+        autos.put("Test AutoAlign Profiled Rotation",
+                () -> auto(kAutoAlignTestStartPose, c -> {
+                    c.addCommands(new AutoAlign(
+                            kAutoAlignProfiledRotationTestTargetPose,
+                            drivetrain,
+                            AutoAlign.kDefaultVelocityLimitedProfile,
+                            AutoAlign.AutoAlignConstants.ROTATION_PROFILE_MAX_PERIOD));
+                }));
+
+        autos.put("Test AutoAlign Profiled Rotation Distance Cancel",
+                () -> auto(kAutoAlignTestStartPose, c -> {
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(
+                            AutoAlign.kDefaultVelocityLimitedProfile,
+                            kAutoAlignProfiledRotationTestTargetPose,
+                            drivetrain,
+                            Meters.of(5),
+                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
+                }));
+
         autos.put("BLINE_test",
                 () -> auto(c -> {
                     Command directionTestAuto = pathBuilder.build(directionTestPath);
@@ -80,7 +101,7 @@ public class Autos {
 
                     c.addCommands(workshopTest1Auto);
                 }));
-       autos.put("Workshop_test2",
+        autos.put("Workshop_test2",
                 () -> auto(c -> {
                     Command workshopTest2Auto = pathBuilder.build(workshopTest2);
 
