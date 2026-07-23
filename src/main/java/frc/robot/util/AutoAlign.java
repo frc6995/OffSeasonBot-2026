@@ -19,9 +19,18 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
+/**
+ * Drives the robot to an Autopilot target while controlling heading with either
+ * direct CTRE heading PID or a velocity-limited rotation profile.
+ */
 public class AutoAlign extends Command {
+    /**
+     * Selects how AutoAlign should generate the requested robot heading.
+     */
     public enum RotationControlMode {
+        /** Let the drivetrain heading PID move directly to the target angle. */
         UNPROFILED_PID,
+        /** Limit the heading setpoint velocity before sending it to the drivetrain PID. */
         VELOCITY_LIMITED_PROFILE
     }
 
@@ -31,7 +40,7 @@ public class AutoAlign extends Command {
         public static double DEFAULT_JERK = 6.0;
 
         public static double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI * 2; // rad/s
-                public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 5; // rad/s
+        public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 1; // rad/s
 
         public static double PROFILED_ROTATION_DEFAULT_ACCELERATION = 6 * Math.PI; // rad/s^2
         public static double ROTATION_PROFILE_PERIOD = 0.020; // seconds
@@ -46,7 +55,8 @@ public class AutoAlign extends Command {
                 DEFAULT_MAX_VELOCITY,
                 DEFAULT_ACCELERATION,
                 DEFAULT_JERK);
-        public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
+        public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY,
+                DEFAULT_ACCELERATION, 60);
         public static APConstraints DEFAULT_CONSTRAINTS = new APConstraints(DEFAULT_ACCELERATION, DEFAULT_JERK);
         public static PrimitiveRotationProfile.Constraints DEFAULT_ROTATION_CONSTRAINTS = new PrimitiveRotationProfile.Constraints(
                 PROFILED_ROTATION_DEFAULT_ACCELERATION);
@@ -92,17 +102,46 @@ public class AutoAlign extends Command {
 
     protected SwerveDriveState swerveState = new SwerveDriveState();
 
+    /**
+     * Creates an AutoAlign command with direct drivetrain heading PID.
+     *
+     * @param targetPose The desired field-relative target pose.
+     * @param drivetrain The drivetrain subsystem to command.
+     * @param profile    The Autopilot profile used for translation and completion
+     *                   tolerances.
+     */
+    public AutoAlign(
+            Pose2d targetPose,
+            CommandSwerveDrivetrain drivetrain,
+            APProfile profile) {
+        this(
+                new APTarget(targetPose),
+                drivetrain,
+                profile,
+                RotationControlMode.UNPROFILED_PID,
+                AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS,
+                AutoAlignConstants.PROFILED_ROTATION_DEFAULT_VELOCITY);
+    }
+
+    /**
+     * Creates an AutoAlign command with velocity-limited profiled rotation.
+     *
+     * @param targetPose                 The desired field-relative target pose.
+     * @param drivetrain                 The drivetrain subsystem to command.
+     * @param profile                    The Autopilot profile used for translation
+     *                                   and completion tolerances.
+     * @param profiledRotationMaxVelocity Max profiled heading velocity, in rad/s.
+     */
     public AutoAlign(
             Pose2d targetPose,
             CommandSwerveDrivetrain drivetrain,
             APProfile profile,
-            RotationControlMode rotationControlMode,
             double profiledRotationMaxVelocity) {
         this(
                 new APTarget(targetPose),
                 drivetrain,
                 profile,
-                rotationControlMode,
+                RotationControlMode.VELOCITY_LIMITED_PROFILE,
                 AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS,
                 profiledRotationMaxVelocity);
     }
@@ -171,23 +210,54 @@ public class AutoAlign extends Command {
         addRequirements(drivetrain);
     }
 
+    /**
+     * Creates an AutoAlign command with direct drivetrain heading PID that ends once
+     * the robot is within a distance of the target translation.
+     *
+     * @param profile    The Autopilot profile used for translation and completion
+     *                   tolerances.
+     * @param targetPose The desired field-relative target pose.
+     * @param drivetrain The drivetrain subsystem to command.
+     * @param distance   The distance from the target translation that ends the
+     *                   command.
+     * @return AutoAlign command decorated with the distance end condition.
+     */
+    public static Command toPoseUntilWithinDistance(
+            APProfile profile,
+            Pose2d targetPose,
+            CommandSwerveDrivetrain drivetrain,
+            Distance distance) {
+        return withDistanceCancel(
+                new AutoAlign(targetPose, drivetrain, profile),
+                targetPose,
+                drivetrain,
+                distance);
+    }
+
+    /**
+     * Creates an AutoAlign command with velocity-limited profiled rotation that ends
+     * once the robot is within a distance of the target translation.
+     *
+     * @param profile                    The Autopilot profile used for translation
+     *                                   and completion tolerances.
+     * @param targetPose                 The desired field-relative target pose.
+     * @param drivetrain                 The drivetrain subsystem to command.
+     * @param distance                   The distance from the target translation
+     *                                   that ends the command.
+     * @param profiledRotationMaxVelocity Max profiled heading velocity, in rad/s.
+     * @return AutoAlign command decorated with the distance end condition.
+     */
     public static Command toPoseUntilWithinDistance(
             APProfile profile,
             Pose2d targetPose,
             CommandSwerveDrivetrain drivetrain,
             Distance distance,
-            RotationControlMode rotationControlMode,
             double profiledRotationMaxVelocity) {
-        return new AutoAlign(
+        return withDistanceCancel(
+                new AutoAlign(targetPose, drivetrain, profile, profiledRotationMaxVelocity),
                 targetPose,
                 drivetrain,
-                profile,
-                rotationControlMode,
-                profiledRotationMaxVelocity)
-                .until(TriggerUtil.isWithinRadius(
-                        () -> targetPose.getTranslation(),
-                        () -> drivetrain.state().Pose,
-                        () -> distance));
+                distance);
     }
 
     public static Command toPoseUntilWithinDistance(
@@ -209,6 +279,17 @@ public class AutoAlign extends Command {
                         () -> targetPose.getTranslation(),
                         () -> drivetrain.state().Pose,
                         () -> distance));
+    }
+
+    private static Command withDistanceCancel(
+            AutoAlign autoAlign,
+            Pose2d targetPose,
+            CommandSwerveDrivetrain drivetrain,
+            Distance distance) {
+        return autoAlign.until(TriggerUtil.isWithinRadius(
+                () -> targetPose.getTranslation(),
+                () -> drivetrain.state().Pose,
+                () -> distance));
     }
 
     public AutoAlign withModifiedProfile(java.util.function.Function<APProfile, APProfile> profileModifier) {
