@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
@@ -22,7 +23,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
-public class TurretIOTalonFX implements TurretIO{
+public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
     protected final TalonFX m_turretMotor = new TalonFX(kCANID); 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
@@ -70,7 +71,7 @@ public class TurretIOTalonFX implements TurretIO{
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToRotations(angleToRotations(kMaxAngle)))
+                .withForwardSoftLimitThreshold(angleToRotations(kMaxAngle))
                 .withReverseSoftLimitEnable(true)
                 .withReverseSoftLimitThreshold(angleToRotations(kMinAngle));
 
@@ -78,6 +79,12 @@ public class TurretIOTalonFX implements TurretIO{
             new HardwareLimitSwitchConfigs()
                 .withForwardLimitEnable(false)
                 .withReverseLimitEnable(false);
+        
+        //Need to set these
+        config.MotionMagic = 
+            new MotionMagicConfigs()
+                .withMotionMagicAcceleration(0)
+                .withMotionMagicCruiseVelocity(0);
 
         //TODO replace this with CtreUtil reportIfNotOk
         m_turretMotor.getConfigurator().apply(config);
@@ -115,7 +122,7 @@ public class TurretIOTalonFX implements TurretIO{
     }
     
     protected double angleToRotations(double angle) {
-        return (angle/360)*(kReduction);
+        return (angle/360);
     }
 
     protected double rotationsToAngle(double rotations) {
@@ -124,7 +131,7 @@ public class TurretIOTalonFX implements TurretIO{
 
     @Override
     public void disable() {
-        this.setAngle(0);
+        m_turretMotor.set(0);
     }
     
 }

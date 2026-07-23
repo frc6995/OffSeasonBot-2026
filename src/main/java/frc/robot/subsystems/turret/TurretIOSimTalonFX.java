@@ -5,8 +5,9 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
-public class TurretIOSimTalonFX extends TurretIOTalonFX{
-    private final SingleJointedArmSim m_TurretSim = new SingleJointedArmSim(
+public class TurretIOSimTalonFX extends TurretIOTalonFX {
+
+  private final SingleJointedArmSim m_TurretSim = new SingleJointedArmSim(
         DCMotor.getKrakenX44(1), 
         Turret.TurretConstants.kReduction, 
         Turret.TurretConstants.kMOI, //Need MOI
@@ -16,7 +17,6 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX{
         false, 
         0, 
         null);
-
 
 
   public TurretIOSimTalonFX() {

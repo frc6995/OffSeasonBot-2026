@@ -3,7 +3,7 @@ package frc.robot.subsystems.turret;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 
-public class Turret extends SubsystemBase{
+public class Turret extends SubsystemBase {
 
     private TurretState state = TurretState.DISABLED;
     private double requestedAngle;
