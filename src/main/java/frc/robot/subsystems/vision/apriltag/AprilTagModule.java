@@ -141,8 +141,7 @@ public class AprilTagModule {
 
     // modified version of LL Helpers getPose method
     public Optional<AprilTagEstimate> getPose(boolean isMegaTag2) {
-        DoubleArrayEntry poseEntry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, isMegaTag2 ? "botpose_orb" : "botpose");
-        
+        DoubleArrayEntry poseEntry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, isMegaTag2 ? "botpose_orb_wpiblue" : "botpose_wpiblue");        
         TimestampedDoubleArray tsValue = poseEntry.getAtomic();
         double[] poseArray = tsValue.value;
         long timestamp = tsValue.timestamp;

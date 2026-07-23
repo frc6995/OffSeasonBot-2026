@@ -75,7 +75,7 @@ public class Autos {
                             kAutoAlignProfiledRotationTestTargetPose,
                             drivetrain,
                             AutoAlign.kDefaultVelocityLimitedProfile,
-                            AutoAlign.AutoAlignConstants.ROTATION_PROFILE_MAX_PERIOD));
+                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
                 }));
 
         autos.put("Test AutoAlign Profiled Rotation Distance Cancel",
