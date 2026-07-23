@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Flywheel;
+package frc.robot.subsystems.flywheel;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -18,7 +18,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.Flywheel.Flywheel.FlywheelConstants;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
 
@@ -28,44 +28,43 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   protected final TalonFX m_flywheelFollowMotor2 = new TalonFX(FlywheelConstants.kFollowMotor2CANID,FlywheelConstants.kHigherBus);
 
-  protected final TalonFX m_flywheelFollowMotor3 = new TalonFX(FlywheelConstants.kFollowMotor1CANID,FlywheelConstants.kHigherBus);
+  protected final TalonFX m_flywheelFollowMotor3 = new TalonFX(FlywheelConstants.kFollowMotor3CANID,FlywheelConstants.kHigherBus);
   
   protected VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
-
-  protected VoltageOut m_VoltageOut = new VoltageOut(0);
-
+  
   final StatusSignal<AngularVelocity> m_FlywheelVelocity = m_flywheelLeadMotor.getVelocity();
   final StatusSignal<Voltage> m_FlywheelVoltage = m_flywheelLeadMotor.getMotorVoltage();
   final StatusSignal<Current> m_FlywheelSupCurrent = m_flywheelLeadMotor.getSupplyCurrent();
   final StatusSignal<Current> m_FlywheelStatCurrent = m_flywheelLeadMotor.getStatorCurrent();
 
   protected void configureMotors() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput =
+    TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
+    flywheelConfig.MotorOutput =
         new MotorOutputConfigs()
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.CounterClockwise_Positive);
-    config.CurrentLimits =
+    flywheelConfig.CurrentLimits =
         new CurrentLimitsConfigs()
             .withStatorCurrentLimit(FlywheelConstants.kStatorCurrentLimit)
             .withStatorCurrentLimitEnable(true)
             .withSupplyCurrentLimit(FlywheelConstants.kSupplyCurrentLimit)
             .withSupplyCurrentLimitEnable(true);
-    config.Feedback =
+    flywheelConfig.Feedback =
         new FeedbackConfigs().withSensorToMechanismRatio(FlywheelConstants.kReduction);
           m_flywheelFollowMotor1.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Aligned));
           m_flywheelFollowMotor2.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
           m_flywheelFollowMotor3.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
-    config.Slot0 =
+    flywheelConfig.Slot0 =
         new Slot0Configs()
             .withKP(FlywheelConstants.kP)
             .withKS(FlywheelConstants.kS)
             .withKV(FlywheelConstants.kV);
-    config.Voltage = 
+    flywheelConfig.Voltage = 
         new VoltageConfigs()
           .withPeakForwardVoltage(FlywheelConstants.kNewMaxVoltage)
           .withPeakReverseVoltage(FlywheelConstants.kNewMinVoltage);
     // CtreUtil.reportIfNotOk("configure example", m_exMotor.getConfigurator().apply(config));
+     m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig);
   }
 
   @Override
@@ -85,7 +84,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocityRPM(double velocityRPM) {
-  m_flywheelLeadMotor.setControl(m_velocityRequest.withVelocity(velocityRPM));
+  m_flywheelLeadMotor.setControl(m_velocityRequest.withVelocity(velocityRPM/60));
   }
 
   @Override

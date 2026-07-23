@@ -1,8 +1,10 @@
-package frc.robot.subsystems.Flywheel;
+package frc.robot.subsystems.flywheel;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 // import frc.robot.util.CtreUtil;
+
 public class Flywheel extends SubsystemBase{
+  
   public static class FlywheelConstants {
     // PID Constants
     public static final double kP = 0.70;
@@ -15,7 +17,6 @@ public class Flywheel extends SubsystemBase{
     public static final int kFollowMotor2CANID = 42;
     public static final int kFollowMotor3CANID = 43;
     // Motor Config Constants
-    public static final boolean kInvertLeadMotor = true;
     public static final double kSupplyCurrentLimit = 40;
     public static final double kStatorCurrentLimit = 80;
     public static final double kNewMaxVoltage = 10;
@@ -76,20 +77,20 @@ public void setState(State state) {
    public boolean areMotorsConnected() {
     return inputs.leadMotorConnected
         && inputs.followerMotor1Connected 
-        && inputs.followerMotor1Connected 
-        && inputs.followerMotor1Connected;
+        && inputs.followerMotor2Connected 
+        && inputs.followerMotor3Connected;
   }
 
 @Override
 public void periodic() {
    
     io.updateInputs(inputs);
-    io.setVelocityRPM(ResolveTargetRPM(flywheelState));
+    io.setVelocityRPM(resolveTargetRPM(flywheelState));
 
 
 }
 //shoot is NOT 10000 rpm
-private static double ResolveTargetRPM(State state) {
+private static double resolveTargetRPM(State state) {
     return switch (state) {
       case DISABLED -> 0.0;
       case ACTIVE -> 10000;

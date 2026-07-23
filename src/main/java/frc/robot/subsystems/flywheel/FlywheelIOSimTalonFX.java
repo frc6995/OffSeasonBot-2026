@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Flywheel;
+package frc.robot.subsystems.flywheel;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -8,8 +8,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.Flywheel.Flywheel;
-import frc.robot.subsystems.Flywheel.Flywheel.FlywheelConstants;
+import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import edu.wpi.first.math.system.plant.DCMotor;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -61,9 +61,10 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX{
     inputs.appliedVolts = appliedVolts;
     inputs.statorCurrentAmps = flywheelState.getTorqueCurrent();
     inputs.supplyCurrentAmps = flywheelState.getSupplyCurrent();
-    inputs.leadMotorConnected = true;
+    inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
+    inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
+    inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();
+    inputs.followerMotor3Connected = m_flywheelFollowMotor3.isConnected();
 
   }
 }
-
-
