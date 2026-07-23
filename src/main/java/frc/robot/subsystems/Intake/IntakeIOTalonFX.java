@@ -16,27 +16,24 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 import frc.robot.subsystems.Intake.Intake.IntakeConstants;
 
 public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_rollerLeadMotor
-    = new TalonFX(Intake.IntakeConstants.kROLLER_LEAD_MOTOR_ID);
-   // = new TalonFX(IntakeConstants.kROLLER_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
+   = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
 
    protected final TalonFX m_rollerFollowerMotor 
-    = new TalonFX(Intake.IntakeConstants.kROLLER_FOLLOWER_MOTOR_ID);
+    = new TalonFX(Intake.IntakeConstants.kROLLER_FOLLOWER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
     protected final TalonFX m_extensionLeadMotor
-    = new TalonFX(Intake.IntakeConstants.kEXTENSION_LEAD_MOTOR_ID);
-    // = new TalonFX(IntakeConstants.kEXTENSION_LEAD_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
+    = new TalonFX(Intake.IntakeConstants.kEXTENSION_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
 
     protected final TalonFX m_extensionFollowerMotor
-    = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID);
-    // = new TalonFX(IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
+    = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
    protected final TalonFX m_kickerMotor
-    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID);
-   // = new TalonFX(IntakeConstants.kKICKER_MOTOR_ID, Constants.CanBuses.kUpperCANBus);
+    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
     private final VoltageOut m_rollerRequest = new VoltageOut(0);
     private final VoltageOut m_kickerRequest = new VoltageOut(0);
