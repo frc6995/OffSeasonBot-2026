@@ -35,7 +35,7 @@ public class AutoAlign extends Command {
         public static double DEFAULT_MAX_VELOCITY = 5.5; // physical max is 5.5 m/s^2
         public static double DEFAULT_ACCELERATION = 23; // Calculated from swerve slip current
         public static double DEFAULT_JERK = 6.0;
-        public static double DEFAULT_ROTATION_MAX_VELOCITY = Math.PI *2; // rad/s
+        public static double DEFAULT_ROTATION_MAX_VELOCITY = Math.PI * 1; // rad/s
         public static double DEFAULT_ROTATION_MAX_ACCELERATION = 6 * Math.PI; // rad/s^2
         public static double ROTATION_PROFILE_PERIOD = 0.020; // seconds
         public static double ROTATION_PROFILE_MAX_PERIOD = 0.060; // seconds
