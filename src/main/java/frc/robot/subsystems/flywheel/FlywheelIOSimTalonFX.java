@@ -30,9 +30,6 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX{
   private void configureSim() {
    
     configureKrakenSim(m_flywheelLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
-    configureKrakenSim(m_flywheelFollowMotor1.getSimState(), ChassisReference.CounterClockwise_Positive);
-    configureKrakenSim(m_flywheelFollowMotor2.getSimState(), ChassisReference.CounterClockwise_Positive);
-    configureKrakenSim(m_flywheelFollowMotor3.getSimState(), ChassisReference.CounterClockwise_Positive);
   }
 
  private static void configureKrakenSim(TalonFXSimState simState, ChassisReference orientation) {
