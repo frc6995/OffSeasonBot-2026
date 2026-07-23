@@ -1,10 +1,11 @@
 package frc.robot.subsystems.Intake;
 
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
 
-    public class IntakeConstants {
+    public static final class IntakeConstants {
     public static final int kKICKER_MOTOR_ID = 34;
     public static final int kROLLER_LEAD_MOTOR_ID = 30;
     public static final int kROLLER_FOLLOWER_MOTOR_ID = 31;
@@ -32,13 +33,16 @@ public class Intake extends SubsystemBase {
     public static final double kExtensionMaxMeters = 0.5;
     public static final double kExtensionMinMeters = 0.0;
 
-    public static final double kDrumCircumferenceMeters = 0.0;
+    public static final double kDrumCircumferenceMeters = 1.0;
 
-    public static final double kRollerForwardVolts = 50.0;
-    public static final double kKickerForwardVolts = 50.0;
+    public static final double kRollerForwardVolts = 12.0;
+    public static final double kKickerForwardVolts = 12.0;
 
     public static final double kRollerForwardVelocity = kRollerForwardVolts;
     public static final double kKickerForwardVelocity = kKickerForwardVolts;
+
+    public static final double acceleration = 5.0;
+    public static final double velocity = 5.0;
     }
 
     public enum IntakeState {

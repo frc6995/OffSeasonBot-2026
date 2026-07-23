@@ -111,6 +111,7 @@ public class IntakeIOTalonFX implements IntakeIO {
             new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
                 .withInverted(InvertedValue.Clockwise_Positive);
+
         extensionConfig.CurrentLimits =
             new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(IntakeConstants.kExtensionStatorCurrentLimit)
@@ -121,6 +122,10 @@ public class IntakeIOTalonFX implements IntakeIO {
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kExtensionReduction);
         m_extensionLeadMotor.getConfigurator().apply(extensionConfig);
         m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
+
+        extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration);
+
+        extensionConfig.MotionMagic.withMotionMagicCruiseVelocity(IntakeConstants.velocity);
 
         m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
@@ -178,7 +183,8 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     @Override
     public void setExtensionPosition(double positionMeters) {
-        m_extensionLeadMotor.setControl(m_extensionRequest.withPosition(positionMeters));
+        m_extensionLeadMotor.setControl(m_extensionRequest
+        .withPosition(metersToMechanismRotations(positionMeters)));
     }
 
     @Override
@@ -187,6 +193,8 @@ public class IntakeIOTalonFX implements IntakeIO {
         m_extensionFollowerMotor.setPosition(0.0);
     }
 
+
+    //not used??
     protected static double metersToMechanismRotations(double meters) {
         return meters / IntakeConstants.kDrumCircumferenceMeters;
     }
