@@ -22,9 +22,11 @@ import frc.robot.util.AutoAlign;
 
 public class Autos {
     // Just for testing AutoAlign
-    private static final Pose2d kAutoAlignTestStartPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
-    private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(4.0, 0.0, Rotation2d.kZero);
-    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(11.0, 0.0,
+    private static final Pose2d kAutoAlignTestStartPose = new Pose2d(13.7499, 4.0386, Rotation2d.kZero);
+    private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(15.941938400268555, 4.038633823394775,
+            Rotation2d.kZero);
+    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(15.941938400268555,
+            4.038633823394775,
             new Rotation2d(Degrees.of(70)));
 
     private final CommandSwerveDrivetrain drivetrain;
@@ -48,7 +50,7 @@ public class Autos {
                 drivetrain::drive, // Consumer<ChassisSpeeds> (robot-relative)
                 new PIDController(5.0, 0.0, 0.0), // translation — minimizes remaining distance
                 new PIDController(7.0, 0.0, 0.0), // rotation — minimizes heading error
-                new PIDController(0.5, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
+                new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
                 .withDefaultShouldFlip() // auto-flip when on the red alliance
                 .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
@@ -59,14 +61,13 @@ public class Autos {
     // ============= AUTO REGISTRATION =============
 
     private void registerAutos() {
-        autos.put("Test AutoAlign Distance Cancel",
+        autos.put("Test AutoAlign Basic",
                 // In actual use, this pose will need to be flipped
                 () -> auto(kAutoAlignTestStartPose, c -> {
-                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(
-                            AutoAlign.kDefaultVelocityLimitedProfile,
+                    c.addCommands(new AutoAlign(
                             kAutoAlignTestTargetPose,
                             drivetrain,
-                            Meters.of(0.05)));
+                            AutoAlign.kDefaultVelocityLimitedProfile));
                 }));
 
         autos.put("Test AutoAlign Profiled Rotation",
@@ -84,24 +85,24 @@ public class Autos {
                             AutoAlign.kDefaultVelocityLimitedProfile,
                             kAutoAlignProfiledRotationTestTargetPose,
                             drivetrain,
-                            Meters.of(5),
+                            Meters.of(0.5),
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
                 }));
 
-        autos.put("BLINE_test",
-                () -> auto(c -> {
-                    Command directionTestAuto = pathBuilder.build(directionTestPath);
+        // autos.put("BLINE_test",
+        //         () -> auto(c -> {
+        //             Command directionTestAuto = pathBuilder.build(directionTestPath);
 
-                    c.addCommands(directionTestAuto);
-                }));
+        //             c.addCommands(directionTestAuto);
+        //         }));
 
-        autos.put("Workshop_test1",
+        autos.put("Bline_Workshop_test1",
                 () -> auto(c -> {
                     Command workshopTest1Auto = pathBuilder.build(workshopTest1);
 
                     c.addCommands(workshopTest1Auto);
                 }));
-        autos.put("Workshop_test2",
+        autos.put("Bline_Workshop_test2",
                 () -> auto(c -> {
                     Command workshopTest2Auto = pathBuilder.build(workshopTest2);
 

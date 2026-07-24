@@ -41,7 +41,7 @@ public class AutoAlign extends Command {
         public static double DEFAULT_JERK = 6.0;
 
         public static double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI * 2; // rad/s
-        public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 1; // rad/s
+        public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 0.5; // rad/s
 
         public static double PROFILED_ROTATION_DEFAULT_ACCELERATION = 6 * Math.PI; // rad/s^2
         public static double ROTATION_PROFILE_PERIOD = 0.020; // seconds
