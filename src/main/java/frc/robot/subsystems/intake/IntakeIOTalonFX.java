@@ -98,8 +98,10 @@ public class IntakeIOTalonFX implements IntakeIO {
                 .withSupplyCurrentLimitEnable(true);
         rollerConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kRollerReduction);
-            m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+    
         m_rollerLeadMotor.getConfigurator().apply(rollerConfig);
+        m_rollerFollowerMotor.getConfigurator().apply(rollerConfig);
+        m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         
     }
 
@@ -118,15 +120,18 @@ public class IntakeIOTalonFX implements IntakeIO {
                 .withSupplyCurrentLimitEnable(true);
         extensionConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kExtensionReduction);
-            m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+           
 
         extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration)
              .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
-        m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
 
         extensionConfig.Slot0
         .withKP(IntakeConstants.kExtensionP)
         .withKV(IntakeConstants.kExtensionV);
+
+        m_extensionLeadMotor.getConfigurator().apply(extensionConfig);
+        m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
+        m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     @Override

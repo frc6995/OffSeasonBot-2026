@@ -54,7 +54,9 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
 
     private void configureSim() {
         configureKrakenSim(m_rollerLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
+        configureKrakenSim(m_rollerFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
         configureKrakenSim(m_extensionLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
+        configureKrakenSim(m_extensionFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
         configureKrakenSim(m_kickerMotor.getSimState(), ChassisReference.Clockwise_Positive);
     }
 
@@ -66,12 +68,16 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     @Override
     public void updateInputs(IntakeInputs inputs) {
         TalonFXSimState rollerState = m_rollerLeadMotor.getSimState();
+        TalonFXSimState followerRollerState = m_rollerFollowerMotor.getSimState();
         TalonFXSimState extensionState = m_extensionLeadMotor.getSimState();
+        TalonFXSimState followerExtensionState = m_extensionFollowerMotor.getSimState();
         TalonFXSimState kickerState = m_kickerMotor.getSimState();
 
         double batteryVoltage = RobotController.getBatteryVoltage();
         rollerState.setSupplyVoltage(batteryVoltage);
+        followerRollerState.setSupplyVoltage(batteryVoltage);
         extensionState.setSupplyVoltage(batteryVoltage);
+        followerExtensionState.setSupplyVoltage(batteryVoltage);
         kickerState.setSupplyVoltage(batteryVoltage);
 
         double rollerAppliedVolts = rollerState.getMotorVoltageMeasure().baseUnitMagnitude();

@@ -81,7 +81,7 @@ public class RobotContainer {
         //     point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         // ));
 
-        joystick.rightTrigger().onTrue(m_superStructure.requestIntakeDeployed());
+        joystick.rightTrigger().whileTrue(m_superStructure.requestIntakeAgitating());
         joystick.rightTrigger().onFalse(m_superStructure.requestIntakeIdle());
         // joystick.rightTrigger().onTrue(m_superStructure.requestRobotIdle());
 
