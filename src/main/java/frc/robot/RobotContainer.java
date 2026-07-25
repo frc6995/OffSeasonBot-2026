@@ -11,11 +11,15 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.dyerotor.DyeRotor;
+import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.util.Telemetry;
 
 public class RobotContainer {
@@ -23,6 +27,8 @@ public class RobotContainer {
                                                                                         // speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
+    
+    private DyeRotor dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -64,6 +70,18 @@ public class RobotContainer {
                                                                                     // negative X (left)
                 ));
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        joystick.a().onTrue(Commands.runOnce(() -> dyeRotor.setIndexState(DyeRotorState.SPIN))
+        .andThen(Commands.runOnce(() -> System.out.println("spin indexer"))));
+
+        joystick.b().onTrue(Commands.runOnce(() -> dyeRotor.setSpinState(DyeRotorState.SPIN))
+        .andThen(Commands.runOnce(() -> System.out.println("spin spin"))));
+
+        joystick.x().onTrue(Commands.runOnce(() -> {
+            dyeRotor.setSpinState(DyeRotorState.IDLE);
+            dyeRotor.setIndexState(DyeRotorState.IDLE);
+        })
+        .andThen(Commands.runOnce(() -> System.out.println("idling everything"))));
     }
 
     public Command getAutonomousCommand() {
