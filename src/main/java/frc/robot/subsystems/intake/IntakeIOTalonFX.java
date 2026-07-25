@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Intake;
+package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -17,7 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.subsystems.Intake.Intake.IntakeConstants;
+import frc.robot.subsystems.intake.Intake.IntakeConstants;
 
 public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_rollerLeadMotor

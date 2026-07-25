@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Flywheel;
+package frc.robot.subsystems.flywheel;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 // import frc.robot.util.CtreUtil;

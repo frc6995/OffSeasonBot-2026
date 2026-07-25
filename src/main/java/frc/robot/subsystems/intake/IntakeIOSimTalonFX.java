@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Intake;
+package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -8,7 +8,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.Intake.Intake.IntakeConstants;
+import frc.robot.subsystems.intake.Intake.IntakeConstants;
 
 public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     private static final double kSimLoopPeriodSeconds = 0.02;

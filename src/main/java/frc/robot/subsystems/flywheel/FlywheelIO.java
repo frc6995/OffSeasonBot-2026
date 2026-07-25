@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Flywheel;
+package frc.robot.subsystems.flywheel;
 
 
 public interface FlywheelIO{

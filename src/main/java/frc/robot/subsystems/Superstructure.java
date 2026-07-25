@@ -8,22 +8,22 @@ import frc.robot.subsystems.dyerotor.DyeRotor;
 import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotorIOTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
-import frc.robot.subsystems.Flywheel.Flywheel;
-import frc.robot.subsystems.Flywheel.FlywheelIOSimTalonFX;
-import frc.robot.subsystems.Flywheel.FlywheelIOTalonFX;
-import frc.robot.subsystems.Flywheel.Flywheel.FlywheelState;
+import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
+import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
-import frc.robot.subsystems.Intake.Intake;
-import frc.robot.subsystems.Intake.IntakeIOSimTalonFX;
-import frc.robot.subsystems.Intake.IntakeIOTalonFX;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOSimTalonFX;
+import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
-import frc.robot.subsystems.Intake.Intake.IntakeState;
+import frc.robot.subsystems.intake.Intake.IntakeState;
 
 public class Superstructure extends SubsystemBase {
 

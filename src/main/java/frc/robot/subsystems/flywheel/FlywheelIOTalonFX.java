@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Flywheel;
+package frc.robot.subsystems.flywheel;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -17,7 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.Flywheel.Flywheel.FlywheelConstants;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.Constants.CANBuses;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
