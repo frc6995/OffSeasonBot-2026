@@ -11,6 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
@@ -67,6 +68,32 @@ public class RobotContainer {
                                                                                     // negative X (left)
                 ));
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        configureSuperstructureBindings();
+    }
+
+    /**
+     * Operator bindings for the superstructure. Before this existed, every
+     * {@code Superstructure.request*} method was unreachable from the controller and
+     * all five mechanisms sat in their initial state forever (K-6).
+     *
+     * <p>This mapping is a starting point, not a drive-team decision — change it
+     * freely.
+     */
+    private void configureSuperstructureBindings() {
+        // Robot-level states.
+        joystick.a().onTrue(superstructure.requestRobotScoring());
+        joystick.b().onTrue(superstructure.requestRobotPassing());
+        joystick.y().onTrue(superstructure.requestRobotIdle());
+
+        // Intake: hold to deploy and run, release to retract.
+        joystick.leftBumper()
+                .onTrue(Commands.runOnce(superstructure::requestIntakeDeployed))
+                .onFalse(Commands.runOnce(superstructure::requestIntakeRetracted));
+
+        // Anti-jam. Currently a no-op until K-9 is implemented.
+        joystick.x().onTrue(Commands.runOnce(superstructure::requestIntakeAgitating))
+                .onFalse(Commands.runOnce(superstructure::requestIntakeIdle));
     }
 
     public Command getAutonomousCommand() {

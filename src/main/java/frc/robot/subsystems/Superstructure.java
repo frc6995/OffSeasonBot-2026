@@ -77,12 +77,24 @@ public class Superstructure extends SubsystemBase {
 
     }
 
+    /**
+     * PLACEHOLDER hood setpoints. These are not characterised — they exist so the
+     * hood is commanded at all rather than sitting in DISABLED. Replace with a
+     * distance-indexed table once the shot is measured.
+     * See K-2 and K-4 in {@code 08-operations/known-issues.md}.
+     */
+    private static final double kScoringHoodAngleDeg = 35.0;
+
+    private static final double kPassingHoodAngleDeg = 15.0;
+
     public Command requestRobotIdle() {
 
         return Commands.runOnce(() -> {
             robotState = RobotState.IDLE;
             m_dyeRotor.setState(DyeRotorState.SPIN_BACKWARDS);
             m_turret.setState(TurretState.DISABLED);
+            m_flywheel.setState(FlywheelState.DISABLED);
+            m_hood.setState(HoodState.DISABLED);
         });
     }
 
@@ -93,6 +105,7 @@ public class Superstructure extends SubsystemBase {
             m_dyeRotor.setState(DyeRotorState.SPIN);
             m_turret.setState(TurretState.ACTIVE);
             m_flywheel.setState(FlywheelState.ACTIVE);
+            m_hood.setAngle(kScoringHoodAngleDeg);
         });
     }
 
@@ -102,6 +115,11 @@ public class Superstructure extends SubsystemBase {
             m_flywheel.setState(FlywheelState.ACTIVE);
             m_dyeRotor.setState(DyeRotorState.SPIN);
             m_turret.setState(TurretState.ACTIVE);
+            m_hood.setAngle(kPassingHoodAngleDeg);
         });
+    }
+
+    public RobotState getRobotState() {
+        return robotState;
     }
 }
