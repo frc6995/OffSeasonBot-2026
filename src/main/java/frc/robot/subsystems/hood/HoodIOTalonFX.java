@@ -19,6 +19,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.subsystems.hood.Hood.HoodConstants;
 
 public class HoodIOTalonFX implements HoodIO{   
 
@@ -49,8 +50,8 @@ public class HoodIOTalonFX implements HoodIO{
                 .withSupplyCurrentLimit(Hood.HoodConstants.kSupplyCurrentLimitAmps)
                 .withSupplyCurrentLimitEnable(true);
         
-        config.Feedback = 
-            new FeedbackConfigs().withSensorToMechanismRatio(Hood.HoodConstants.kReduction);
+        // config.Feedback = 
+        //     new FeedbackConfigs().withSensorToMechanismRatio(Hood.HoodConstants.kReduction);
 
         config.Slot0 = 
             new Slot0Configs()
@@ -112,11 +113,11 @@ public class HoodIOTalonFX implements HoodIO{
      */
 
     protected double angleToRotations(double angle) {
-        return (angle/360.0);
+        return (angle/360.0)*HoodConstants.kReduction;
     }
 
     protected double rotationsToAngle(double rotations) {
-        return rotations*360;
+        return rotations*(1/HoodConstants.kReduction)*360;
     }
 
     @Override
