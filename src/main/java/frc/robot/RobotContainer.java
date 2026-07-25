@@ -12,11 +12,16 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIOSimTalonFX;
+import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.util.Telemetry;
@@ -46,6 +51,8 @@ public class RobotContainer {
 
     public final Autos autos = new Autos(drivetrain);
 
+    public final Hood hood = new Hood(new HoodIOSimTalonFX());
+
     public final Turret turret = new Turret(new TurretIOSimTalonFX());
 
     public RobotContainer() {
@@ -70,14 +77,16 @@ public class RobotContainer {
                 ));
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        joystick.a().onTrue(Commands.runOnce(() -> turret.setAngle(180))
-        .andThen(Commands.runOnce(() -> System.out.println("going to 180 deg"))));
+        joystick.b().onTrue(Commands.runOnce(() -> hood.setAngle(15))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 15 degrees"))));
 
-        joystick.b().onTrue(Commands.runOnce(() -> turret.setAngle(90))
-        .andThen(Commands.runOnce(() -> System.out.println("going to 90 deg"))));
+        joystick.a().onTrue(Commands.runOnce(() -> hood.setAngle(0))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 0 degrees"))));
+        
+        joystick.x().onTrue(Commands.runOnce(() -> hood.setState(HoodState.DISABLED))
+        .andThen(Commands.runOnce(() -> System.out.println("disabling"))));
 
-        joystick.x().onTrue(Commands.runOnce(() -> turret.setAngle(0))
-        .andThen(Commands.runOnce(() -> System.out.println("going to 0 deg"))));
+
     }
 
     public Command getAutonomousCommand() {

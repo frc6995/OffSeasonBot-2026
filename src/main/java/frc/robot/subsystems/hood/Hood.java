@@ -18,10 +18,10 @@ public class Hood extends SubsystemBase{
         public static int kCANID = 44; //Should be right with doc
 
         //Tune PID/FF constants
-        public static final double kP = 0;
+        public static final double kP = 2; //Double check this
         public static final double kD = 0;
         public static final double kS = 0;
-        public static final double kV = 0;
+        public static final double kV = 0.1;
         public static final double kG = 0;
 
         public static final double kSimP = 0;
@@ -62,7 +62,7 @@ public class Hood extends SubsystemBase{
         switch(hoodState) {
             case DISABLED:
                 io.disable();
-                return;
+                break;
             case ACTIVE:
 
                 double clampedAngle = applyLimits(requestedAngle);
@@ -85,8 +85,8 @@ public class Hood extends SubsystemBase{
     }
 
     public void setState(HoodState state) {
-  hoodState = state;
-  }
+        hoodState = state;
+    }
 
     public double getAngle() {
         return hoodIOInputs.angle;
