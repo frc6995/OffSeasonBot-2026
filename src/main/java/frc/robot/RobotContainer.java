@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Superstructure;
 import frc.robot.util.Telemetry;
 
 public class RobotContainer {
@@ -41,6 +42,8 @@ public class RobotContainer {
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
 
+    public final Superstructure superstructure = new Superstructure();
+
     public final Autos autos = new Autos(drivetrain);
 
     public RobotContainer() {
@@ -48,7 +51,7 @@ public class RobotContainer {
 
         configureBindings();
         SignalLogger.enableAutoLogging(false);
-
+        RobotVisualizer.setupVisualizer();
     }
 
     private void configureBindings() {
@@ -67,7 +70,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-
         return autos.selectedCommand();
     }
 }

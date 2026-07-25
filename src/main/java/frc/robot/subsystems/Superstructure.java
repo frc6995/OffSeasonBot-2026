@@ -33,22 +33,21 @@ public class Superstructure extends SubsystemBase {
         SCORING
     }
 
-    public Intake m_intake;
-    public Hood m_hood;
-    public Flywheel m_flywheel;
-    public Turret m_turret;
-    public DyeRotor m_dyeRotor;
+    public final Intake m_intake;
+    public final Hood m_hood;
+    public final Flywheel m_flywheel;
+    public final Turret m_turret;
+    public final DyeRotor m_dyeRotor;
 
     RobotState robotState = RobotState.IDLE;
 
-    public Superstructure(Intake m_intake, Hood m_hood, Flywheel m_flywheel, Turret m_turret, DyeRotor m_dyeRotor) {
+    public Superstructure() {
         if (Robot.isSimulation()) {
             m_intake = new Intake(new IntakeIOSimTalonFX());
             m_hood = new Hood(new HoodIOSimTalonFX());
             m_flywheel = new Flywheel(new FlywheelIOSimTalonFX());
             m_turret = new Turret(new TurretIOSimTalonFX());
             m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
-
         } else {
             m_intake = new Intake(new IntakeIOTalonFX());
             m_hood = new Hood(new HoodIOTalonFX());
@@ -56,7 +55,6 @@ public class Superstructure extends SubsystemBase {
             m_turret = new Turret(new TurretIOTalonFX());
             m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
-
     }
 
     public void requestIntakeDeployed() {

@@ -17,29 +17,26 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     private static final double kExtensionCarriageMassKg = 2.0;
     private static final double kExtensionDrumRadiusMeters = 0.019;
 
-    private final FlywheelSim rollerSim =
-        new FlywheelSim(
+    private final FlywheelSim rollerSim = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getKrakenX60(2),
-                kRollerMOI,
-                IntakeConstants.kRollerReduction),
+                    DCMotor.getKrakenX60(2),
+                    kRollerMOI,
+                    IntakeConstants.kRollerReduction),
             DCMotor.getKrakenX60(2));
 
-    private final FlywheelSim kickerSim =
-        new FlywheelSim(
+    private final FlywheelSim kickerSim = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
-                DCMotor.getKrakenX60(1),
-                kKickerMOI,
-                IntakeConstants.kKickerReduction),
+                    DCMotor.getKrakenX60(1),
+                    kKickerMOI,
+                    IntakeConstants.kKickerReduction),
             DCMotor.getKrakenX60(1));
 
-    private final ElevatorSim extensionSim =
-        new ElevatorSim(
+    private final ElevatorSim extensionSim = new ElevatorSim(
             LinearSystemId.createElevatorSystem(
-                DCMotor.getKrakenX60(2),
-                kExtensionCarriageMassKg,
-                kExtensionDrumRadiusMeters,
-                IntakeConstants.kExtensionReduction),
+                    DCMotor.getKrakenX60(2),
+                    kExtensionCarriageMassKg,
+                    kExtensionDrumRadiusMeters,
+                    IntakeConstants.kExtensionReduction),
             DCMotor.getKrakenX60(2),
             IntakeConstants.kExtensionMinMeters,
             IntakeConstants.kExtensionMaxMeters,
@@ -122,6 +119,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
 
     private static double simMetersToMotorRotations(double meters) {
         return meters / (2.0 * Math.PI * kExtensionDrumRadiusMeters)
-            * IntakeConstants.kExtensionReduction;
+                * IntakeConstants.kExtensionReduction;
     }
 }

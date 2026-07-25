@@ -116,6 +116,7 @@ public class DyeRotor extends SubsystemBase {
       case SPIN_BACKWARDS -> -DyeRotorConstants.kSpinBackwardRPM;
     };
   }
+
   private static double resolveIndexTargetRPM(DyeRotorState state) {
     return switch (state) {
       case IDLE -> 0.0;

@@ -1,4 +1,5 @@
 package frc.robot.subsystems.turret;
+
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -8,16 +9,14 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 public class TurretIOSimTalonFX extends TurretIOTalonFX {
 
   private final SingleJointedArmSim m_TurretSim = new SingleJointedArmSim(
-        DCMotor.getKrakenX44(1), 
-        Turret.TurretConstants.kReduction, 
-        Turret.TurretConstants.kMOI, //Need MOI
-        Turret.TurretConstants.kLength, 
-        Math.toRadians(Turret.TurretConstants.kMinAngle), 
-        Math.toRadians(Turret.TurretConstants.kMaxAngle), 
-        false, 
-        0, 
-        null);
-
+      DCMotor.getKrakenX44(1),
+      Turret.TurretConstants.kReduction,
+      Turret.TurretConstants.kMOI, // Need MOI
+      Turret.TurretConstants.kLength,
+      Math.toRadians(Turret.TurretConstants.kMinAngle),
+      Math.toRadians(Turret.TurretConstants.kMaxAngle),
+      false,
+      0);
 
   public TurretIOSimTalonFX() {
     super();
@@ -45,7 +44,7 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
     simState.setRawRotorPosition(angleToRotations(turretPosition));
 
     inputs.angle = turretPosition;
-    inputs.appliedVolts =  appliedVolts;
+    inputs.appliedVolts = appliedVolts;
     inputs.supplyCurrent = simState.getSupplyCurrent();
     inputs.statorCurrent = simState.getTorqueCurrent();
 
