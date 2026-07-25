@@ -1,5 +1,9 @@
 package frc.robot.subsystems.flywheel;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotVisualizer;
 
 // import frc.robot.util.CtreUtil;
 
@@ -37,6 +41,7 @@ public class Flywheel extends SubsystemBase{
 
   public Flywheel(FlywheelIO io) {
     this.io = io;
+
   }
 
   private final FlywheelIO io;
@@ -48,6 +53,7 @@ public class Flywheel extends SubsystemBase{
     
     ACTIVE
   }
+
 
 private FlywheelState flywheelState = FlywheelState.DISABLED;
 

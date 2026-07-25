@@ -1,7 +1,12 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularAcceleration;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotVisualizer;
 
 public class Intake extends SubsystemBase {
 
@@ -55,14 +60,19 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIO.IntakeInputs inputs = new IntakeIO.IntakeInputs();
 
+    private final MechanismLigament2d intakeLigament = new MechanismLigament2d("intake", Units.inchesToMeters(8), 10.854, 6,
+            new Color8Bit(52, 235, 137));
+            
     private IntakeState intakeState = IntakeState.IDLE;
 
     public Intake() {
-    this(new IntakeIO() {});
+        this(new IntakeIO() {});
     }
 
     public Intake(IntakeIO io) {
-    this.io = io;
+        this.io = io;
+        RobotVisualizer.addIntake(intakeLigament);
+
     }
 
     public void stop() {
@@ -151,6 +161,11 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic() {
     io.updateInputs(inputs);
+
+    double retractedLengthMeters = Units.inchesToMeters(8.0);
+    double extensionMeters = inputs.extensionPositionMeters;
+
+    intakeLigament.setLength(retractedLengthMeters + extensionMeters);
 
     io.setKickerVoltage(resolveKickerTargetVoltage(intakeState));
     io.setRollerVoltage(resolveRollerTargetVoltage(intakeState));

@@ -62,6 +62,7 @@ public class Hood extends SubsystemBase {
         this.io = io;
         RobotVisualizer.addHood(hoodLigament);
     }
+    
 
     @Override
     public void periodic() {

@@ -99,6 +99,7 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.rollerLeadMotorConnected = true;
         inputs.rollerFollowerMotorConnected = true;
 
+        inputs.extensionPositionMeters = extensionPositionMeters;
         inputs.extensionAppliedVolts = extensionAppliedVolts;
         inputs.extensionStatorCurrentAmps = extensionState.getTorqueCurrent();
         inputs.extensionSupplyCurrentAmps = extensionState.getSupplyCurrent();

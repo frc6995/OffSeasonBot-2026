@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
@@ -46,6 +47,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Current> m_rollerSupplyCurrent = m_rollerLeadMotor.getSupplyCurrent();
     private final StatusSignal<Voltage> m_rollerFollowerAppliedVoltage = m_rollerFollowerMotor.getMotorVoltage();
 
+    private final StatusSignal<Angle> m_extensionPosition = m_extensionLeadMotor.getPosition();
     private final StatusSignal<Voltage> m_extensionAppliedVoltage = m_extensionLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_extensionStatorCurrent = m_extensionLeadMotor.getStatorCurrent();
     private final StatusSignal<Current> m_extensionSupplyCurrent = m_extensionLeadMotor.getSupplyCurrent();
@@ -140,6 +142,7 @@ public class IntakeIOTalonFX implements IntakeIO {
 
         inputs.extensionLeadMotorConnected =
             BaseStatusSignal.refreshAll(
+                m_extensionPosition,
                 m_extensionAppliedVoltage,
                 m_extensionStatorCurrent,
                 m_extensionSupplyCurrent)
@@ -147,6 +150,8 @@ public class IntakeIOTalonFX implements IntakeIO {
         inputs.extensionFollowerMotorConnected =
             BaseStatusSignal.refreshAll(m_extensionFollowerAppliedVoltage).isOK();
 
+        
+            
         inputs.kickerMotorConnected =
             BaseStatusSignal.refreshAll(
                 m_kickerAppliedVoltage,
@@ -158,6 +163,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         inputs.rollerStatorCurrentAmps = m_rollerStatorCurrent.getValueAsDouble();
         inputs.rollerSupplyCurrentAmps = m_rollerSupplyCurrent.getValueAsDouble();
         
+        inputs.extensionPositionMeters = mechanismRotationsToMeters(m_extensionPosition.getValueAsDouble());
         inputs.extensionAppliedVolts = m_extensionAppliedVoltage.getValueAsDouble();
         inputs.extensionStatorCurrentAmps = m_extensionStatorCurrent.getValueAsDouble();
         inputs.extensionSupplyCurrentAmps = m_extensionSupplyCurrent.getValueAsDouble();
@@ -181,6 +187,10 @@ public class IntakeIOTalonFX implements IntakeIO {
     public void setExtensionPosition(double positionMeters) {
         m_extensionLeadMotor.setControl(m_extensionRequest
         .withPosition(metersToMechanismRotations(positionMeters)));
+    }
+
+    public double getExtensionPosition() {
+        return m_extensionLeadMotor.getPosition().getValueAsDouble();
     }
 
     @Override

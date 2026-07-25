@@ -1,6 +1,10 @@
 package frc.robot.subsystems.turret;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 
@@ -10,6 +14,8 @@ public class Turret extends SubsystemBase {
     private double requestedAngle;
     private TurretIO io;
     private TurretIOInputs inputs = new TurretIOInputs();
+    private final MechanismLigament2d turretLigament = new MechanismLigament2d("turret", Units.inchesToMeters(12), 0, 6,
+        new Color8Bit(137, 52, 235));
 
     static class TurretConstants {
         public static int kCANID = 45; 
@@ -50,6 +56,7 @@ public class Turret extends SubsystemBase {
 
     public Turret(TurretIO io) {
         this.io = io;
+        RobotVisualizer.addTurret(turretLigament);
     }
 
     public void activate() {
@@ -70,6 +77,8 @@ public class Turret extends SubsystemBase {
         }
 
         io.updateInputs(inputs);
+        turretLigament.setAngle(inputs.angle);
+
     }
 
     public TurretState getTurretState() {

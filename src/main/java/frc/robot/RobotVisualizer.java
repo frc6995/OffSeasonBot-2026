@@ -17,7 +17,7 @@ public class RobotVisualizer {
   private static final MechanismRoot2d DRIVETRAIN_ROOT = MECH_VISUALIZER.getRoot("drivetrain-root", BASE_X,
       Units.inchesToMeters(7.5));
 
-  private static final MechanismRoot2d FLYWHEEL_BASE = MECH_VISUALIZER.getRoot("flywheel-base", BASE_X,
+  private static final MechanismRoot2d HOOD_BASE = MECH_VISUALIZER.getRoot("hood-base", BASE_X,
       Units.inchesToMeters(18.5));
 
   private static final MechanismRoot2d INTAKE_PIVOT_BASE = MECH_VISUALIZER.getRoot(
@@ -25,8 +25,8 @@ public class RobotVisualizer {
       BASE_X + Units.inchesToMeters(11.5),
       Units.inchesToMeters(9.5));
 
-  private static final MechanismRoot2d DYE_ROTOR_BASE = MECH_VISUALIZER.getRoot(
-      "dye-rotor-base",
+  private static final MechanismRoot2d TURRET_BASE = MECH_VISUALIZER.getRoot(
+      "turret-base",
       BASE_X - Units.inchesToMeters(8),
       Units.inchesToMeters(10));
 
@@ -44,14 +44,22 @@ public class RobotVisualizer {
   // --- Subsystem attachment points ---
 
   public static void addHood(MechanismLigament2d hood) {
-    FLYWHEEL_BASE.append(hood);
+    HOOD_BASE.append(hood);
   }
 
   public static void addIntake(MechanismLigament2d intake) {
     INTAKE_PIVOT_BASE.append(intake);
   }
 
-  public static void addDyeRotor(MechanismLigament2d rotor) {
-    DYE_ROTOR_BASE.append(rotor);
+  // public static void addDyeRotor(MechanismLigament2d rotor) {
+  //   DYE_ROTOR_BASE.append(rotor);
+  // }
+  // public static void addFlywheel(MechanismLigament2d flywheel) {
+  //   FLYWHEEL_BASE.append(flywheel);
+  // }
+
+  public static void addTurret(MechanismLigament2d turret) {
+    TURRET_BASE.append(turret);
   }
+
 }
