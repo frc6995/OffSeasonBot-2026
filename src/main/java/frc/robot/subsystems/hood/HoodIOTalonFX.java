@@ -75,8 +75,8 @@ public class HoodIOTalonFX implements HoodIO{
         // need to set these
         config.MotionMagic = 
             new MotionMagicConfigs()
-                .withMotionMagicAcceleration(0)
-                .withMotionMagicCruiseVelocity(0);
+                .withMotionMagicAcceleration(2)
+                .withMotionMagicCruiseVelocity(2);
 
         // TODO replace this with CtreUtil reportIfNotOk
         m_hoodMotor.getConfigurator().apply(config);

@@ -11,11 +11,16 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIOSimTalonFX;
+import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.util.Telemetry;
 
 public class RobotContainer {
@@ -43,6 +48,8 @@ public class RobotContainer {
 
     public final Autos autos = new Autos(drivetrain);
 
+    public final Hood hood = new Hood(new HoodIOSimTalonFX());
+
     public RobotContainer() {
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
 
@@ -64,6 +71,15 @@ public class RobotContainer {
                                                                                     // negative X (left)
                 ));
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        joystick.b().onTrue(Commands.runOnce(() -> hood.setAngle(15))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 15 degrees"))));
+
+        joystick.a().onTrue(Commands.runOnce(() -> hood.setAngle(0))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 0 degrees"))));
+        
+        joystick.x().onTrue(Commands.runOnce(() -> hood.setState(HoodState.DISABLED))
+        .andThen(Commands.runOnce(() -> System.out.println("disabling"))));
     }
 
     public Command getAutonomousCommand() {
