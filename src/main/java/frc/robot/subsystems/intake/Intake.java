@@ -27,8 +27,8 @@ public class Intake extends SubsystemBase {
     public static final double kVelMetersPerSecond = 0.5;
     public static final double kAccelMetersPerSecondSquared = 0.5;
 
-    public static final double kExtensionP = 0.5;
-    public static final double kExtensionV = 0.5;
+    public static final double kExtensionP = 20;
+    public static final double kExtensionV = 0.07;
 
     public static final double kExtensionMaxMeters = 0.5;
     public static final double kExtensionMinMeters = 0.0;

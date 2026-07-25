@@ -3,8 +3,10 @@ package frc.robot.subsystems.intake;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.DifferentialConstantsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -96,10 +98,9 @@ public class IntakeIOTalonFX implements IntakeIO {
                 .withSupplyCurrentLimitEnable(true);
         rollerConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kRollerReduction);
+            m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         m_rollerLeadMotor.getConfigurator().apply(rollerConfig);
-        m_rollerFollowerMotor.getConfigurator().apply(rollerConfig);
-
-        m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        
     }
 
     private void configureExtensionMotors() {
@@ -117,13 +118,15 @@ public class IntakeIOTalonFX implements IntakeIO {
                 .withSupplyCurrentLimitEnable(true);
         extensionConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kExtensionReduction);
-        m_extensionLeadMotor.getConfigurator().apply(extensionConfig);
-        m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
+            m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
         extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration)
-                                .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
+             .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
+        m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
 
-        m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        extensionConfig.Slot0
+        .withKP(IntakeConstants.kExtensionP)
+        .withKV(IntakeConstants.kExtensionV);
     }
 
     @Override

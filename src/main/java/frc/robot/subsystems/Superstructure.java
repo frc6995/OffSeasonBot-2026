@@ -41,42 +41,38 @@ public class Superstructure extends SubsystemBase {
 
     RobotState robotState = RobotState.IDLE;
 
-    public Superstructure(Intake m_intake, Hood m_hood, Flywheel m_flywheel, Turret m_turret, DyeRotor m_dyeRotor) {
+    public Superstructure() {
         if (Robot.isSimulation()) {
-            m_intake = new Intake(new IntakeIOSimTalonFX());
-            m_hood = new Hood(new HoodIOSimTalonFX());
-            m_flywheel = new Flywheel(new FlywheelIOSimTalonFX());
-            m_turret = new Turret(new TurretIOSimTalonFX());
-            m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
+            this.m_intake = new Intake(new IntakeIOSimTalonFX());
+            this.m_hood = new Hood(new HoodIOSimTalonFX());
+            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX());
+            this.m_turret = new Turret(new TurretIOSimTalonFX());
+            this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            m_intake = new Intake(new IntakeIOTalonFX());
-            m_hood = new Hood(new HoodIOTalonFX());
-            m_flywheel = new Flywheel(new FlywheelIOTalonFX());
-            m_turret = new Turret(new TurretIOTalonFX());
-            m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
+            this.m_intake = new Intake(new IntakeIOTalonFX());
+            this.m_hood = new Hood(new HoodIOTalonFX());
+            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX());
+            this.m_turret = new Turret(new TurretIOTalonFX());
+            this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
     }
 
-    public void requestIntakeDeployed() {
-        m_intake.setState(IntakeState.DEPLOYED);
-
+    public Command requestIntakeDeployed() {
+        return Commands.runOnce(()-> m_intake.setState(IntakeState.DEPLOYED));
     }
 
-    public void requestIntakeRetracted() {
-        m_intake.setState(IntakeState.RETRACTED);
-
+    public Command requestIntakeRetracted() {
+        return Commands.runOnce(()-> m_intake.setState(IntakeState.RETRACTED));
     }
 
-    public void requestIntakeAgitating() {
-        m_intake.setState(IntakeState.AGITATING);
-
+    public Command requestIntakeAgitating() {
+       return Commands.runOnce(()-> m_intake.setState(IntakeState.AGITATING));
     }
 
-    public void requestIntakeIdle() {
-        m_intake.setState(IntakeState.IDLE);
-
+    public Command requestIntakeIdle() {
+       return Commands.runOnce(()-> m_intake.setState(IntakeState.IDLE));
     }
 
     public Command requestRobotIdle() {
