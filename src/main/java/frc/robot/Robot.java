@@ -22,6 +22,13 @@ public class Robot extends TimedRobot {
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
         .withTimestampReplay()
         .withJoystickReplay();
+    
+
+    Elastic.Notification notification = new Elastic.Notification(
+        //Level of notificaction level
+        Elastic.NotificationLevel.ERROR,
+        "Need Notificaction?", 
+        "This is an example error notification.");
 
     public Robot() {
         m_robotContainer = new RobotContainer();
@@ -52,6 +59,8 @@ public class Robot extends TimedRobot {
         }
         //Tab switching so when we start, tab switches to "Autonomous".
         Elastic.selectTab("Autonomous");
+        //Send a notification
+        //Elastic.sendNotification(notification);
     }
 
     @Override
