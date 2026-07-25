@@ -6,10 +6,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Flywheel extends SubsystemBase{
   public static class FlywheelConstants {
     // PID Constants
-    public static final double kP = 0.70;
+    public static final double kP = 0.1;
     // Feedforward Constants
     public static final double kS = 0.25;
-    public static final double kV = 0.18;
+    public static final double kV = 0.08;
     // CAN IDs
     public static final int kLeadMotorCANID = 40;
     public static final int kFollowMotor1CANID = 41;
@@ -92,7 +92,7 @@ public void periodic() {
 private static double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
-      case ACTIVE -> 10000;
+      case ACTIVE -> 3000;
     };
   }
 }

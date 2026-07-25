@@ -12,12 +12,13 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.Telemetry;
-
+import frc.robot.subsystems.Superstructure;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -32,8 +33,9 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry();
-    private final CommandXboxController joystick = new CommandXboxController(0);
-
+    // private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandJoystick keyboard = new CommandJoystick(0);
+    public Superstructure m_Superstucture = new Superstructure();
     public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
             TunerConstants.FrontLeft,
@@ -54,16 +56,18 @@ public class RobotContainer {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        drivetrain.setDefaultCommand(
-                // Drivetrain will execute this command periodically
-                drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
-                                                                                                   // negative Y
-                                                                                                   // (forward)
-                        .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with
-                                                                                    // negative X (left)
-                ));
-        drivetrain.registerTelemetry(logger::telemeterize);
+    //     drivetrain.setDefaultCommand(
+    //             // Drivetrain will execute this command periodically
+    //             drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
+    //                                                                                                // negative Y
+    //                                                                                                // (forward)
+    //                     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+    //                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with
+    //                                                                                 // negative X (left)
+    //             ));
+    //     drivetrain.registerTelemetry(logger::telemeterize);
+        keyboard.button(1).onTrue(m_Superstucture.requestRobotShooting());
+        keyboard.button(1).onFalse(m_Superstucture.requestRobotIdle());
     }
 
     public Command getAutonomousCommand() {

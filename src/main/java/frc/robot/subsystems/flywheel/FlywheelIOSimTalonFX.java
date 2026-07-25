@@ -30,6 +30,9 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX{
   private void configureSim() {
    
     configureKrakenSim(m_flywheelLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
+    // configureKrakenSim(m_flywheelFollowMotor1.getSimState(),ChassisReference.Clockwise_Positive);
+    // configureKrakenSim(m_flywheelFollowMotor2.getSimState(),ChassisReference.CounterClockwise_Positive);
+    // configureKrakenSim(m_flywheelFollowMotor3.getSimState(),ChassisReference.CounterClockwise_Positive);
   }
 
  private static void configureKrakenSim(TalonFXSimState simState, ChassisReference orientation) {
@@ -39,25 +42,32 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX{
 
    @Override
   public void updateInputs(FlywheelInputs inputs) {
-    var flywheelState = m_flywheelLeadMotor.getSimState();
+    var flywheelLeadState = m_flywheelLeadMotor.getSimState();
+    // var flywheelFollowerState1 = m_flywheelFollowMotor1.getSimState();
+    // var flywheelFollowerState2 = m_flywheelFollowMotor2.getSimState();
+    // var flywheelFollowerState3 = m_flywheelFollowMotor3.getSimState();
   
     double batteryVoltage = RobotController.getBatteryVoltage();
-    flywheelState.setSupplyVoltage(batteryVoltage);
-
-    double appliedVolts = flywheelState.getMotorVoltageMeasure().baseUnitMagnitude();
+    flywheelLeadState.setSupplyVoltage(batteryVoltage);
+    // flywheelFollowerState1.setSupplyVoltage(batteryVoltage);
+    // flywheelFollowerState2.setSupplyVoltage(batteryVoltage);
+    // flywheelFollowerState3.setSupplyVoltage(batteryVoltage);
+    double appliedVolts = flywheelLeadState.getMotorVoltageMeasure().baseUnitMagnitude();
     flywheelSim.setInputVoltage(appliedVolts);
 
     flywheelSim.update(0.02);
 
     double velocityRPM = flywheelSim.getAngularVelocityRPM();
 
-    flywheelState.setRotorVelocity(velocityRPM/60);
-
+    flywheelLeadState.setRotorVelocity(velocityRPM/60);
+    // flywheelFollowerState1.setRotorVelocity(velocityRPM/60);
+    // flywheelFollowerState2.setRotorVelocity(velocityRPM/60);
+    // flywheelFollowerState3.setRotorVelocity(velocityRPM/60);
 
     inputs.velocityRPM = velocityRPM;
     inputs.appliedVolts = appliedVolts;
-    inputs.statorCurrentAmps = flywheelState.getTorqueCurrent();
-    inputs.supplyCurrentAmps = flywheelState.getSupplyCurrent();
+    inputs.statorCurrentAmps = flywheelLeadState.getTorqueCurrent();
+    inputs.supplyCurrentAmps = flywheelLeadState.getSupplyCurrent();
     inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
     inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
     inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();

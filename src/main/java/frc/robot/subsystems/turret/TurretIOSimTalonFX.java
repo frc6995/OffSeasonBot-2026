@@ -15,8 +15,7 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
         Math.toRadians(Turret.TurretConstants.kMinAngle), 
         Math.toRadians(Turret.TurretConstants.kMaxAngle), 
         false, 
-        0, 
-        null);
+        0);
 
 
   public TurretIOSimTalonFX() {

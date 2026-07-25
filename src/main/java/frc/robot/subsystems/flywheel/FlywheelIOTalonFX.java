@@ -22,6 +22,10 @@ import frc.robot.Constants.CANBuses;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
 
+  public FlywheelIOTalonFX() {
+        configureMotors();
+    }
+
   protected final TalonFX m_flywheelLeadMotor = new TalonFX(FlywheelConstants.kLeadMotorCANID, CANBuses.UpperBus);
 
   protected final TalonFX m_flywheelFollowMotor1 = new TalonFX(FlywheelConstants.kFollowMotor1CANID, CANBuses.UpperBus);

@@ -41,7 +41,7 @@ public class Superstructure extends SubsystemBase {
 
     RobotState robotState = RobotState.IDLE;
 
-    public Superstructure(Intake m_intake, Hood m_hood, Flywheel m_flywheel, Turret m_turret, DyeRotor m_dyeRotor) {
+    public Superstructure() {
         if (Robot.isSimulation()) {
             m_intake = new Intake(new IntakeIOSimTalonFX());
             m_hood = new Hood(new HoodIOSimTalonFX());
@@ -59,24 +59,28 @@ public class Superstructure extends SubsystemBase {
 
     }
 
-    public void requestIntakeDeployed() {
+    public Command requestIntakeDeployed() {
+        return Commands.runOnce(()-> {
         m_intake.setState(IntakeState.DEPLOYED);
-
+        });
     }
 
-    public void requestIntakeRetracted() {
+    public Command requestIntakeRetracted() {
+        return Commands.runOnce(()-> {
         m_intake.setState(IntakeState.RETRACTED);
-
+        });
     }
 
-    public void requestIntakeAgitating() {
+    public Command requestIntakeAgitating() {
+        return Commands.runOnce(()-> {
         m_intake.setState(IntakeState.AGITATING);
-
+        });
     }
 
-    public void requestIntakeIdle() {
+    public Command requestIntakeIdle() {
+        return Commands.runOnce(()-> {
         m_intake.setState(IntakeState.IDLE);
-
+        });
     }
 
     public Command requestRobotIdle() {
@@ -85,6 +89,13 @@ public class Superstructure extends SubsystemBase {
             robotState = RobotState.IDLE;
             m_dyeRotor.setState(DyeRotorState.SPIN_BACKWARDS);
             m_turret.setState(TurretState.DISABLED);
+            m_flywheel.setState(FlywheelState.DISABLED);
+        });
+    }
+
+    public Command requestRobotShooting() {
+        return Commands.runOnce(() -> {
+            m_flywheel.setState(FlywheelState.ACTIVE);
         });
     }
 
