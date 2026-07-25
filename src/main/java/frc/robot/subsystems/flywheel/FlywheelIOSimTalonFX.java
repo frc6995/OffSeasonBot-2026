@@ -62,6 +62,5 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX{
     inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
     inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();
     inputs.followerMotor3Connected = m_flywheelFollowMotor3.isConnected();
-
   }
 }
