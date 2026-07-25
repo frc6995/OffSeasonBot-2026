@@ -41,7 +41,7 @@ public class Superstructure extends SubsystemBase {
 
     RobotState robotState = RobotState.IDLE;
 
-    public Superstructure() {
+    public Superstructure(Intake m_intake, Hood m_hood, Flywheel m_flywheel, Turret m_turret, DyeRotor m_dyeRotor) {
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
             this.m_hood = new Hood(new HoodIOSimTalonFX());

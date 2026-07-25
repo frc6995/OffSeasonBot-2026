@@ -32,6 +32,7 @@ public class Intake extends SubsystemBase {
 
     public static final double kExtensionMaxMeters = 0.5;
     public static final double kExtensionMinMeters = 0.0;
+    public static final double kExtensionAgitatingMeters = 0.25;
 
     public static final double kDrumCircumferenceMeters = 0.119;
 
@@ -57,6 +58,8 @@ public class Intake extends SubsystemBase {
 
     private IntakeState intakeState = IntakeState.IDLE;
 
+    private boolean intakeToAgitatePostion = true;
+
     public Intake() {
     this(new IntakeIO() {});
     }
@@ -77,6 +80,7 @@ public class Intake extends SubsystemBase {
     public IntakeState getState() {
         return intakeState;
     }
+
 
     public void retract() {
         setState(IntakeState.RETRACTED);
@@ -155,6 +159,7 @@ public class Intake extends SubsystemBase {
     io.setKickerVoltage(resolveKickerTargetVoltage(intakeState));
     io.setRollerVoltage(resolveRollerTargetVoltage(intakeState));
     io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
+
   }
 
     private static double resolveExtensionTargetPosition(IntakeState state) {
@@ -165,6 +170,24 @@ public class Intake extends SubsystemBase {
             case AGITATING -> IntakeConstants.kExtensionMinMeters;
         };
     }
+
+    /*  
+    
+        if intakeToAgitatePosition && Math.abs(kAgitateMeters - current position [.getExtensionPosition]) < tolerance :
+            intakeToAgitatePosition = false;
+
+        if !intakeToAgitatePosition && Math.abs(kExtensionMinMeters - current position) < tolerance :
+            intakeToAgitatePosition = true;
+
+        setPosition(intakeToAgitatePosition ? true : false)
+
+        true = setPosition(kExtensionAgitateMeters)
+        false = setPosition(kExtensionMaxMeters)
+
+        To figure out:
+        - Logic for joystick.x held and how to go back to intake after releasing
+
+    */
 
     private static double resolveRollerTargetVoltage(IntakeState state) {
         return switch (state) {

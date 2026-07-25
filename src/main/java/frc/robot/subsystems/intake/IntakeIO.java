@@ -32,6 +32,7 @@ public interface IntakeIO {
         public double kickerSupplyCurrentAmps;
         public boolean kickerMotorConnected;
 
+        public double extensionPositionMeters;
         public double extensionAppliedVolts;
         public double extensionStatorCurrentAmps;
         public double extensionSupplyCurrentAmps;

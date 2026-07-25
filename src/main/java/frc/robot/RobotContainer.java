@@ -50,7 +50,13 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final Superstructure m_superStructure = new Superstructure();
+    Intake m_intake = new Intake(new IntakeIOSimTalonFX());
+    Hood m_hood = new Hood(new HoodIOSimTalonFX());
+    Flywheel m_flywheel = new Flywheel(new FlywheelIOSimTalonFX());
+    Turret m_turret = new Turret(new TurretIOSimTalonFX());
+    DyeRotor m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
+
+    public final Superstructure m_superStructure = new Superstructure(m_intake, m_hood, m_flywheel, m_turret, m_dyeRotor);
 
 
     public RobotContainer() {
