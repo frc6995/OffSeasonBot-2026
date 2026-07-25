@@ -4,11 +4,12 @@ import java.util.ArrayList;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 
 public class Turret extends SubsystemBase {
 
-    private TurretState state = TurretState.DISABLED;
+    private TurretState turretState = TurretState.DISABLED;
     private double requestedAngle;
     private TurretIO io;
     private TurretIOInputs inputs = new TurretIOInputs();
@@ -24,7 +25,7 @@ public class Turret extends SubsystemBase {
         public static final double kV = 0;
         public static final double kA = 0;
 
-        public static final double kSimP = 0;
+        public static final double kSimP = 5;
         public static final double kSimI = 0;
         public static final double kSimD = 0;
         public static final double kSimS = 0;
@@ -56,20 +57,20 @@ public class Turret extends SubsystemBase {
     }
 
     public void aimClosest() {
-        state = TurretState.AIM_CLOSEST;
+        turretState = TurretState.AIM_CLOSEST;
     }
 
     public void aimCentral() {
-        state = TurretState.AIM_CENTRAL;
+        turretState = TurretState.AIM_CENTRAL;
     }
 
     public void disable() {
-        state = TurretState.DISABLED;
+        turretState = TurretState.DISABLED;
     }
 
     @Override
     public void periodic() {
-        switch (state) {
+        switch (turretState) {
             case DISABLED -> io.disable();
 
             // need to fix this because currently this will only command 0 degrees
@@ -80,12 +81,23 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
     }
 
-    public TurretState getState() {
-        return state;
+    public TurretState getTurretState() {
+        return turretState;
+    }
+
+      public void setState(TurretState state) {
+        turretState = state;
     }
 
     public double getAngle() {
         return inputs.angle;
+    }
+
+    //just for testing in sim
+    public void setAngle(double angle) {
+        requestedAngle = angle;
+
+        this.turretState = TurretState.AIM_CLOSEST;
     }
 
     public double getRequestedAngle() {
