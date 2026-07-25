@@ -1,4 +1,4 @@
-package frc.robot.subsystems.flywheel;
+package frc.robot.subsystems.Flywheel;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -8,8 +8,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.flywheel.Flywheel;
-import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
+import frc.robot.subsystems.Flywheel.Flywheel;
+import frc.robot.subsystems.Flywheel.Flywheel.FlywheelConstants;
 import edu.wpi.first.math.system.plant.DCMotor;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
