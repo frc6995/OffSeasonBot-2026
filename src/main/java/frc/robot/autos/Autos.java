@@ -75,7 +75,7 @@ public class Autos {
                     c.addCommands(new AutoAlign(
                             kAutoAlignProfiledRotationTestTargetPose,
                             drivetrain,
-                            AutoAlign.kDefaultVelocityLimitedProfile,
+                            AutoAlign.kSlowDriveProfile,
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
                 }));
 
@@ -85,7 +85,7 @@ public class Autos {
                             AutoAlign.kDefaultVelocityLimitedProfile,
                             kAutoAlignProfiledRotationTestTargetPose,
                             drivetrain,
-                            Meters.of(0.5),
+                            Meters.of(1.5),
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
                 }));
 
