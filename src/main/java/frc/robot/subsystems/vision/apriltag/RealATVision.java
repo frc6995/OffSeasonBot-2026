@@ -23,23 +23,11 @@ import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 public class RealATVision extends AprilTagVision {
     public static class ATVisionConstants {
         public static final String[] LL_IDS = {
-            "limelight-climb", 
-            "limelight-right", 
-            "limelight-left",
             "limelight-front"
         };
 
 
         public static final Pose3d[] LL_OFFSETS = {
-            new Pose3d( // climb
-                new Translation3d(Inches.of(-11.0672),Inches.of(-10.432), Inches.of(8.674)),
-                new Rotation3d(Degrees.zero(), Degrees.of(22.5), Degrees.of(180))),
-            new Pose3d( // right
-                new Translation3d(Inches.of(2.550), Inches.of(12.987),Inches.of(7.435)),
-                new Rotation3d(Degrees.zero(), Degrees.of(22.5), Degrees.of(-90))),
-            new Pose3d( // left
-                new Translation3d(Inches.of(2.550), Inches.of(-12.987), Inches.of(7.435)),
-                new Rotation3d(Degrees.zero(), Degrees.of(22.5), Degrees.of(90))),
             new Pose3d( // front
                 new Translation3d(Inches.of(-11.213), Inches.of(7.375), Inches.of(20.849)),
                 new Rotation3d(Degrees.zero(), Degrees.of(30), Degrees.zero())
