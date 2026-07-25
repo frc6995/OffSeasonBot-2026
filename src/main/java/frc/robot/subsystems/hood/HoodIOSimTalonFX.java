@@ -18,8 +18,7 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX{
             Math.toRadians(Hood.HoodConstants.MIN_ANGLE), 
             Math.toRadians(Hood.HoodConstants.MAX_ANGLE), 
             true, 
-            0, 
-            null);
+            0);
 
     public HoodIOSimTalonFX(){
         super();

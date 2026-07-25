@@ -11,11 +11,14 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.util.Telemetry;
 
 public class RobotContainer {
@@ -43,6 +46,8 @@ public class RobotContainer {
 
     public final Autos autos = new Autos(drivetrain);
 
+    public final Turret turret = new Turret(new TurretIOSimTalonFX());
+
     public RobotContainer() {
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
 
@@ -64,6 +69,15 @@ public class RobotContainer {
                                                                                     // negative X (left)
                 ));
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        joystick.a().onTrue(Commands.runOnce(() -> turret.setAngle(180))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 180 deg"))));
+
+        joystick.b().onTrue(Commands.runOnce(() -> turret.setAngle(90))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 90 deg"))));
+
+        joystick.x().onTrue(Commands.runOnce(() -> turret.setAngle(0))
+        .andThen(Commands.runOnce(() -> System.out.println("going to 0 deg"))));
     }
 
     public Command getAutonomousCommand() {

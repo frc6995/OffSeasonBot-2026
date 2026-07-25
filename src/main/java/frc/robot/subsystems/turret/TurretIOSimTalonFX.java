@@ -15,8 +15,7 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
         Math.toRadians(Turret.TurretConstants.kMinAngle), 
         Math.toRadians(Turret.TurretConstants.kMaxAngle), 
         false, 
-        0, 
-        null);
+        0);
 
 
   public TurretIOSimTalonFX() {
@@ -32,6 +31,8 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
+    m_TurretSim.update(0.02);
+
     var simState = m_turretMotor.getSimState();
 
     simState.setSupplyVoltage(RobotController.getBatteryVoltage());
@@ -48,8 +49,6 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
     inputs.appliedVolts =  appliedVolts;
     inputs.supplyCurrent = simState.getSupplyCurrent();
     inputs.statorCurrent = simState.getTorqueCurrent();
-
-    m_TurretSim.update(0.02);
 
   }
 }

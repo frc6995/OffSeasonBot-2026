@@ -18,14 +18,14 @@ public class Turret extends SubsystemBase {
         public static int kCANID = 45; 
 
         //Tune PID/FF constants
-        public static final double kP = 0;
+        public static final double kP = 3;
         public static final double kI = 0;
         public static final double kD = 0;
         public static final double kS = 0;
         public static final double kV = 0;
         public static final double kA = 0;
 
-        public static final double kSimP = 5;
+        public static final double kSimP = 0;
         public static final double kSimI = 0;
         public static final double kSimD = 0;
         public static final double kSimS = 0;
@@ -97,7 +97,7 @@ public class Turret extends SubsystemBase {
     public void setAngle(double angle) {
         requestedAngle = angle;
 
-        this.turretState = TurretState.AIM_CLOSEST;
+        this.turretState = TurretState.AIM_CENTRAL;
     }
 
     public double getRequestedAngle() {

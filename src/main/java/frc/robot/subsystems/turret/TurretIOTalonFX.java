@@ -58,8 +58,8 @@ public class TurretIOTalonFX implements TurretIO {
                 .withSupplyCurrentLimit(kSupplyCurrentLimitAmps)
                 .withSupplyCurrentLimitEnable(true);
         
-        config.Feedback = 
-            new FeedbackConfigs().withSensorToMechanismRatio(kReduction);
+        // config.Feedback = 
+        //     new FeedbackConfigs().withSensorToMechanismRatio(kReduction);
 
         config.Slot0 = 
             new Slot0Configs()
@@ -83,8 +83,8 @@ public class TurretIOTalonFX implements TurretIO {
         //Need to set these
         config.MotionMagic = 
             new MotionMagicConfigs()
-                .withMotionMagicAcceleration(0)
-                .withMotionMagicCruiseVelocity(0);
+                .withMotionMagicAcceleration(2)
+                .withMotionMagicCruiseVelocity(2);
 
         //TODO replace this with CtreUtil reportIfNotOk
         m_turretMotor.getConfigurator().apply(config);
@@ -118,15 +118,17 @@ public class TurretIOTalonFX implements TurretIO {
             );
         }
         
+        // System.out.println("trying to set to " + angle + " degrees " + angleToRotations(clampedAngle) + " rotations");
+
         m_turretMotor.setControl(positionRequest.withPosition(angleToRotations(clampedAngle)));
     }
     
     protected double angleToRotations(double angle) {
-        return (angle/360);
+        return (angle/360)*kReduction;
     }
 
     protected double rotationsToAngle(double rotations) {
-        return rotations*360;
+        return rotations*(1/kReduction)*360;
     }
 
     @Override
