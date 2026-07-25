@@ -64,7 +64,7 @@ public class Robot extends TimedRobot {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
         //Tab switches to "Teleoperated"
-        //Elastic.selectTab("Teleoperated");
+        Elastic.selectTab("Teleoperated");
     }
 
     @Override
