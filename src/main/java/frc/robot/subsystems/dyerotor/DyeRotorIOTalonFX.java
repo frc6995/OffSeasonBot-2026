@@ -123,6 +123,12 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   }
 
   @Override
+  public void setIndexVelocity(double velocityRPM) {
+    m_indexerLead.setControl(m_indexerRequest.withOutput(velocityRPM));
+  }
+
+
+  @Override
   public void stop() {
     m_spinMotor.stopMotor();
     m_indexerLead.stopMotor();

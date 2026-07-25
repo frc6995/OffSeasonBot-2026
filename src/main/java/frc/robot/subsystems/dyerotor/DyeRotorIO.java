@@ -10,6 +10,9 @@ public interface DyeRotorIO {
   default void setIndexVoltage(double volts) {
   }
 
+  default void setIndexVelocity(double velocityRPM) {
+  }
+
   default void stop() {
   }
 

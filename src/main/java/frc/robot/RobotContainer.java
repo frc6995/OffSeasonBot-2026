@@ -18,12 +18,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.hood.Hood;
-import frc.robot.subsystems.hood.HoodIOSimTalonFX;
-import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.dyerotor.*;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
+import frc.robot.subsystems.hood.*;
 import frc.robot.subsystems.hood.Hood.HoodState;
-import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.TurretIOSimTalonFX;
+import frc.robot.subsystems.turret.*;
 import frc.robot.util.Telemetry;
 
 public class RobotContainer {
@@ -31,6 +30,8 @@ public class RobotContainer {
                                                                                         // speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
+    
+    private DyeRotor dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -77,16 +78,17 @@ public class RobotContainer {
                 ));
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        joystick.b().onTrue(Commands.runOnce(() -> hood.setAngle(15))
-        .andThen(Commands.runOnce(() -> System.out.println("going to 15 degrees"))));
+        joystick.a().onTrue(Commands.runOnce(() -> dyeRotor.setIndexState(DyeRotorState.SPIN))
+        .andThen(Commands.runOnce(() -> System.out.println("spin indexer"))));
 
-        joystick.a().onTrue(Commands.runOnce(() -> hood.setAngle(0))
-        .andThen(Commands.runOnce(() -> System.out.println("going to 0 degrees"))));
-        
-        joystick.x().onTrue(Commands.runOnce(() -> hood.setState(HoodState.DISABLED))
-        .andThen(Commands.runOnce(() -> System.out.println("disabling"))));
+        joystick.b().onTrue(Commands.runOnce(() -> dyeRotor.setSpinState(DyeRotorState.SPIN))
+        .andThen(Commands.runOnce(() -> System.out.println("spin spin"))));
 
-
+        joystick.x().onTrue(Commands.runOnce(() -> {
+            dyeRotor.setSpinState(DyeRotorState.IDLE);
+            dyeRotor.setIndexState(DyeRotorState.IDLE);
+        })
+        .andThen(Commands.runOnce(() -> System.out.println("idling everything"))));
     }
 
     public Command getAutonomousCommand() {
