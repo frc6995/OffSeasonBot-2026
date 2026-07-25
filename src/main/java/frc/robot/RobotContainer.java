@@ -19,6 +19,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.Telemetry;
 import frc.robot.subsystems.Superstructure;
+
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
                                                                                         // speed
@@ -56,16 +57,19 @@ public class RobotContainer {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-    //     drivetrain.setDefaultCommand(
-    //             // Drivetrain will execute this command periodically
-    //             drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
-    //                                                                                                // negative Y
-    //                                                                                                // (forward)
-    //                     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-    //                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with
-    //                                                                                 // negative X (left)
-    //             ));
-    //     drivetrain.registerTelemetry(logger::telemeterize);
+        // drivetrain.setDefaultCommand(
+        // // Drivetrain will execute this command periodically
+        // drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() *
+        // MaxSpeed) // Drive forward with
+        // // negative Y
+        // // (forward)
+        // .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X
+        // (left)
+        // .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive
+        // counterclockwise with
+        // // negative X (left)
+        // ));
+        // drivetrain.registerTelemetry(logger::telemeterize);
         keyboard.button(1).onTrue(m_Superstucture.requestRobotShooting());
         keyboard.button(1).onFalse(m_Superstucture.requestRobotIdle());
     }

@@ -1,13 +1,15 @@
 package frc.robot.subsystems.flywheel;
 
+public interface FlywheelIO {
 
-public interface FlywheelIO{
+    default void updateInputs(FlywheelInputs inputs) {
+    }
 
-    default void updateInputs(FlywheelInputs inputs) {}
+    default void setVelocityRPM(double velocityRPM) {
+    }
 
-    default void setVelocityRPM( double velocityRPM) {}
-
-    default void stop() {}
+    default void stop() {
+    }
 
     class FlywheelInputs {
         public double velocityRPM;
@@ -19,5 +21,5 @@ public interface FlywheelIO{
         public boolean followerMotor2Connected;
         public boolean followerMotor3Connected;
     }
-    
+
 }
