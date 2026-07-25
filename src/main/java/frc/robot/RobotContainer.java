@@ -82,14 +82,14 @@ public class RobotContainer {
         // negative X (left)
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.a().onTrue(m_Superstucture.requestRobotShooting());
-        joystick.b().onFalse(m_Superstucture.requestRobotIdle());
+        joystick.a().onTrue(m_Superstucture.requestIntakeDeployed());
+        joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
+        joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
 
        
     }
 
     public Command getAutonomousCommand() {
-
         return autos.selectedCommand();
     }
 }

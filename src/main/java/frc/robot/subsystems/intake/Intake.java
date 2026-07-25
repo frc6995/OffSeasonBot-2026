@@ -27,16 +27,16 @@ public class Intake extends SubsystemBase {
     public static final double kVelMetersPerSecond = 0.5;
     public static final double kAccelMetersPerSecondSquared = 0.5;
 
-    public static final double kExtensionP = 0.5;
-    public static final double kExtensionV = 0.5;
+    public static final double kExtensionP = 20;
+    public static final double kExtensionV = 0.07;
 
     public static final double kExtensionMaxMeters = 0.5;
     public static final double kExtensionMinMeters = 0.0;
 
-    public static final double kDrumCircumferenceMeters = 1.0;
+    public static final double kDrumCircumferenceMeters = 0.119;
 
-    public static final double kRollerForwardVolts = 12.0;
-    public static final double kKickerForwardVolts = 12.0;
+    public static final double kRollerForwardVolts = 4.0;
+    public static final double kKickerForwardVolts = 4.0;
 
     public static final double kRollerForwardVelocity = kRollerForwardVolts;
     public static final double kKickerForwardVelocity = kKickerForwardVolts;
