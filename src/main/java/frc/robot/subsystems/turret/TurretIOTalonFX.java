@@ -20,12 +20,13 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.Constants;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
 public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
-    protected final TalonFX m_turretMotor = new TalonFX(kCANID); 
+    protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus); 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
     
     protected StatusSignal<Angle> angleSignal;
