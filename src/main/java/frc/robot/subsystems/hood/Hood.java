@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.hood.HoodIO.HoodIOInputs;
 
-public class Hood extends SubsystemBase{
+public class Hood extends SubsystemBase {
 
     private HoodIO io;
     private HoodIOInputs hoodIOInputs = new HoodIOInputs();
@@ -18,7 +18,7 @@ public class Hood extends SubsystemBase{
         public static int kCANID = 44; //Should be right with doc
 
         //Tune PID/FF constants
-        public static final double kP = 2; //Double check this
+        public static final double kP = 120; //Double check this
         public static final double kD = 0;
         public static final double kS = 0;
         public static final double kV = 0.1;

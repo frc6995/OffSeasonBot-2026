@@ -32,8 +32,6 @@ public class RobotContainer {
                                                                                         // speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
-    
-    private DyeRotor dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -53,10 +51,6 @@ public class RobotContainer {
             TunerConstants.BackRight);
 
     public final Autos autos = new Autos(drivetrain);
-
-    public final Hood hood = new Hood(new HoodIOSimTalonFX());
-
-    public final Turret turret = new Turret(new TurretIOSimTalonFX());
 
     public RobotContainer() {
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
@@ -85,6 +79,8 @@ public class RobotContainer {
         joystick.a().onTrue(m_Superstucture.requestIntakeDeployed());
         joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
         joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
+
+        joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_hood.setAngle(30)));
 
        
     }

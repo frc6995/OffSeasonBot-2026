@@ -7,7 +7,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
-public class HoodIOSimTalonFX extends HoodIOTalonFX{
+public class HoodIOSimTalonFX extends HoodIOTalonFX {
     
     private final SingleJointedArmSim m_HoodSim = 
         new SingleJointedArmSim(
@@ -46,7 +46,7 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX{
 
         double hoodPosition = Math.toDegrees(m_HoodSim.getAngleRads());
 
-        simState.setRawRotorPosition(angleToRotations(hoodPosition));
+        simState.setRawRotorPosition(angleToMotorRotations(hoodPosition));
 
         inputs.angle = hoodPosition;
         inputs.appliedVolts = appliedVolts;
