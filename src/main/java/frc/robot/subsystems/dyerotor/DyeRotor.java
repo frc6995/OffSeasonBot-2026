@@ -24,16 +24,16 @@ public class DyeRotor extends SubsystemBase {
     public static final double kSpinKS = 0.0;
     public static final double kSpinKV = 0.12;
 
-    public static final double kIndexKP = 0.0;
+    public static final double kIndexKP = 0.1;
     public static final double kIndexKS = 0.0;
-    public static final double kIndexKV = 0.0;
+    public static final double kIndexKV = 0.12;
 
     public static final double kSpinForwardRPM = 300.0;
     public static final double kSpinBackwardRPM = 300.0;
     public static final double kSpinVelocityToleranceRPM = 20.0;
 
-    public static final double kIndexForwardRPM = 6.0;
-    public static final double kIndexBackwardRPM = 6.0;
+    public static final double kIndexForwardRPM = 300.0;
+    public static final double kIndexBackwardRPM = 300.0;
 
     private DyeRotorConstants() {
     }
@@ -106,7 +106,7 @@ public class DyeRotor extends SubsystemBase {
     io.updateInputs(inputs);
 
     io.setSpinVelocity(resolveSpinTargetRPM(spinState));
-    io.setIndexVoltage(resolveIndexTargetRPM(indexState));
+    io.setIndexVelocity(resolveIndexTargetRPM(indexState));
   }
 
   private static double resolveSpinTargetRPM(DyeRotorState state) {

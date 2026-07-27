@@ -30,6 +30,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
   private final VelocityVoltage m_spinRequest = new VelocityVoltage(0);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);
+  private final VelocityVoltage m_indexerVelocityRequest = new VelocityVoltage(0);
 
   final StatusSignal<AngularVelocity> m_spinVelocity = m_spinMotor.getVelocity();
   final StatusSignal<Voltage> m_spinVoltage = m_spinMotor.getMotorVoltage();
@@ -124,7 +125,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
   @Override
   public void setIndexVelocity(double velocityRPM) {
-    m_indexerLead.setControl(m_indexerRequest.withOutput(velocityRPM));
+    m_indexerLead.setControl(m_indexerVelocityRequest.withVelocity(velocityRPM / 60.0));
   }
 
 

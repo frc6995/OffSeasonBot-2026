@@ -19,6 +19,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.Telemetry;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -75,6 +76,9 @@ public class RobotContainer {
 
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
+
+        joystick.a().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.SPIN)));
+        joystick.b().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.IDLE)));
 
        
     }
