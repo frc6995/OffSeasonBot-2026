@@ -80,7 +80,8 @@ public class RobotContainer {
         joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
         joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
 
-        joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_hood.setAngle(30)));
+            // do not do this for actual bindings, test only
+        // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
 
        
     }

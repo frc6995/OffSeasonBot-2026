@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -27,7 +28,7 @@ import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
     protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus); 
-    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
+    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
     
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<Voltage> voltSignal;
@@ -59,8 +60,8 @@ public class TurretIOTalonFX implements TurretIO {
                 .withSupplyCurrentLimit(kSupplyCurrentLimitAmps)
                 .withSupplyCurrentLimitEnable(true);
         
-        // config.Feedback = 
-        //     new FeedbackConfigs().withSensorToMechanismRatio(kReduction);
+        config.Feedback = 
+            new FeedbackConfigs().withSensorToMechanismRatio(kReduction);
 
         config.Slot0 = 
             new Slot0Configs()
@@ -120,8 +121,8 @@ public class TurretIOTalonFX implements TurretIO {
         }
         
         // System.out.println("trying to set to " + angle + " degrees " + angleToRotations(clampedAngle) + " rotations");
-
-        m_turretMotor.setControl(positionRequest.withPosition(angleToRotations(clampedAngle)));
+        double rotations = clampedAngle / 360;
+        m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
     protected double angleToRotations(double angle) {
