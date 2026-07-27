@@ -12,18 +12,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.dyerotor.*;
-import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
-import frc.robot.subsystems.hood.*;
-import frc.robot.subsystems.hood.Hood.HoodState;
-import frc.robot.subsystems.turret.*;
 import frc.robot.util.Telemetry;
 import frc.robot.subsystems.Superstructure;
 
