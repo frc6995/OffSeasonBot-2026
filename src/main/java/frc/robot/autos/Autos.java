@@ -39,8 +39,9 @@ public class Autos {
     private final Path directionTestPath = new Path("Direction_test");
     private final Path workshopTest1 = new Path("workshop-test-1");
     private final Path workshopTest2 = new Path("workshop-test-2");
-    private final Path Depot1 = new Path("Left-Center-Line-Depot");
-
+    private final Path Depot1Path = new Path("Left-Center-Line-Depot");
+    private final Path Depot2Path = new Path("Depot-2");
+    private final Path Depot3Path = new Path("Depot-3");
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -93,9 +94,16 @@ public class Autos {
 
         autos.put("BLINE Depot Auto",
                 () -> auto(c -> {
-                    Command LeftDepot1 = pathBuilder.build(Depot1);
+                    Command Depot1 = pathBuilder.build(Depot1Path);
+                    Command Depot2 = pathBuilder.build(Depot2Path);
+                    Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(LeftDepot1);
+                    c.addCommands(Depot1);
+
+                    c.addCommands(Depot2);
+
+                    c.addCommands(Depot3);
+
                 }));
 
         autos.put("Bline_Workshop_test1",

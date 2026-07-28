@@ -75,7 +75,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
 
         double batteryVoltage = RobotController.getBatteryVoltage();
 
-        System.out.println("Battery Voltage: " + batteryVoltage);
         rollerState.setSupplyVoltage(batteryVoltage);
         followerRollerState.setSupplyVoltage(batteryVoltage);
         extensionState.setSupplyVoltage(batteryVoltage);
@@ -88,7 +87,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
 
         rollerSim.setInputVoltage(rollerAppliedVolts);
 
-        System.out.println("Roller Applied Volts: " + rollerAppliedVolts);
         extensionSim.setInputVoltage(extensionAppliedVolts);
         kickerSim.setInputVoltage(kickerAppliedVolts);
 
