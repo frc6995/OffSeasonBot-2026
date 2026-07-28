@@ -39,6 +39,8 @@ public class Autos {
     private final Path directionTestPath = new Path("Direction_test");
     private final Path workshopTest1 = new Path("workshop-test-1");
     private final Path workshopTest2 = new Path("workshop-test-2");
+    private final Path Depot1 = new Path("Left-Center-Line-Depot");
+
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -89,12 +91,12 @@ public class Autos {
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
                 }));
 
-        // autos.put("BLINE_test",
-        //         () -> auto(c -> {
-        //             Command directionTestAuto = pathBuilder.build(directionTestPath);
+        autos.put("BLINE Depot Auto",
+                () -> auto(c -> {
+                    Command LeftDepot1 = pathBuilder.build(Depot1);
 
-        //             c.addCommands(directionTestAuto);
-        //         }));
+                    c.addCommands(LeftDepot1);
+                }));
 
         autos.put("Bline_Workshop_test1",
                 () -> auto(c -> {

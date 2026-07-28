@@ -3,12 +3,12 @@
   "editor_config": {
     "gui": {
       "robot": {
-        "length_meters": 0.7,
-        "width_meters": 0.85
+        "length_meters": 0.76,
+        "width_meters": 0.99
       },
       "protrusions": {
         "enabled": true,
-        "distance_meters": 0.12,
+        "distance_meters": 0.23,
         "side": "front",
         "default_state": "shown",
         "show_on_event_keys": [],
@@ -25,11 +25,29 @@
       "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
     }
   },
-  "active_path_file_name": "workshop-test-1.json",
-  "active_path_group_id": null,
-  "path_groups": [],
+  "active_path_file_name": "left-center-line-depot.json",
+  "active_path_group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
+  "path_groups": [
+    {
+      "group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
+      "display_name": "Left Center Line + Depot",
+      "path_file_names": [
+        "left-center-line-depot.json",
+        "depot-2.json",
+        "depot-3.json"
+      ]
+    }
+  ],
   "linked_targets": [],
   "paths": {
+    "Direction_test.json": {
+      "display_name": "Direction test",
+      "editor_metadata": null
+    },
+    "workshop-test-2.json": {
+      "display_name": "Workshop-test-2",
+      "editor_metadata": null
+    },
     "workshop-test-1.json": {
       "display_name": "Workshop_test_1",
       "editor_metadata": {
@@ -76,12 +94,74 @@
         ]
       }
     },
-    "workshop-test-2.json": {
-      "display_name": "Workshop-test-2",
-      "editor_metadata": null
+    "depot-2.json": {
+      "display_name": "Depot 2",
+      "editor_metadata": {
+        "ranged_constraints": [
+          {
+            "key": "max_velocity_meters_per_sec",
+            "value": 2.0,
+            "start_ordinal": 1,
+            "end_ordinal": 1,
+            "source": "auto_velocity",
+            "auto_velocity": {
+              "velocity_safety_factor": 0.9,
+              "acceleration_safety_factor": 0.8,
+              "merge_tolerance_meters_per_sec": 0.3,
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":6.189091820712084,\"yMeters\":4.024596455433944,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.1210041785690823,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.967554388574677,\"yMeters\":5.243005133974127,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":3.4565182888644124,\"yMeters\":5.543570951418523,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":0.5834407553358409,\"yMeters\":5.9956125947526635,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":20000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+            }
+          },
+          {
+            "key": "max_velocity_meters_per_sec",
+            "value": 2.34,
+            "start_ordinal": 2,
+            "end_ordinal": 2,
+            "source": "auto_velocity",
+            "auto_velocity": {
+              "velocity_safety_factor": 0.9,
+              "acceleration_safety_factor": 0.8,
+              "merge_tolerance_meters_per_sec": 0.3,
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":6.189091820712084,\"yMeters\":4.024596455433944,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.1210041785690823,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.967554388574677,\"yMeters\":5.243005133974127,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":3.4565182888644124,\"yMeters\":5.543570951418523,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":0.5834407553358409,\"yMeters\":5.9956125947526635,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":20000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+            }
+          }
+        ]
+      }
     },
-    "Direction_test.json": {
-      "display_name": "Direction test",
+    "left-center-line-depot.json": {
+      "display_name": "(Left) Center Line+Depot",
+      "editor_metadata": {
+        "ranged_constraints": [
+          {
+            "key": "max_velocity_meters_per_sec",
+            "value": 2.0,
+            "start_ordinal": 1,
+            "end_ordinal": 1,
+            "source": "auto_velocity",
+            "auto_velocity": {
+              "velocity_safety_factor": 0.9,
+              "acceleration_safety_factor": 0.8,
+              "merge_tolerance_meters_per_sec": 0.3,
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":4.27797,\"yMeters\":7.51967,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-1.5708,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":7.56374,\"yMeters\":6.76789,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-1.5708,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":7.81292,\"yMeters\":4.44413,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-1.5708,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":5.8009,\"yMeters\":3.97779,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13681,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":200,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+            }
+          },
+          {
+            "key": "max_velocity_meters_per_sec",
+            "value": 3.25,
+            "start_ordinal": 2,
+            "end_ordinal": 2,
+            "source": "auto_velocity",
+            "auto_velocity": {
+              "velocity_safety_factor": 0.9,
+              "acceleration_safety_factor": 0.8,
+              "merge_tolerance_meters_per_sec": 0.3,
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":4.27797,\"yMeters\":7.51967,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-1.5708,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":7.56374,\"yMeters\":6.76789,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-1.5708,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":7.81292,\"yMeters\":4.44413,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-1.5708,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":5.8009,\"yMeters\":3.97779,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13681,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":200,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+            }
+          }
+        ]
+      }
+    },
+    "depot-3.json": {
+      "display_name": "Depot 3",
       "editor_metadata": null
     }
   },
