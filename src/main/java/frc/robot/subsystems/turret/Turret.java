@@ -15,9 +15,9 @@ public class Turret extends SubsystemBase {
     private TurretIOInputs inputs = new TurretIOInputs();
 
     static class TurretConstants {
-        public static int kCANID = 45; 
+        public static int kCANID = 45;
 
-        //Tune PID/FF constants
+        // Tune PID/FF constants
         public static final double kP = 3;
         public static final double kI = 0;
         public static final double kD = 0;
@@ -42,7 +42,7 @@ public class Turret extends SubsystemBase {
 
         public static final double kMOI = 0.0873236726;
 
-        //6.5 in
+        // 6.5 in
         public static final double kLength = 0.1651;
     }
 
@@ -85,7 +85,7 @@ public class Turret extends SubsystemBase {
         return turretState;
     }
 
-      public void setState(TurretState state) {
+    public void setState(TurretState state) {
         turretState = state;
     }
 
@@ -93,7 +93,7 @@ public class Turret extends SubsystemBase {
         return inputs.angle;
     }
 
-    //just for testing in sim
+    // just for testing in sim
     public void setAngle(double angle) {
         requestedAngle = angle;
 
@@ -114,18 +114,18 @@ public class Turret extends SubsystemBase {
         possibleAngles.add(angle);
 
         if (angle >= 0) {
-            possibleAngles.add(angle-360);
+            possibleAngles.add(angle - 360);
         }
 
         if (angle <= 0) {
-            possibleAngles.add(angle+360);
+            possibleAngles.add(angle + 360);
         }
 
         double smallestAngle = angle;
-        double smallestDifference = Math.abs(angle-currentAngle);
+        double smallestDifference = Math.abs(angle - currentAngle);
 
         for (int i = 1; i < possibleAngles.size(); i++) {
-            double diff = Math.abs(possibleAngles.get(i)-currentAngle);
+            double diff = Math.abs(possibleAngles.get(i) - currentAngle);
 
             if (diff < smallestDifference) {
                 smallestDifference = diff;

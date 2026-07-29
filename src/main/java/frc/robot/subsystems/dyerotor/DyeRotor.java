@@ -120,7 +120,7 @@ public class DyeRotor extends SubsystemBase {
     return switch (state) {
       case IDLE -> 0.0;
       case SPIN -> DyeRotorConstants.kIndexForwardRPM;
-      case SPIN_BACKWARDS -> -DyeRotorConstants.kIndexBackwardRPM;
+      case SPIN_BACKWARDS -> 0.0;
     };
   }
 }

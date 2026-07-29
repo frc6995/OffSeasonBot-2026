@@ -162,7 +162,7 @@ public class Intake extends SubsystemBase {
             case IDLE -> IntakeConstants.kExtensionMinMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
             case DEPLOYED -> IntakeConstants.kExtensionMaxMeters;
-            case AGITATING -> IntakeConstants.kExtensionMinMeters;
+            case AGITATING -> IntakeConstants.kExtensionMinMeters; //fix this
         };
     }
 
@@ -171,7 +171,7 @@ public class Intake extends SubsystemBase {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
             case DEPLOYED -> IntakeConstants.kRollerForwardVolts;
-            case AGITATING -> 0.0;
+            case AGITATING -> IntakeConstants.kRollerForwardVolts;
         };
     }
 
@@ -180,7 +180,7 @@ public class Intake extends SubsystemBase {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
             case DEPLOYED -> IntakeConstants.kKickerForwardVolts;
-            case AGITATING -> 0.0;
+            case AGITATING -> IntakeConstants.kKickerForwardVolts;
         };
     }
 }

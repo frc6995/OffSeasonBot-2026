@@ -92,7 +92,7 @@ public class Flywheel extends SubsystemBase {
   private static double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
-      case ACTIVE -> 3000;
+      case ACTIVE -> 3000;  // This may need to be mapped to the shooter controller
     };
   }
 }
