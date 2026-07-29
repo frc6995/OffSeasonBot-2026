@@ -24,12 +24,6 @@ public class Hood extends SubsystemBase {
         public static final double kV = 0.1;
         public static final double kG = 0;
 
-        public static final double kSimP = 0;
-        public static final double kSimD = 0;
-        public static final double kSimS = 0;
-        public static final double kSimV = 0;
-        public static final double kSimG = 0;
-
         public static final double kStatorCurrentLimitAmps = 80;
         public static final double kSupplyCurrentLimitAmps = 40;
 

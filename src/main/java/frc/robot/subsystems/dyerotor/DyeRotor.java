@@ -94,13 +94,6 @@ public class DyeRotor extends SubsystemBase {
     return inputs.indexAppliedVolts;
   }
 
-  public boolean isSpinReady() {
-    return MathUtil.isNear(
-        resolveSpinTargetRPM(spinState),
-        inputs.spinVelocityRPM,
-        DyeRotorConstants.kSpinVelocityToleranceRPM);
-  }
-
   @Override
   public void periodic() {
     io.updateInputs(inputs);
