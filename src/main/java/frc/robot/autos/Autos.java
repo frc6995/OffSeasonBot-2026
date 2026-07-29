@@ -19,15 +19,14 @@ import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.AutoAlign;
+import frc.robot.util.POI;
 
 public class Autos {
     // Just for testing AutoAlign
     private static final Pose2d kAutoAlignTestStartPose = new Pose2d(13.7499, 4.0386, Rotation2d.kZero);
     private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(15.941938400268555, 4.038633823394775,
             Rotation2d.kZero);
-    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = new Pose2d(15.941938400268555,
-            4.038633823394775,
-            new Rotation2d(Degrees.of(70)));
+    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = POI.TEST_POSE.get();
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -76,7 +75,7 @@ public class Autos {
         autos.put("Test AutoAlign Profiled Rotation",
                 () -> auto(kAutoAlignTestStartPose, c -> {
                     c.addCommands(new AutoAlign(
-                            kAutoAlignProfiledRotationTestTargetPose,
+                            POI.TEST_POSE.get(),
                             drivetrain,
                             AutoAlign.kSlowDriveProfile,
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
