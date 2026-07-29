@@ -59,20 +59,25 @@ public class Superstructure extends SubsystemBase {
 
     }
 
-    public Command requestIntakeDeployed() {
-        return Commands.runOnce(()-> m_intake.setState(IntakeState.DEPLOYED));
+    public Command requestFuelIntaking() {
+        return Commands.runOnce(() -> m_intake.setState(IntakeState.INTAKING));
     }
 
     public Command requestIntakeRetracted() {
-        return Commands.runOnce(()-> m_intake.setState(IntakeState.RETRACTED));
+        return Commands.runOnce(() -> m_intake.setState(IntakeState.RETRACTED));
     }
 
     public Command requestIntakeAgitating() {
-       return Commands.runOnce(()-> m_intake.setState(IntakeState.AGITATING));
+        return Commands.runOnce(() -> m_intake.setState(IntakeState.AGITATING));
     }
 
+    // In actual use, Idle can mean slow roller velocity
     public Command requestIntakeIdle() {
-       return Commands.runOnce(()-> m_intake.setState(IntakeState.IDLE));
+        return Commands.runOnce(() -> m_intake.setState(IntakeState.IDLE));
+    }
+
+    public Command requestIntakeEject() {
+        return Commands.runOnce(() -> m_intake.setState(IntakeState.EJECTING));
     }
 
     public Command requestRobotIdle() {

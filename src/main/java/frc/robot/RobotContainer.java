@@ -70,7 +70,7 @@ public class RobotContainer {
         // negative X (left)
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.a().onTrue(m_Superstucture.requestIntakeDeployed());
+        joystick.a().onTrue(m_Superstucture.requestFuelIntaking());
         joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
         joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
 
