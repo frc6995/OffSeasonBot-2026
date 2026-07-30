@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.CANRange;
 import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -35,6 +36,8 @@ public class Autos {
     private final Path Depot2Path = new Path("Depot-2");
     private final Path Depot3Path = new Path("Depot-3");
 
+    private final CANRange m_canRange = new CANRange();
+
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
 
@@ -48,8 +51,9 @@ public class Autos {
                 new PIDController(7.0, 0.0, 0.0), // rotation — minimizes heading error
                 new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
-                .withDefaultShouldFlip() // auto-flip when on the red alliance
-                .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
+                .withDefaultShouldFlip(); // auto-flip when on the red alliance
+        // .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start
+        // pose
 
         registerAutos();
     }
@@ -57,11 +61,6 @@ public class Autos {
     // ============= AUTO REGISTRATION =============
 
     private void registerAutos() {
-
-        //BLine Path Commands
-        Command Depot1 = pathBuilder.build(Depot1Path);
-        Command Depot2 = pathBuilder.build(Depot2Path);
-        Command Depot3 = pathBuilder.build(Depot3Path);
 
         autos.put("AP Depot Auto",
                 () -> auto(POI.TRENCH_START.get(), c -> {
@@ -81,9 +80,15 @@ public class Autos {
                 }));
 
         autos.put("BLINE Depot Auto",
-                () -> auto(c -> {
-                    c.addCommands(Depot1);
+                () -> auto(POI.TRENCH_START.get(), c -> {
+                    
+                    // BLine Path Commands
+                    Command Depot1 = pathBuilder.build(Depot1Path);
+                    Command Depot2 = pathBuilder.build(Depot2Path);
+                    Command Depot3 = pathBuilder.build(Depot3Path);
 
+                    c.addCommands(Depot1);
+                    // .until(() -> m_canRange.isCloseToWall())
                     c.addCommands(Depot2);
 
                     c.addCommands(Depot3);
