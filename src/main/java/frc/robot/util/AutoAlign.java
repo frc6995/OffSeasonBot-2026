@@ -65,8 +65,8 @@ public class AutoAlign extends Command {
         public static double DEFAULT_ACCELERATION = 23;
         public static double DEFAULT_JERK = 6.0;
 
-        public static double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI * 2;
-        public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 0.5;
+        public static double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI * 0.7;
+        public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 0.3;
 
         public static double PROFILED_ROTATION_DEFAULT_ACCELERATION = 6 * Math.PI;
         /** Update period of the rotation profile (seconds). */
@@ -74,18 +74,10 @@ public class AutoAlign extends Command {
         /** Maximum allowable period between loop updates (seconds). */
         public static double ROTATION_PROFILE_MAX_PERIOD = 0.060;
 
-        public static APConstraints SLOW_DRIVE_CONSTRAINTS = new APConstraints(1.3, DEFAULT_ACCELERATION, 20);
-       
+        public static APConstraints SLOW_DRIVE_CONSTRAINTS = new APConstraints(1.6, DEFAULT_ACCELERATION, 60);
         public static APConstraints SLOW_CRAWL_CONSTRAINTS = new APConstraints(0.5, DEFAULT_ACCELERATION, 20);
-
-        public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(
-                DEFAULT_MAX_VELOCITY,
-                DEFAULT_ACCELERATION,
-                DEFAULT_JERK);
-
-        public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY,
-                DEFAULT_ACCELERATION, 60);
-
+        public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
+        public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
         public static APConstraints DEFAULT_CONSTRAINTS = new APConstraints(DEFAULT_ACCELERATION, DEFAULT_JERK);
 
         /** Default rotation profile constraints (acceleration only, velocity is limited separately). */
@@ -112,6 +104,12 @@ public class AutoAlign extends Command {
 
     public static APProfile kSlowCrawlProfile = new APProfile(
             AutoAlignConstants.SLOW_CRAWL_CONSTRAINTS)
+            .withErrorXY(Centimeters.of(8))
+            .withErrorTheta(Degrees.of(2.5))
+            .withBeelineRadius(Centimeters.of(8));
+
+                public static APProfile kHighJerkProfile = new APProfile(
+            AutoAlignConstants.HIGH_JERK_CONSTRAINTS)
             .withErrorXY(Centimeters.of(8))
             .withErrorTheta(Degrees.of(2.5))
             .withBeelineRadius(Centimeters.of(8));

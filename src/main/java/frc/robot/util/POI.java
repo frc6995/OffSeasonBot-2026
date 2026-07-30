@@ -4,18 +4,22 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-
+import frc.robot.generated.ChoreoVars;
 import choreo.Choreo;
 import choreo.util.ChoreoAllianceFlipUtil;
 import static frc.robot.util.AllianceFlipUtil.flipped;
 
-
 public class POI {
     // ============= POSES =============
-//Need to flip
-    public static final Supplier<Pose2d> TEST_POSE = flipped(new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(90.0)));
-        
-    public static final Supplier<Pose2d> HUB_CENTER = flipped(new Pose2d(4.624246120452881, 4.037848949432373, Rotation2d.kZero));
+    // Need to flip
+    public static final Supplier<Pose2d> HUB_CENTER = flipped(
+            new Pose2d(4.624246120452881, 4.037848949432373, Rotation2d.kZero));
+
+    public static final Supplier<Pose2d> TRENCH_START = flipped(ChoreoVars.Poses.TRENCH_START);
+    public static final Supplier<Pose2d> M_1 = flipped(ChoreoVars.Poses.M_1);
+    public static final Supplier<Pose2d> M_2 = flipped(ChoreoVars.Poses.M_2);
+    public static final Supplier<Pose2d> M_3 = flipped(ChoreoVars.Poses.M_3);
+    public static final Supplier<Pose2d> HUB_BEHIND_INTAKE = flipped(ChoreoVars.Poses.HUB_BEHIND_INTAKE);
 
     private POI() {
     }

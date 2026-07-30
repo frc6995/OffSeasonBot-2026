@@ -25,7 +25,7 @@
       "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
     }
   },
-  "active_path_file_name": "depot-3.json",
+  "active_path_file_name": "left-center-line-depot.json",
   "active_path_group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
   "path_groups": [
     {
@@ -57,20 +57,20 @@
     }
   ],
   "paths": {
-    "depot-3.json": {
-      "display_name": "Depot 3",
+    "Direction_test.json": {
+      "display_name": "Direction test",
+      "editor_metadata": null
+    },
+    "left-center-line-depot.json": {
+      "display_name": "(Left) Center Line+Depot",
       "editor_metadata": {
         "linked_targets": [
           {
-            "element_index": 0.0,
-            "target_id": "target-2f1e31fa"
+            "element_index": 5.0,
+            "target_id": "target-418b4784"
           }
         ]
       }
-    },
-    "workshop-test-2.json": {
-      "display_name": "Workshop-test-2",
-      "editor_metadata": null
     },
     "depot-2.json": {
       "display_name": "Depot 2",
@@ -115,17 +115,17 @@
         ]
       }
     },
-    "Direction_test.json": {
-      "display_name": "Direction test",
+    "workshop-test-2.json": {
+      "display_name": "Workshop-test-2",
       "editor_metadata": null
     },
-    "left-center-line-depot.json": {
-      "display_name": "(Left) Center Line+Depot",
+    "depot-3.json": {
+      "display_name": "Depot 3",
       "editor_metadata": {
         "linked_targets": [
           {
-            "element_index": 5.0,
-            "target_id": "target-418b4784"
+            "element_index": 0.0,
+            "target_id": "target-2f1e31fa"
           }
         ]
       }

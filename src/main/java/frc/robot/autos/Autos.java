@@ -1,6 +1,5 @@
 package frc.robot.autos;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 
 import java.util.LinkedHashMap;
@@ -11,7 +10,6 @@ import java.util.function.Supplier;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -23,10 +21,6 @@ import frc.robot.util.POI;
 
 public class Autos {
     // Just for testing AutoAlign
-    private static final Pose2d kAutoAlignTestStartPose = new Pose2d(13.7499, 4.0386, Rotation2d.kZero);
-    private static final Pose2d kAutoAlignTestTargetPose = new Pose2d(15.941938400268555, 4.038633823394775,
-            Rotation2d.kZero);
-    private static final Pose2d kAutoAlignProfiledRotationTestTargetPose = POI.TEST_POSE.get();
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -35,7 +29,6 @@ public class Autos {
 
     // ============= BLINE PATHS =============
 
-    private final Path directionTestPath = new Path("Direction_test");
     private final Path workshopTest1 = new Path("workshop-test-1");
     private final Path workshopTest2 = new Path("workshop-test-2");
     private final Path Depot1Path = new Path("Left-Center-Line-Depot");
@@ -45,6 +38,7 @@ public class Autos {
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
 
+        // For Bline
         pathBuilder = new FollowPath.Builder(
                 drivetrain, // Subsystem requirement
                 drivetrain::getPose, // Supplier<Pose2d>
@@ -63,32 +57,22 @@ public class Autos {
     // ============= AUTO REGISTRATION =============
 
     private void registerAutos() {
-        autos.put("Test AutoAlign Basic",
-                // In actual use, this pose will need to be flipped
-                () -> auto(kAutoAlignTestStartPose, c -> {
-                    c.addCommands(new AutoAlign(
-                            kAutoAlignTestTargetPose,
-                            drivetrain,
-                            AutoAlign.kDefaultVelocityLimitedProfile));
-                }));
 
-        autos.put("Test AutoAlign Profiled Rotation",
-                () -> auto(kAutoAlignTestStartPose, c -> {
-                    c.addCommands(new AutoAlign(
-                            POI.TEST_POSE.get(),
-                            drivetrain,
-                            AutoAlign.kSlowDriveProfile,
-                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
-                }));
+        autos.put("AP Depot Auto",
+                () -> auto(POI.TRENCH_START.get(), c -> {
 
-        autos.put("Test AutoAlign Profiled Rotation Distance Cancel",
-                () -> auto(kAutoAlignTestStartPose, c -> {
-                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(
-                            AutoAlign.kDefaultVelocityLimitedProfile,
-                            kAutoAlignProfiledRotationTestTargetPose,
-                            drivetrain,
-                            Meters.of(1.5),
-                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_SLOW_VELOCITY));
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kHighJerkProfile,
+                            POI.M_1.get(), drivetrain, Meters.of(1.0)));
+
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kHighJerkProfile,
+                            POI.M_2.get(), drivetrain, Meters.of(1.0)));
+
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kSlowDriveProfile,
+                            POI.M_3.get(), drivetrain, Meters.of(1.0)));
+
+                    c.addCommands(new AutoAlign(
+                            POI.HUB_BEHIND_INTAKE.get(), drivetrain, AutoAlign.kSlowDriveProfile,
+                            AutoAlign.AutoAlignConstants.PROFILED_ROTATION_DEFAULT_VELOCITY).withTimeout(2.0));
                 }));
 
         autos.put("BLINE Depot Auto",
