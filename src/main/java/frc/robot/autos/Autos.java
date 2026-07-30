@@ -38,7 +38,7 @@ public class Autos {
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
 
-        // For Bline
+        // Bline Configurations
         pathBuilder = new FollowPath.Builder(
                 drivetrain, // Subsystem requirement
                 drivetrain::getPose, // Supplier<Pose2d>
@@ -57,6 +57,11 @@ public class Autos {
     // ============= AUTO REGISTRATION =============
 
     private void registerAutos() {
+
+        //BLine Path Commands
+        Command Depot1 = pathBuilder.build(Depot1Path);
+        Command Depot2 = pathBuilder.build(Depot2Path);
+        Command Depot3 = pathBuilder.build(Depot3Path);
 
         autos.put("AP Depot Auto",
                 () -> auto(POI.TRENCH_START.get(), c -> {
@@ -77,10 +82,6 @@ public class Autos {
 
         autos.put("BLINE Depot Auto",
                 () -> auto(c -> {
-                    Command Depot1 = pathBuilder.build(Depot1Path);
-                    Command Depot2 = pathBuilder.build(Depot2Path);
-                    Command Depot3 = pathBuilder.build(Depot3Path);
-
                     c.addCommands(Depot1);
 
                     c.addCommands(Depot2);

@@ -16,7 +16,24 @@
       },
       "field": {
         "selected_field_id": "frc2026-rebuilt",
-        "custom_fields": []
+        "custom_fields": [
+          {
+            "id": "custom:field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png",
+            "name": "Choreo v2026.0.3 macOS aarch64.dmg",
+            "asset_id": "field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png",
+            "file_name": "Choreo-v2026.0.3-macOS-aarch64.dmg",
+            "mime_type": "application/x-diskcopy",
+            "size_bytes": 9426851.0,
+            "created_at": "2026-07-30T04:25:42.867Z",
+            "geometry": {
+              "length_meters": 17.54,
+              "width_meters": 9.07,
+              "coordinate_offset_meters": 0.5,
+              "coordinate_offset_x_meters": 0.5,
+              "coordinate_offset_y_meters": 0.5
+            }
+          }
+        ]
       }
     },
     "kinematic_constraints": {
@@ -25,7 +42,7 @@
       "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
     }
   },
-  "active_path_file_name": "left-center-line-depot.json",
+  "active_path_file_name": "depot-2.json",
   "active_path_group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
   "path_groups": [
     {
@@ -43,34 +60,23 @@
       "target_id": "target-418b4784",
       "display_name": "InFrontOfHub",
       "kind": "waypoint",
-      "x_meters": 5.89315,
-      "y_meters": 4.04078,
+      "x_meters": 5.64077,
+      "y_meters": 4.03516,
       "rotation_radians": 3.14148
     },
     {
       "target_id": "target-2f1e31fa",
       "display_name": "InDepot",
       "kind": "waypoint",
-      "x_meters": 0.22384,
-      "y_meters": 6.01994,
+      "x_meters": 0.25993,
+      "y_meters": 6.06897,
       "rotation_radians": -3.1381
     }
   ],
   "paths": {
-    "Direction_test.json": {
-      "display_name": "Direction test",
+    "workshop-test-2.json": {
+      "display_name": "Workshop-test-2",
       "editor_metadata": null
-    },
-    "left-center-line-depot.json": {
-      "display_name": "(Left) Center Line+Depot",
-      "editor_metadata": {
-        "linked_targets": [
-          {
-            "element_index": 5.0,
-            "target_id": "target-418b4784"
-          }
-        ]
-      }
     },
     "depot-2.json": {
       "display_name": "Depot 2",
@@ -86,20 +92,20 @@
               "velocity_safety_factor": 0.9,
               "acceleration_safety_factor": 0.8,
               "merge_tolerance_meters_per_sec": 0.3,
-              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":6.189091820712084,\"yMeters\":4.024596455433944,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.1210041785690823,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.967554388574677,\"yMeters\":5.243005133974127,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":3.4565182888644124,\"yMeters\":5.543570951418523,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":0.5834407553358409,\"yMeters\":5.9956125947526635,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":20000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":5.6347537798479905,\"yMeters\":4.0155501817608785,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.14148,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.4537791239948525,\"yMeters\":4.465800404137607,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.13827303252423,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.212931719900147,\"yMeters\":5.6526354885425985,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.1381,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":3.35443,\"yMeters\":5.62224,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.1381,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":0.22384,\"yMeters\":6.01994,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.1381,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":7020,\"maxAccelerationDegPerSec\":2000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
             }
           },
           {
             "key": "max_velocity_meters_per_sec",
-            "value": 2.34,
+            "value": 2.95,
             "start_ordinal": 2,
-            "end_ordinal": 2,
+            "end_ordinal": 3,
             "source": "auto_velocity",
             "auto_velocity": {
               "velocity_safety_factor": 0.9,
               "acceleration_safety_factor": 0.8,
               "merge_tolerance_meters_per_sec": 0.3,
-              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":6.189091820712084,\"yMeters\":4.024596455433944,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.1210041785690823,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.967554388574677,\"yMeters\":5.243005133974127,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":3.4565182888644124,\"yMeters\":5.543570951418523,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":0.5834407553358409,\"yMeters\":5.9956125947526635,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.13810081543725,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":20000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":5.6347537798479905,\"yMeters\":4.0155501817608785,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.14148,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.4537791239948525,\"yMeters\":4.465800404137607,\"handoffRadiusMeters\":0.45,\"rotationRadians\":3.13827303252423,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":6.212931719900147,\"yMeters\":5.6526354885425985,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.1381,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":3.35443,\"yMeters\":5.62224,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.1381,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":0.22384,\"yMeters\":6.01994,\"handoffRadiusMeters\":0.45,\"rotationRadians\":-3.1381,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":7020,\"maxAccelerationDegPerSec\":2000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
             }
           }
         ],
@@ -109,14 +115,25 @@
             "target_id": "target-418b4784"
           },
           {
-            "element_index": 3.0,
+            "element_index": 4.0,
             "target_id": "target-2f1e31fa"
           }
         ]
       }
     },
-    "workshop-test-2.json": {
-      "display_name": "Workshop-test-2",
+    "left-center-line-depot.json": {
+      "display_name": "(Left) Center Line+Depot",
+      "editor_metadata": {
+        "linked_targets": [
+          {
+            "element_index": 5.0,
+            "target_id": "target-418b4784"
+          }
+        ]
+      }
+    },
+    "Direction_test.json": {
+      "display_name": "Direction test",
       "editor_metadata": null
     },
     "depot-3.json": {
@@ -177,5 +194,22 @@
       }
     }
   },
-  "field_assets": {}
+  "field_assets": {
+    "field-bd99cee4-7c44-4fb4-99ed-927e571ea999.png": {
+      "file_name": "model_0.glb",
+      "mime_type": "model/gltf-binary"
+    },
+    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
+      "file_name": "DSCN8698.JPG",
+      "mime_type": "image/jpeg"
+    },
+    "field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png": {
+      "file_name": "Choreo-v2026.0.3-macOS-aarch64.dmg",
+      "mime_type": "application/x-diskcopy"
+    },
+    "field-02720075-4c8c-427c-8759-646c835cd666.png": {
+      "file_name": "tempImageF3Xr1W.png",
+      "mime_type": "image/png"
+    }
+  }
 }
