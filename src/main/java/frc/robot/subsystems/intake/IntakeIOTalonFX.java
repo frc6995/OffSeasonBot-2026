@@ -198,7 +198,6 @@ public class IntakeIOTalonFX implements IntakeIO {
     }
 
 
-    //not used??
     protected static double metersToMechanismRotations(double meters) {
         return meters / IntakeConstants.kDrumCircumferenceMeters;
     }

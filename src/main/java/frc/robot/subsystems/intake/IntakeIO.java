@@ -17,8 +17,6 @@ public interface IntakeIO {
         setKickerVoltage(0.0);
     }
 
-
-
     class IntakeInputs {
 
         public double rollerAppliedVolts;
@@ -38,6 +36,4 @@ public interface IntakeIO {
         public boolean extensionLeadMotorConnected;
         public boolean extensionFollowerMotorConnected;
     }
-
-    
 }
