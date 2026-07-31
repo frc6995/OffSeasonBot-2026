@@ -21,7 +21,6 @@ import frc.robot.util.AutoAlign;
 import frc.robot.util.POI;
 
 public class Autos {
-    // Just for testing AutoAlign
 
     private final CommandSwerveDrivetrain drivetrain;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -52,8 +51,7 @@ public class Autos {
                 new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
                 .withDefaultShouldFlip(); // auto-flip when on the red alliance
-        // .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start
-        // pose
+        // .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
 
         registerAutos();
     }
@@ -81,15 +79,16 @@ public class Autos {
 
         autos.put("BLINE Depot Auto",
                 () -> auto(POI.TRENCH_START.get(), c -> {
-                    
+
                     // BLine Path Commands
                     Command Depot1 = pathBuilder.build(Depot1Path);
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(Depot1);
-                    // .until(() -> m_canRange.isCloseToWall())
-                    c.addCommands(Depot2);
+                    c.addCommands(Depot1
+                            .until(() -> m_canRange.isCloseToWall()));
+                    c.addCommands(Depot2
+                            .until(() -> m_canRange.isCloseToWall()));
 
                     c.addCommands(Depot3);
 
@@ -117,6 +116,10 @@ public class Autos {
 
     public AutoChooser getAutoChooser() {
         return autoChooser;
+    }
+
+    public CANRange getCanRange() {
+        return m_canRange;
     }
 
     // ============= AUTO BUILDER =============

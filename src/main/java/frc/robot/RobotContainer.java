@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
@@ -32,10 +33,10 @@ public class RobotContainer {
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
+
     public Superstructure m_Superstucture = new Superstructure();
     public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
@@ -80,7 +81,9 @@ public class RobotContainer {
         joystick.a().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.SPIN)));
         joystick.b().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.IDLE)));
 
-       
+        // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
+        // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
+        autos.getCanRange().setSimProximitySupplier(joystick.x());
     }
 
     public Command getAutonomousCommand() {
