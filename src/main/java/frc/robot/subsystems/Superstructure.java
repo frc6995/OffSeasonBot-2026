@@ -68,7 +68,13 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command requestIntakeAgitating() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.AGITATING));
+        return Commands.runOnce(() -> m_intake.agitate());
+    }
+
+    // Sweeps the extension between the two given distances every intervalSeconds
+    // while the rollers and kicker keep spinning
+    public Command requestIntakeAgitating(double nearMeters, double farMeters, double intervalSeconds) {
+        return Commands.runOnce(() -> m_intake.agitate(nearMeters, farMeters, intervalSeconds));
     }
 
     // In actual use, Idle can mean slow roller velocity
