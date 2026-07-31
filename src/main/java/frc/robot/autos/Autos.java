@@ -85,9 +85,10 @@ public class Autos {
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(Depot1
+                    c.addCommands((Depot1.withTimeout(5))
                             .until(() -> m_canRange.isCloseToWall()));
-                    c.addCommands(Depot2
+
+                    c.addCommands((Depot2.withTimeout(7))
                             .until(() -> m_canRange.isCloseToWall()));
 
                     c.addCommands(Depot3);
