@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -36,6 +37,10 @@ public class Autos {
     private final Path Depot3Path = new Path("Depot-3");
 
     private final CANRange m_canRange = new CANRange();
+
+    // Delay before CANRange readings are trusted, so the sensor can't trip a path early
+    // (e.g. while still turning away from a wall at the start of the path).
+    private static final double CANRANGE_SENSOR_DELAY_SECONDS = 2.5;
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -85,11 +90,9 @@ public class Autos {
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands((Depot1.withTimeout(5))
-                            .until(() -> m_canRange.isCloseToWall()));
+                    c.addCommands(untilCloseToWall(Depot1, 5));
 
-                    c.addCommands((Depot2.withTimeout(7))
-                            .until(() -> m_canRange.isCloseToWall()));
+                    c.addCommands(untilCloseToWall(Depot2, 7));
 
                     c.addCommands(Depot3);
 
@@ -109,6 +112,18 @@ public class Autos {
                 }));
 
         autos.forEach(autoChooser::addCmd);
+    }
+
+    // Runs path until timeoutSeconds elapses or CANRange reports close-to-wall,
+    // ignoring the sensor for the first CANRANGE_SENSOR_DELAY_SECONDS of the path.
+    private Command untilCloseToWall(Command path, double timeoutSeconds) {
+        Timer sensorDelayTimer = new Timer();
+
+        return Commands.sequence(
+                Commands.runOnce(sensorDelayTimer::restart),
+                path.withTimeout(timeoutSeconds)
+                        .until(() -> sensorDelayTimer.hasElapsed(CANRANGE_SENSOR_DELAY_SECONDS)
+                                && m_canRange.isCloseToWall()));
     }
 
     public Command selectedCommand() {
