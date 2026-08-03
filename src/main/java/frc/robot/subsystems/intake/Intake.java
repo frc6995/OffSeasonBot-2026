@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.currentlimit.CurrentLimit;
 
 public class Intake extends SubsystemBase {
 
@@ -105,6 +106,14 @@ public class Intake extends SubsystemBase {
 
     public void resetEncoder() {
         io.resetEncoder();
+    }
+
+    public void setRollerCurrentLimit(CurrentLimit limit) {
+        io.setRollerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
+    public void setKickerCurrentLimit(CurrentLimit limit) {
+        io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
     }
 
     public double getRollerAppliedVolts() {

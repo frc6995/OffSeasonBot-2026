@@ -22,6 +22,10 @@ import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
 
 public class IntakeIOTalonFX implements IntakeIO {
+    // A timeout of 0 tells the configurator to send the config and return immediately instead
+    // of blocking for a CAN response, so calling this from periodic() can't cause loop overruns.
+    private static final double kDynamicConfigTimeoutSeconds = 0.0;
+
     protected final TalonFX m_rollerLeadMotor
    = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
 
@@ -189,6 +193,27 @@ public class IntakeIOTalonFX implements IntakeIO {
     public void setExtensionPosition(double positionMeters) {
         m_extensionLeadMotor.setControl(m_extensionRequest
         .withPosition(metersToMechanismRotations(positionMeters)));
+    }
+
+    @Override
+    public void setRollerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(statorCurrentLimitAmps)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(supplyCurrentLimitAmps)
+            .withSupplyCurrentLimitEnable(true);
+        m_rollerLeadMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds);
+        m_rollerFollowerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds);
+    }
+
+    @Override
+    public void setKickerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(statorCurrentLimitAmps)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(supplyCurrentLimitAmps)
+            .withSupplyCurrentLimitEnable(true);
+        m_kickerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds);
     }
 
     @Override

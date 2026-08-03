@@ -21,6 +21,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.Telemetry;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
+import frc.robot.util.currentlimit.CurrentLimitManager;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -47,8 +48,12 @@ public class RobotContainer {
 
     public final Autos autos = new Autos(drivetrain);
 
+    public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
+
     public RobotContainer() {
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
+
+        RobotCurrentLimits.configure(currentLimitManager, m_Superstucture, drivetrain);
 
         configureBindings();
         SignalLogger.enableAutoLogging(false);

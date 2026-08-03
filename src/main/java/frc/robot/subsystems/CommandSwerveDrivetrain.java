@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -255,6 +256,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public SwerveDriveState state() {
         return getState();
+    }
+
+    /**
+     * Sets the supply current limit on every drive motor. Uses a 0-second config timeout so the
+     * call returns immediately instead of blocking on a CAN response, making it safe to call from
+     * periodic() when the limit changes (e.g. from a {@link frc.robot.RobotCurrentLimits} rule).
+     */
+    public void setDriveSupplyCurrentLimit(double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(supplyCurrentLimitAmps)
+            .withSupplyCurrentLimitEnable(true);
+        for (var module : getModules()) {
+            module.getDriveMotor().getConfigurator().apply(limits, 0.0);
+        }
     }
 
     public void drive(ChassisSpeeds speeds) {

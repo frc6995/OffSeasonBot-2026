@@ -41,6 +41,10 @@ public class Superstructure extends SubsystemBase {
 
     RobotState robotState = RobotState.IDLE;
 
+    public RobotState getRobotState() {
+        return robotState;
+    }
+
     public Superstructure() {
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
