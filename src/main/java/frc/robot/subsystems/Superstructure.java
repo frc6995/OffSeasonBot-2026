@@ -113,7 +113,7 @@ public class Superstructure extends SubsystemBase {
     @Override
     public void periodic() {
         //Just for sim testing, remove for actual use
-        System.out.println("[Superstructure] Shoot would engage " + determineShootState() + " mode");
+        System.out.println("[Superstructure] Shoot button would engage " + determineShootState() );
     }
 
     //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
