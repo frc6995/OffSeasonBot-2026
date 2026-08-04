@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import choreo.util.ChoreoAllianceFlipUtil;
 import frc.robot.util.FieldSize;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -83,6 +84,20 @@ public class AllianceFlipUtil {
 
     public static Supplier<Pose2d> flipped(Pose2d blue) {
         return constant(blue, ChoreoAllianceFlipUtil.flip(blue));
+    }
+
+    /** Flips an axis-aligned Rectangle2d to its red-alliance mirror. */
+    public static Rectangle2d flipRectangle(Rectangle2d blue) {
+        Translation2d center = blue.getCenter().getTranslation();
+        double halfX = blue.getXWidth() / 2.0;
+        double halfY = blue.getYWidth() / 2.0;
+        Translation2d cornerA = new Translation2d(center.getX() - halfX, center.getY() - halfY);
+        Translation2d cornerB = new Translation2d(center.getX() + halfX, center.getY() + halfY);
+        return new Rectangle2d(ChoreoAllianceFlipUtil.flip(cornerA), ChoreoAllianceFlipUtil.flip(cornerB));
+    }
+
+    public static Supplier<Rectangle2d> flipped(Rectangle2d blue) {
+        return constant(blue, flipRectangle(blue));
     }
 
     public static Command flippedCommand(Function<Pose2d, Command> supplier, Pose2d blue) {

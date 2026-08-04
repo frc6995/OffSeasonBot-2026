@@ -37,13 +37,13 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    public Superstructure m_Superstucture = new Superstructure();
     public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
             TunerConstants.FrontLeft,
             TunerConstants.FrontRight,
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
+    public Superstructure m_Superstucture = new Superstructure(drivetrain::getPose);
 
     public final Autos autos = new Autos(drivetrain);
 
