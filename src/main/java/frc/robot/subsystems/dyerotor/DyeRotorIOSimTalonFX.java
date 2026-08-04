@@ -8,6 +8,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
+import frc.robot.util.CtreUtil;
 
 public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
   private final FlywheelSim spinSim = new FlywheelSim(
@@ -31,14 +32,9 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
 
   private void configureSim() {
 
-    configureKrakenSim(m_spinMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
-    configureKrakenSim(m_indexerLead.getSimState(), ChassisReference.CounterClockwise_Positive);
-    configureKrakenSim(m_indexerFollow.getSimState(), ChassisReference.CounterClockwise_Positive);
-  }
-
-  private static void configureKrakenSim(TalonFXSimState simState, ChassisReference orientation) {
-    simState.Orientation = orientation;
-    simState.setMotorType(TalonFXSimState.MotorType.KrakenX60);
+    CtreUtil.configureKrakenX60Sim(m_spinMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
+    CtreUtil.configureKrakenX60Sim(m_indexerLead.getSimState(), ChassisReference.CounterClockwise_Positive);
+    CtreUtil.configureKrakenX60Sim(m_indexerFollow.getSimState(), ChassisReference.CounterClockwise_Positive);
   }
 
   @Override

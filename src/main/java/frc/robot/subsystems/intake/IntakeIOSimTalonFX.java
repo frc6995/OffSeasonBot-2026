@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
+import frc.robot.util.CtreUtil;
 
 public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     private static final double kSimLoopPeriodSeconds = 0.02;
@@ -53,16 +54,11 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     }
 
     private void configureSim() {
-        configureKrakenSim(m_rollerLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
-        configureKrakenSim(m_rollerFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
-        configureKrakenSim(m_extensionLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
-        configureKrakenSim(m_extensionFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
-        configureKrakenSim(m_kickerMotor.getSimState(), ChassisReference.Clockwise_Positive);
-    }
-
-    private static void configureKrakenSim(TalonFXSimState simState, ChassisReference orientation) {
-        simState.Orientation = orientation;
-        simState.setMotorType(TalonFXSimState.MotorType.KrakenX60);
+        CtreUtil.configureKrakenX60Sim(m_rollerLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
+        CtreUtil.configureKrakenX60Sim(m_rollerFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
+        CtreUtil.configureKrakenX60Sim(m_extensionLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
+        CtreUtil.configureKrakenX60Sim(m_extensionFollowerMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
+        CtreUtil.configureKrakenX60Sim(m_kickerMotor.getSimState(), ChassisReference.Clockwise_Positive);
     }
 
     @Override

@@ -1,19 +1,12 @@
 package frc.robot.subsystems.flywheel;
 
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import edu.wpi.first.math.system.plant.DCMotor;
-
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import frc.robot.util.CtreUtil;
 
 public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX {
   private final FlywheelSim flywheelSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(
@@ -29,15 +22,10 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX {
 
   private void configureSim() {
 
-    configureKrakenSim(m_flywheelLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
-    // configureKrakenSim(m_flywheelFollowMotor1.getSimState(),ChassisReference.Clockwise_Positive);
-    // configureKrakenSim(m_flywheelFollowMotor2.getSimState(),ChassisReference.CounterClockwise_Positive);
-    // configureKrakenSim(m_flywheelFollowMotor3.getSimState(),ChassisReference.CounterClockwise_Positive);
-  }
-
-  private static void configureKrakenSim(TalonFXSimState simState, ChassisReference orientation) {
-    simState.Orientation = orientation;
-    simState.setMotorType(TalonFXSimState.MotorType.KrakenX44);
+    CtreUtil.configureKrakenX44Sim(m_flywheelLeadMotor.getSimState(), ChassisReference.Clockwise_Positive);
+    // CtreUtil.configureKrakenX44Sim(m_flywheelFollowMotor1.getSimState(),ChassisReference.Clockwise_Positive);
+    // CtreUtil.configureKrakenX44Sim(m_flywheelFollowMotor2.getSimState(),ChassisReference.CounterClockwise_Positive);
+    // CtreUtil.configureKrakenX44Sim(m_flywheelFollowMotor3.getSimState(),ChassisReference.CounterClockwise_Positive);
   }
 
   @Override

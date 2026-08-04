@@ -1,9 +1,9 @@
 package frc.robot.subsystems.turret;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.util.CtreUtil;
 
 public class TurretIOSimTalonFX extends TurretIOTalonFX {
 
@@ -24,9 +24,8 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
   }
 
   private void configureSim() {
-    var simState = m_turretMotor.getSimState();
-    simState.Orientation = ChassisReference.CounterClockwise_Positive;
-    simState.setMotorType(TalonFXSimState.MotorType.KrakenX44);
+    CtreUtil.configureKrakenX44Sim(
+        m_turretMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
   }
 
   @Override
