@@ -39,8 +39,7 @@ public class Autos {
     private final CANRange m_canRange = new CANRange();
 
     // Delay before CANRange readings are trusted, so the sensor can't trip a path early
-    // (e.g. while still turning away from a wall at the start of the path).
-    private static final double CANRANGE_SENSOR_DELAY_SECONDS = 2.5;
+    private static final double kCANRangeDelaySeconds = 2.5;
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -115,14 +114,14 @@ public class Autos {
     }
 
     // Runs path until timeoutSeconds elapses or CANRange reports close-to-wall,
-    // ignoring the sensor for the first CANRANGE_SENSOR_DELAY_SECONDS of the path.
+    // ignoring the sensor for the first specified seconds of the path.
     private Command untilCloseToWall(Command path, double timeoutSeconds) {
         Timer sensorDelayTimer = new Timer();
 
         return Commands.sequence(
                 Commands.runOnce(sensorDelayTimer::restart),
                 path.withTimeout(timeoutSeconds)
-                        .until(() -> sensorDelayTimer.hasElapsed(CANRANGE_SENSOR_DELAY_SECONDS)
+                        .until(() -> sensorDelayTimer.hasElapsed(kCANRangeDelaySeconds)
                                 && m_canRange.isCloseToWall()));
     }
 
