@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Meters;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
