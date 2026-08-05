@@ -7,8 +7,7 @@ import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.generated.ChoreoVars;
-import choreo.Choreo;
-import choreo.util.ChoreoAllianceFlipUtil;
+
 import static frc.robot.util.AllianceFlipUtil.flipped;
 
 public class POI {

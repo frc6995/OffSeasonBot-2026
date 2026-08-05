@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
-    private double autoSimTime = 20;
+    private double autoSimTime = 20.0; // seconds to wait before disabling autonomous in simulation
 
     private final RobotContainer m_robotContainer;
 
@@ -51,14 +51,14 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         if (RobotBase.isSimulation()) {
-            Commands.waitSeconds(autoSimTime)
-                    .andThen(
-                            () -> {
-                                DriverStationSim.setEnabled(false);
-                                DriverStationSim.notifyNewData();
-                            })
-                    .onlyWhile(DriverStation::isAutonomousEnabled)
-                    .schedule();
+            CommandScheduler.getInstance().schedule(
+                    Commands.waitSeconds(autoSimTime)
+                            .andThen(
+                                    () -> {
+                                        DriverStationSim.setEnabled(false);
+                                        DriverStationSim.notifyNewData();
+                                    })
+                            .onlyWhile(DriverStation::isAutonomousEnabled));
         }
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 

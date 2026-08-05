@@ -1,7 +1,5 @@
 package frc.robot.util;
 
-import static edu.wpi.first.units.Units.Meters;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -9,18 +7,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import choreo.util.ChoreoAllianceFlipUtil;
-import frc.robot.util.FieldSize;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class AllianceFlipUtil {
     public static double FIELD_WIDTH = FieldSize.FIELD_WIDTH_M;
