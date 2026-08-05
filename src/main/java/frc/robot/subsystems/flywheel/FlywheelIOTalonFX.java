@@ -71,10 +71,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   public void updateInputs(FlywheelInputs inputs) {
     BaseStatusSignal.refreshAll(
         m_FlywheelVelocity, m_FlywheelVoltage, m_FlywheelSupCurrent, m_FlywheelStatCurrent);
-    inputs.velocityRPM = (m_flywheelLeadMotor.getVelocity().refresh().getValueAsDouble() * 60);
-    inputs.appliedVolts = m_flywheelLeadMotor.getMotorVoltage().refresh().getValueAsDouble();
-    inputs.statorCurrentAmps = m_flywheelLeadMotor.getStatorCurrent().refresh().getValueAsDouble();
-    inputs.supplyCurrentAmps = m_flywheelLeadMotor.getSupplyCurrent().refresh().getValueAsDouble();
+    inputs.velocityRPM = m_FlywheelVelocity.getValueAsDouble() * 60;
+    inputs.appliedVolts = m_FlywheelVoltage.getValueAsDouble();
+    inputs.statorCurrentAmps = m_FlywheelStatCurrent.getValueAsDouble();
+    inputs.supplyCurrentAmps = m_FlywheelSupCurrent.getValueAsDouble();
     inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
     inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
     inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();

@@ -56,6 +56,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
+    /* Swerve request reused by drive(ChassisSpeeds), e.g. for PathPlanner path-following */
+    private final SwerveRequest.RobotCentric m_robotCentricDriveRequest = new SwerveRequest.RobotCentric()
+            .withDriveRequestType(DriveRequestType.Velocity);
+
     public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
             : new RealATVision(getPigeon2()::getRotation3d, this::resetPose);
 
@@ -258,14 +262,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void drive(ChassisSpeeds speeds) {
-        SwerveRequest.RobotCentric drive_request = new SwerveRequest.RobotCentric()
-                .withDriveRequestType(DriveRequestType.Velocity);
-
-        drive_request.withVelocityX(speeds.vxMetersPerSecond);
-        drive_request.withVelocityY(speeds.vyMetersPerSecond);
-        drive_request.withRotationalRate(speeds.omegaRadiansPerSecond);
-
-        this.setControl(drive_request);
+        this.setControl(m_robotCentricDriveRequest
+                .withVelocityX(speeds.vxMetersPerSecond)
+                .withVelocityY(speeds.vyMetersPerSecond)
+                .withRotationalRate(speeds.omegaRadiansPerSecond));
     }
 
     @Override
