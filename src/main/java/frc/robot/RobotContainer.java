@@ -113,8 +113,7 @@ public class RobotContainer {
     //     // Anti-jam. Currently a no-op until K-9 is implemented.
     //     joystick.x().onTrue(Commands.runOnce(superstructure::requestIntakeAgitating))
     //             // .onFalse(Commands.runOnce(superstructure::requestIntakeIdle));
-    //  * 
-     */
+    //  
 
     public Command getAutonomousCommand() {
         return autos.selectedCommand();

@@ -134,7 +134,7 @@ public class Superstructure extends SubsystemBase {
             engageShootState(targetState);
             robotState = RobotState.SCORING;
             m_dyeRotor.setState(DyeRotorState.SPIN);
-            m_turret.setState(TurretState.ACTIVE);
+            m_turret.setState(TurretState.AIM_CENTRAL);
             m_flywheel.setState(FlywheelState.ACTIVE);
             m_hood.setAngle(kScoringHoodAngleDeg);
         });
@@ -144,19 +144,8 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> engageShootState(RobotState.SCORING));
     }
 
-    public Command requestRobotScoring() {
-        return Commands.runOnce(() -> engageShootState(RobotState.SCORING));
-    }
-
     public Command requestRobotPassing() {
         return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
-        return Commands.runOnce(() -> {
-            robotState = RobotState.PASSING;
-            m_flywheel.setState(FlywheelState.ACTIVE);
-            m_dyeRotor.setState(DyeRotorState.SPIN);
-            m_turret.setState(TurretState.ACTIVE);
-            m_hood.setAngle(kPassingHoodAngleDeg);
-        });
     }
 
     public RobotState getRobotState() {
