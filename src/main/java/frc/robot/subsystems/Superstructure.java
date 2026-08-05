@@ -37,11 +37,11 @@ public class Superstructure extends SubsystemBase {
         SCORING
     }
 
-    public final Intake m_intake;
-    public final Hood m_hood;
-    public final Flywheel m_flywheel;
-    public final Turret m_turret;
-    public final DyeRotor m_dyeRotor;
+    public Intake m_intake;
+    public Hood m_hood;
+    public Flywheel m_flywheel;
+    public Turret m_turret;
+    public DyeRotor m_dyeRotor;
 
     RobotState robotState = RobotState.IDLE;
 
@@ -63,6 +63,7 @@ public class Superstructure extends SubsystemBase {
             this.m_turret = new Turret(new TurretIOTalonFX());
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
+
     }
 
     public Command requestFuelIntaking() {
@@ -86,24 +87,12 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.setState(IntakeState.EJECTING));
     }
 
-    /**
-     * PLACEHOLDER hood setpoints. These are not characterised — they exist so the
-     * hood is commanded at all rather than sitting in DISABLED. Replace with a
-     * distance-indexed table once the shot is measured.
-     * See K-2 and K-4 in {@code 08-operations/known-issues.md}.
-     */
-    private static final double kScoringHoodAngleDeg = 35.0;
-
-    private static final double kPassingHoodAngleDeg = 15.0;
-
     public Command requestRobotIdle() {
 
         return Commands.runOnce(() -> {
             robotState = RobotState.IDLE;
             m_dyeRotor.setState(DyeRotorState.SPIN_BACKWARDS);
             m_turret.setState(TurretState.DISABLED);
-            m_flywheel.setState(FlywheelState.DISABLED);
-            m_hood.setState(HoodState.DISABLED);
             m_flywheel.setState(FlywheelState.DISABLED);
         });
     }
@@ -132,11 +121,6 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> {
             RobotState targetState = determineShootState();
             engageShootState(targetState);
-            robotState = RobotState.SCORING;
-            m_dyeRotor.setState(DyeRotorState.SPIN);
-            m_turret.setState(TurretState.AIM_CENTRAL);
-            m_flywheel.setState(FlywheelState.ACTIVE);
-            m_hood.setAngle(kScoringHoodAngleDeg);
         });
     }
 
@@ -146,9 +130,5 @@ public class Superstructure extends SubsystemBase {
 
     public Command requestRobotPassing() {
         return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
-    }
-
-    public RobotState getRobotState() {
-        return robotState;
     }
 }
