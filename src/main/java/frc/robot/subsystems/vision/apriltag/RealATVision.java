@@ -45,7 +45,7 @@ public class RealATVision extends AprilTagVision {
                 new Rotation3d(Degrees.zero(), Degrees.of(30), Degrees.zero())
             )
         };
-        public static final EstimationMode kDefaultMode = EstimationMode.MEGATAG2;
+        public static final EstimationMode kDefaultMode = EstimationMode.MEGATAG1;
 
         public static final double[] kMT2StdDevCoefficients = {0.085, 0.0}; // deviation order is [xy, theta]
         public static final double[] kMT1StdDevCoefficients = {0.1, 0.075};

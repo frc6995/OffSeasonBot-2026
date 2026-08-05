@@ -1,22 +1,23 @@
 package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.util.CtreUtil;
 
 public class TurretIOSimTalonFX extends TurretIOTalonFX {
 
   private final SingleJointedArmSim m_TurretSim = new SingleJointedArmSim(
-      DCMotor.getKrakenX44(1),
-      Turret.TurretConstants.kReduction,
-      Turret.TurretConstants.kMOI, // Need MOI
-      Turret.TurretConstants.kLength,
-      Math.toRadians(Turret.TurretConstants.kMinAngle),
-      Math.toRadians(Turret.TurretConstants.kMaxAngle),
-      false,
-      0);
+        DCMotor.getKrakenX44(1), 
+        Turret.TurretConstants.kReduction, 
+        Turret.TurretConstants.kMOI, //Need MOI
+        Turret.TurretConstants.kLength, 
+        Math.toRadians(Turret.TurretConstants.kMinAngle), 
+        Math.toRadians(Turret.TurretConstants.kMaxAngle), 
+        false, 
+        0);
+
 
   public TurretIOSimTalonFX() {
     super();
@@ -24,13 +25,14 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
   }
 
   private void configureSim() {
-    var simState = m_turretMotor.getSimState();
-    simState.Orientation = ChassisReference.CounterClockwise_Positive;
-    simState.setMotorType(TalonFXSimState.MotorType.KrakenX44);
+    CtreUtil.configureKrakenX44Sim(
+        m_turretMotor.getSimState(), ChassisReference.CounterClockwise_Positive);
   }
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
+    m_TurretSim.update(0.02);
+
     var simState = m_turretMotor.getSimState();
 
     simState.setSupplyVoltage(RobotController.getBatteryVoltage());
@@ -47,8 +49,6 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
     inputs.appliedVolts = appliedVolts;
     inputs.supplyCurrent = simState.getSupplyCurrent();
     inputs.statorCurrent = simState.getTorqueCurrent();
-
-    m_TurretSim.update(0.02);
 
   }
 }

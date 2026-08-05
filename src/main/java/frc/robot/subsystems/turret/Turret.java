@@ -3,6 +3,9 @@ package frc.robot.subsystems.turret;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import java.util.ArrayList;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
@@ -18,22 +21,15 @@ public class Turret extends SubsystemBase {
         new Color8Bit(137, 52, 235));
 
     static class TurretConstants {
-        public static int kCANID = 45; 
+        public static int kCANID = 45;
 
-        //Tune PID/FF constants
-        public static final double kP = 0;
+        // Tune PID/FF constants
+        public static final double kP = 30;
         public static final double kI = 0;
         public static final double kD = 0;
         public static final double kS = 0;
         public static final double kV = 0;
         public static final double kA = 0;
-
-        public static final double kSimP = 0;
-        public static final double kSimI = 0;
-        public static final double kSimD = 0;
-        public static final double kSimS = 0;
-        public static final double kSimV = 0;
-        public static final double kSimA = 0;
 
         public static final double kStatorCurrentLimitAmps = 80;
         public static final double kSupplyCurrentLimitAmps = 40;
@@ -45,13 +41,14 @@ public class Turret extends SubsystemBase {
 
         public static final double kMOI = 0.0873236726;
 
-        //6.5 in
+        // 6.5 in
         public static final double kLength = 0.1651;
     }
 
     public enum TurretState {
         DISABLED,
-        ACTIVE
+        AIM_CLOSEST,
+        AIM_CENTRAL
     }
 
     public Turret(TurretIO io) {
@@ -59,8 +56,12 @@ public class Turret extends SubsystemBase {
         RobotVisualizer.addTurret(turretLigament);
     }
 
-    public void activate() {
-        this.turretState = TurretState.ACTIVE;
+    public void aimClosest() {
+        turretState = TurretState.AIM_CLOSEST;
+    }
+
+    public void aimCentral() {
+        turretState = TurretState.AIM_CENTRAL;
     }
 
     public void disable() {
@@ -72,8 +73,9 @@ public class Turret extends SubsystemBase {
         switch (turretState) {
             case DISABLED -> io.disable();
 
-            //logic for requestedAngle should be handled somewhere else
-            case ACTIVE -> io.setAngle(requestedAngle);
+            // need to fix this because currently this will only command 0 degrees
+            case AIM_CENTRAL -> selectCentralAngle(requestedAngle);
+            case AIM_CLOSEST -> selectClosestAngle(requestedAngle);
         }
 
         io.updateInputs(inputs);
@@ -85,7 +87,7 @@ public class Turret extends SubsystemBase {
         return turretState;
     }
 
-      public void setState(TurretState state) {
+    public void setState(TurretState state) {
         turretState = state;
     }
 
@@ -93,7 +95,52 @@ public class Turret extends SubsystemBase {
         return inputs.angle;
     }
 
+    // just for testing in sim
+    public void setAngle(double angle) {
+        requestedAngle = angle;
+
+        this.turretState = TurretState.AIM_CENTRAL;
+    }
+
     public double getRequestedAngle() {
         return requestedAngle;
+    }
+
+    public void selectClosestAngle(double angle) {
+        double currentAngle = this.getAngle();
+
+        angle = MathUtil.inputModulus(angle, -180, 180);
+
+        ArrayList<Double> possibleAngles = new ArrayList<>(2);
+
+        possibleAngles.add(angle);
+
+        if (angle >= 0) {
+            possibleAngles.add(angle - 360);
+        }
+
+        if (angle <= 0) {
+            possibleAngles.add(angle + 360);
+        }
+
+        double smallestAngle = angle;
+        double smallestDifference = Math.abs(angle - currentAngle);
+
+        for (int i = 1; i < possibleAngles.size(); i++) {
+            double diff = Math.abs(possibleAngles.get(i) - currentAngle);
+
+            if (diff < smallestDifference) {
+                smallestDifference = diff;
+                smallestAngle = possibleAngles.get(i);
+            }
+        }
+
+        io.setAngle(smallestAngle);
+    }
+
+    public void selectCentralAngle(double angle) {
+        angle = MathUtil.inputModulus(angle, -180, 180);
+
+        io.setAngle(angle);
     }
 }

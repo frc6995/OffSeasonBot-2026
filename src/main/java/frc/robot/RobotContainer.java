@@ -13,12 +13,15 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.Telemetry;
+import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -30,8 +33,7 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+  //  private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
@@ -42,9 +44,7 @@ public class RobotContainer {
             TunerConstants.FrontRight,
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
-
-    public final Superstructure superstructure = new Superstructure();
-
+    public Superstructure m_Superstucture = new Superstructure(drivetrain::getPose);
     public final Autos autos = new Autos(drivetrain);
 
     public RobotContainer() {
@@ -59,42 +59,62 @@ public class RobotContainer {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
-                // Drivetrain will execute this command periodically
-                drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
-                                                                                                   // negative Y
-                                                                                                   // (forward)
-                        .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with
-                                                                                    // negative X (left)
-                ));
+        // Drivetrain will execute this command periodically
+        drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() *
+        MaxSpeed) // Drive forward with
+        // negative Y
+        // (forward)
+        .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X
+        //(left)
+        .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive
+      //  counterclockwise with
+        // negative X (left)
+        ));
         drivetrain.registerTelemetry(logger::telemeterize);
+        joystick.a().onTrue(m_Superstucture.requestFuelIntaking());
+        joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
+        joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
 
+            // do not do this for actual bindings, test only
+        // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
+
+        joystick.a().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.SPIN)));
+        joystick.b().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.IDLE)));
+
+        // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
+        // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
+        autos.getCanRange().setSimProximitySupplier(joystick.x());
+    }
+    /*
+     * 
+     * 
         configureSuperstructureBindings();
-    }
+    // }
 
-    /**
-     * Operator bindings for the superstructure. Before this existed, every
-     * {@code Superstructure.request*} method was unreachable from the controller and
-     * all five mechanisms sat in their initial state forever (K-6).
-     *
-     * <p>This mapping is a starting point, not a drive-team decision — change it
-     * freely.
+    // /**
+    //  * Operator bindings for the superstructure. Before this existed, every
+    //  * {@code Superstructure.request*} method was unreachable from the controller and
+    //  * all five mechanisms sat in their initial state forever (K-6).
+    //  *
+    //  * <p>This mapping is a starting point, not a drive-team decision — change it
+    //  * freely.
+    //  */
+    // private void configureSuperstructureBindings() {
+    //     // Robot-level states.
+    //     joystick.a().onTrue(superstructure.requestRobotScoring());
+    //     joystick.b().onTrue(superstructure.requestRobotPassing());
+    //     joystick.y().onTrue(superstructure.requestRobotIdle());
+
+    //     // Intake: hold to deploy and run, release to retract.
+    //     joystick.leftBumper()
+    //             .onTrue(Commands.runOnce(superstructure::requestIntakeDeployed))
+    //             .onFalse(Commands.runOnce(superstructure::requestIntakeRetracted));
+
+    //     // Anti-jam. Currently a no-op until K-9 is implemented.
+    //     joystick.x().onTrue(Commands.runOnce(superstructure::requestIntakeAgitating))
+    //             // .onFalse(Commands.runOnce(superstructure::requestIntakeIdle));
+    //  * 
      */
-    private void configureSuperstructureBindings() {
-        // Robot-level states.
-        joystick.a().onTrue(superstructure.requestRobotScoring());
-        joystick.b().onTrue(superstructure.requestRobotPassing());
-        joystick.y().onTrue(superstructure.requestRobotIdle());
-
-        // Intake: hold to deploy and run, release to retract.
-        joystick.leftBumper()
-                .onTrue(Commands.runOnce(superstructure::requestIntakeDeployed))
-                .onFalse(Commands.runOnce(superstructure::requestIntakeRetracted));
-
-        // Anti-jam. Currently a no-op until K-9 is implemented.
-        joystick.x().onTrue(Commands.runOnce(superstructure::requestIntakeAgitating))
-                .onFalse(Commands.runOnce(superstructure::requestIntakeIdle));
-    }
 
     public Command getAutonomousCommand() {
         return autos.selectedCommand();

@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -20,13 +21,14 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.Constants;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
 public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
-    protected final TalonFX m_turretMotor = new TalonFX(kCANID); 
-    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
+    protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus); 
+    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
     
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<Voltage> voltSignal;
@@ -83,8 +85,8 @@ public class TurretIOTalonFX implements TurretIO {
         //Need to set these
         config.MotionMagic = 
             new MotionMagicConfigs()
-                .withMotionMagicAcceleration(0)
-                .withMotionMagicCruiseVelocity(0);
+                .withMotionMagicAcceleration(2)
+                .withMotionMagicCruiseVelocity(2);
 
         //TODO replace this with CtreUtil reportIfNotOk
         m_turretMotor.getConfigurator().apply(config);
@@ -118,15 +120,17 @@ public class TurretIOTalonFX implements TurretIO {
             );
         }
         
-        m_turretMotor.setControl(positionRequest.withPosition(angleToRotations(clampedAngle)));
+        // System.out.println("trying to set to " + angle + " degrees " + angleToRotations(clampedAngle) + " rotations");
+        double rotations = clampedAngle / 360;
+        m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
     protected double angleToRotations(double angle) {
-        return (angle/360);
+        return (angle/360)*kReduction;
     }
 
     protected double rotationsToAngle(double rotations) {
-        return rotations*360;
+        return rotations*(1/kReduction)*360;
     }
 
     @Override

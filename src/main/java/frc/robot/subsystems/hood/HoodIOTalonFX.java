@@ -10,7 +10,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -19,11 +19,12 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.subsystems.hood.Hood.HoodConstants;
 
-public class HoodIOTalonFX implements HoodIO{   
+public class HoodIOTalonFX implements HoodIO {   
 
     protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus); 
-    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
+    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(false);
     
     protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
     protected final StatusSignal<Voltage> voltSignal = m_hoodMotor.getMotorVoltage();
@@ -63,9 +64,9 @@ public class HoodIOTalonFX implements HoodIO{
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToRotations(Hood.HoodConstants.MAX_ANGLE))
+                .withForwardSoftLimitThreshold(angleToMotorRotations(Hood.HoodConstants.MAX_ANGLE))
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(angleToRotations(Hood.HoodConstants.MIN_ANGLE));
+                .withReverseSoftLimitThreshold(angleToMotorRotations(Hood.HoodConstants.MIN_ANGLE));
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()
@@ -75,8 +76,8 @@ public class HoodIOTalonFX implements HoodIO{
         // need to set these
         config.MotionMagic = 
             new MotionMagicConfigs()
-                .withMotionMagicAcceleration(0)
-                .withMotionMagicCruiseVelocity(0);
+                .withMotionMagicAcceleration(2)
+                .withMotionMagicCruiseVelocity(2);
 
         // TODO replace this with CtreUtil reportIfNotOk
         m_hoodMotor.getConfigurator().apply(config);
@@ -91,7 +92,7 @@ public class HoodIOTalonFX implements HoodIO{
     public void updateInputs(HoodIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        inputs.angle = rotationsToAngle(angleSignal.getValueAsDouble());
+        inputs.angle = motorRotationsToAngle(angleSignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
@@ -100,7 +101,8 @@ public class HoodIOTalonFX implements HoodIO{
 
     @Override
     public void setAngle(double angle) {
-        m_hoodMotor.setControl(positionRequest.withPosition(angleToRotations(angle)));
+        double rotations = angle / 360;
+        m_hoodMotor.setControl(positionRequest.withPosition(rotations));
     }
     
     /**
@@ -111,12 +113,12 @@ public class HoodIOTalonFX implements HoodIO{
      * The number of motor rotations for a given hood angle
      */
 
-    protected double angleToRotations(double angle) {
-        return (angle/360.0);
+    protected double angleToMotorRotations(double angle) {
+        return (angle/360.0)*HoodConstants.kReduction;
     }
 
-    protected double rotationsToAngle(double rotations) {
-        return rotations*360;
+    protected double motorRotationsToAngle(double rotations) {
+        return rotations*(1/HoodConstants.kReduction)*360;
     }
 
     @Override

@@ -6,9 +6,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class DyeRotor extends SubsystemBase {
   public static final class DyeRotorConstants {
 
-    public static final int kSpinMotorCANID = 30; // Tune
-    public static final int kLeadIndexMotorCANID = 31; // Tune
-    public static final int kFollowIndexMotorCANID = 32; // Tune
+    public static final int kSpinMotorCANID = 23; // Tune
+    public static final int kLeadIndexMotorCANID = 21; // Tune
+    public static final int kFollowIndexMotorCANID = 22; // Tune
 
     public static final double kSpinReduction = 1.0; // Tune
     public static final double kIndexReduction = 1.0;
@@ -24,16 +24,16 @@ public class DyeRotor extends SubsystemBase {
     public static final double kSpinKS = 0.0;
     public static final double kSpinKV = 0.12;
 
-    public static final double kIndexKP = 0.0;
+    public static final double kIndexKP = 0.1;
     public static final double kIndexKS = 0.0;
-    public static final double kIndexKV = 0.0;
+    public static final double kIndexKV = 0.12;
 
     public static final double kSpinForwardRPM = 300.0;
     public static final double kSpinBackwardRPM = 300.0;
     public static final double kSpinVelocityToleranceRPM = 20.0;
 
-    public static final double kIndexForwardRPM = 6.0;
-    public static final double kIndexBackwardRPM = 6.0;
+    public static final double kIndexForwardRPM = 300.0;
+    public static final double kIndexBackwardRPM = 300.0;
 
     private DyeRotorConstants() {
     }
@@ -94,19 +94,12 @@ public class DyeRotor extends SubsystemBase {
     return inputs.indexAppliedVolts;
   }
 
-  public boolean isSpinReady() {
-    return MathUtil.isNear(
-        resolveSpinTargetRPM(spinState),
-        inputs.spinVelocityRPM,
-        DyeRotorConstants.kSpinVelocityToleranceRPM);
-  }
-
   @Override
   public void periodic() {
     io.updateInputs(inputs);
 
     io.setSpinVelocity(resolveSpinTargetRPM(spinState));
-    io.setIndexVoltage(resolveIndexTargetRPM(indexState));
+    io.setIndexVelocity(resolveIndexTargetRPM(indexState));
   }
 
   private static double resolveSpinTargetRPM(DyeRotorState state) {
@@ -121,7 +114,7 @@ public class DyeRotor extends SubsystemBase {
     return switch (state) {
       case IDLE -> 0.0;
       case SPIN -> DyeRotorConstants.kIndexForwardRPM;
-      case SPIN_BACKWARDS -> -DyeRotorConstants.kIndexBackwardRPM;
+      case SPIN_BACKWARDS -> 0.0;
     };
   }
 }
