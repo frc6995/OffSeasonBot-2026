@@ -25,6 +25,9 @@ import frc.robot.util.Telemetry;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.turret.Turret.TurretState;
+import frc.robot.util.AutoAlign.RotationControlMode;
+
+import java.util.Set;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -74,11 +77,28 @@ public class RobotContainer {
         // negative X (left)
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
+
         joystick.a().onTrue(m_Superstructure.requestToggleFuelIntaking());
+
         joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeEject());
-        joystick.rightBumper().onTrue(m_Superstructure.requestRobotShooting());
+        joystick.leftTrigger().onFalse(m_Superstructure.requestFuelIntaking());
+
+
+        joystick.rightBumper().whileTrue(m_Superstructure.requestRobotShooting());
+        joystick.rightBumper().onFalse(m_Superstructure.requestRobotIdle());
+
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_Superstructure.requestFuelIntaking());
+
+        // Snap the robot's heading to the nearest cardinal direction in place.
+        joystick.b().whileTrue(Commands.defer(
+                () -> new AutoAlignFixedHeading(
+                        drivetrain.getPose(),
+                        drivetrain,
+                        true,
+                        RotationControlMode.VELOCITY_LIMITED_PROFILE),
+                Set.of(drivetrain)));
+
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
 
