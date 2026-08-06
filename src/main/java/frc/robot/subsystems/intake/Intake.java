@@ -19,10 +19,10 @@ public class Intake extends SubsystemBase {
         public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
 
         // Kicker PID Constants
-        public static final double kKickerP = 0.1;
+        public static final double kKickerP = 0.2;
         // Kicker Feedforward Constants
         public static final double kKickerS = 0.25;
-        public static final double kKickerV = 0.08;
+        public static final double kKickerV = 0.164;
         // Kicker Config Constants
         public static final double kKickerSupplyCurrentLimit = 40;
         public static final double kKickerStatorCurrentLimit = 80;
@@ -30,13 +30,13 @@ public class Intake extends SubsystemBase {
         public static final double kKickerMinVoltage = 0;
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
-        public static final double kKickerMOI = 0.000292639653; // meters^2 kg
+        public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
 
         // Roller PID Constants
-        public static final double kRollerP = 0.1;
+        public static final double kRollerP = 0.2;
         // Roller Feedforward Constants
         public static final double kRollerS = 0.25;
-        public static final double kRollerV = 0.08;
+        public static final double kRollerV = 0.396;
         // Roller Config Constants
         public static final double kRollerSupplyCurrentLimit = 40;
         public static final double kRollerStatorCurrentLimit = 80;
@@ -44,7 +44,7 @@ public class Intake extends SubsystemBase {
         public static final double kRollerMinVoltage = 0;
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
-        public static final double kRollerMOI = 0.000292639653; // meters^2 kg
+        public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
 
 
         public static final double kExtensionStatorCurrentLimit = 80.0;
@@ -65,11 +65,11 @@ public class Intake extends SubsystemBase {
         public static final double kRollerForwardVolts = 4.0;
         public static final double kKickerForwardVolts = 4.0;
 
-        public static final double kRollerEjectingRPM = -4.0;
-        public static final double kKickerEjectingRPM = -4.0;
+        public static final double kRollerEjectingRPM = -1000.0;
+        public static final double kKickerEjectingRPM = -1000.0;
 
-        public static final double kRollerForwardRPM = kRollerForwardVolts;
-        public static final double kKickerForwardRPM = kKickerForwardVolts;
+        public static final double kRollerForwardRPM = 1000.0;
+        public static final double kKickerForwardRPM = 1000.0;
         public static final double acceleration = 5.0;
         public static final double velocity = 5.0;
 

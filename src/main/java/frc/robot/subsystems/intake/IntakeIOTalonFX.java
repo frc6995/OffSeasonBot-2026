@@ -41,7 +41,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_kickerMotor
     = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
-    private final VoltageOut m_rollerRequest = new VoltageOut(0);
+    protected VelocityVoltage m_rollerVelocityRequest = new VelocityVoltage(0);
     protected VelocityVoltage m_kickerVelocityRequest = new VelocityVoltage(0);
 
     protected final MotionMagicVoltage m_extensionRequest =
@@ -106,7 +106,7 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withSupplyCurrentLimit(IntakeConstants.kRollerSupplyCurrentLimit)
             .withSupplyCurrentLimitEnable(true);
         rollerConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kRollerReduction);
-        m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         rollerConfig.Slot0 = new Slot0Configs()
             .withKP(IntakeConstants.kRollerP)
             .withKS(IntakeConstants.kRollerS)
@@ -196,13 +196,13 @@ public class IntakeIOTalonFX implements IntakeIO {
     }
 
     @Override
-    public void setKickerVelocity(double velocity) {
-        m_kickerMotor.setControl(m_kickerVelocityRequest.withVelocity(velocity));
+    public void setKickerVelocity(double velocityRPM) {
+        m_kickerMotor.setControl(m_kickerVelocityRequest.withVelocity(velocityRPM / 60.0));
     }
 
     @Override
-    public void setRollerVelocity(double velocity) {
-        m_rollerLeadMotor.setControl(m_rollerRequest.withOutput(velocity));
+    public void setRollerVelocity(double velocityRPM) {
+        m_rollerLeadMotor.setControl(m_rollerVelocityRequest.withVelocity(velocityRPM / 60.0));
     }
 
     @Override
