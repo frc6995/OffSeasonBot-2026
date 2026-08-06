@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.wpilibj.Timer;
@@ -51,6 +52,12 @@ public class Intake extends SubsystemBase {
 
         public static final double acceleration = 5.0;
         public static final double velocity = 5.0;
+
+        // Extension sweeps between these two positions while agitating,
+        // swapping targets every kAgitateIntervalSeconds.
+        public static final double kAgitateNearMeters = 0.2;
+        public static final double kAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kAgitateIntervalSeconds = 0.35;
     }
 
     public enum IntakeState {
@@ -69,6 +76,12 @@ public class Intake extends SubsystemBase {
             
     private IntakeState intakeState = IntakeState.IDLE;
 
+    private final Timer agitateTimer = new Timer();
+    private boolean agitateAtFarPosition = false;
+    private double agitateNearMeters = IntakeConstants.kAgitateNearMeters;
+    private double agitateFarMeters = IntakeConstants.kAgitateFarMeters;
+    private double agitateIntervalSeconds = IntakeConstants.kAgitateIntervalSeconds;
+
     public Intake() {
         this(new IntakeIO() {
         });
@@ -86,6 +99,10 @@ public class Intake extends SubsystemBase {
     }
 
     public void setState(IntakeState state) {
+        if (state == IntakeState.AGITATING && intakeState != IntakeState.AGITATING) {
+            agitateAtFarPosition = false;
+            agitateTimer.restart();
+        }
         intakeState = state;
     }
 
@@ -106,6 +123,23 @@ public class Intake extends SubsystemBase {
     }
 
     public void agitate() {
+        agitate(IntakeConstants.kAgitateNearMeters,
+                IntakeConstants.kAgitateFarMeters,
+                IntakeConstants.kAgitateIntervalSeconds);
+    }
+
+    /**
+     * Sweeps the extension back and forth between two positions while the rollers
+     * and kicker keep spinning forward.
+     *
+     * @param nearMeters      the retracted end of the sweep
+     * @param farMeters       the extended end of the sweep
+     * @param intervalSeconds how long to hold each end before swapping targets
+     */
+    public void agitate(double nearMeters, double farMeters, double intervalSeconds) {
+        agitateNearMeters = clampExtension(nearMeters);
+        agitateFarMeters = clampExtension(farMeters);
+        agitateIntervalSeconds = Math.max(intervalSeconds, 0.02);
         setState(IntakeState.AGITATING);
     }
 
@@ -181,14 +215,28 @@ public class Intake extends SubsystemBase {
         io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
     }
 
-    private static double resolveExtensionTargetPosition(IntakeState state) {
+    private double resolveExtensionTargetPosition(IntakeState state) {
         return switch (state) {
             case IDLE -> IntakeConstants.kExtensionMinMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
             case INTAKING -> IntakeConstants.kExtensionMaxMeters;
-            case AGITATING -> IntakeConstants.kExtensionMinMeters; // fix this
+            case AGITATING -> resolveAgitationTargetPosition();
             case EJECTING -> IntakeConstants.kExtensionMaxMeters;
         };
+    }
+
+    private double resolveAgitationTargetPosition() {
+        if (agitateTimer.advanceIfElapsed(agitateIntervalSeconds)) {
+            agitateAtFarPosition = !agitateAtFarPosition;
+        }
+        return agitateAtFarPosition ? agitateFarMeters : agitateNearMeters;
+    }
+
+    private static double clampExtension(double positionMeters) {
+        return MathUtil.clamp(
+                positionMeters,
+                IntakeConstants.kExtensionMinMeters,
+                IntakeConstants.kExtensionMaxMeters);
     }
 
     private static double resolveRollerTargetVoltage(IntakeState state) {
