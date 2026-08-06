@@ -50,14 +50,14 @@ public class Intake extends SubsystemBase {
         public static final double kRollerForwardVelocity = kRollerForwardVolts;
         public static final double kKickerForwardVelocity = kKickerForwardVolts;
 
-        public static final double acceleration = 5.0;
-        public static final double velocity = 5.0;
+        public static final double acceleration = 200.0;
+        public static final double velocity = 10.0;
 
         // Extension sweeps between these two positions while agitating,
         // swapping targets every kAgitateIntervalSeconds.
         public static final double kAgitateNearMeters = 0.2;
         public static final double kAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kAgitateIntervalSeconds = 0.35;
+        public static final double kAgitateIntervalSeconds = 0.4;
     }
 
     public enum IntakeState {

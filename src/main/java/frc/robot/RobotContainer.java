@@ -77,6 +77,7 @@ public class RobotContainer {
         joystick.a().toggleOnTrue(m_Superstructure.requestFuelIntaking());
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeEject());
         joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeAgitating());
+            joystick.leftTrigger().onFalse(m_Superstructure.requestFuelIntaking());
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
 
