@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
+import frc.robot.util.CtreUtil;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
@@ -73,23 +74,16 @@ public class TurretIOTalonFX implements TurretIO {
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToRotations(kMaxAngle))
+                .withForwardSoftLimitThreshold(angleToMechanismRotations(kMaxAngle))
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(angleToRotations(kMinAngle));
+                .withReverseSoftLimitThreshold(angleToMechanismRotations(kMinAngle));
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()
                 .withForwardLimitEnable(false)
                 .withReverseLimitEnable(false);
-        
-        //Need to set these
-        config.MotionMagic = 
-            new MotionMagicConfigs()
-                .withMotionMagicAcceleration(2)
-                .withMotionMagicCruiseVelocity(2);
 
-        //TODO replace this with CtreUtil reportIfNotOk
-        m_turretMotor.getConfigurator().apply(config);
+        CtreUtil.reportIfNotOk("Config Turret", m_turretMotor.getConfigurator().apply(config));
     }
 
     @Override
@@ -101,7 +95,7 @@ public class TurretIOTalonFX implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        inputs.angle = rotationsToAngle(angleSignal.getValueAsDouble());
+        inputs.angle = motorRotationsToAngle(angleSignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
@@ -125,12 +119,20 @@ public class TurretIOTalonFX implements TurretIO {
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
-    protected double angleToRotations(double angle) {
+    protected double angleToMotorRotations(double angle) {
         return (angle/360)*kReduction;
     }
 
-    protected double rotationsToAngle(double rotations) {
+    protected double motorRotationsToAngle(double rotations) {
         return rotations*(1/kReduction)*360;
+    }
+
+    protected double angleToMechanismRotations(double angle) {
+        return angle / 360.0;
+    }
+
+    protected double mechanismToAngleRotations(double rotations) {
+        return rotations * 360.0;
     }
 
     @Override
