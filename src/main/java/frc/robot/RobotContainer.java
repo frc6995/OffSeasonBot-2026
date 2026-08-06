@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -19,8 +20,11 @@ import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
+import frc.robot.subsystems.intake.Intake.IntakeState;
+import frc.robot.subsystems.turret.Turret.TurretState;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -43,7 +47,7 @@ public class RobotContainer {
             TunerConstants.FrontRight,
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
-    public Superstructure m_Superstucture = new Superstructure(drivetrain::getPose);
+    public Superstructure m_Superstructure = new Superstructure(drivetrain::getPose);
     public final Autos autos = new Autos(drivetrain);
 
     public RobotContainer() {
@@ -70,15 +74,11 @@ public class RobotContainer {
         // negative X (left)
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.a().onTrue(m_Superstucture.requestFuelIntaking());
-        joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
-        joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
-
+        joystick.a().toggleOnTrue(m_Superstructure.requestFuelIntaking());
+        joystick.leftBumper().onTrue(m_Superstructure.requestIntakeEject());
+        joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeAgitating());
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
-
-        joystick.a().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.SPIN)));
-        joystick.b().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.IDLE)));
 
         // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
         // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
