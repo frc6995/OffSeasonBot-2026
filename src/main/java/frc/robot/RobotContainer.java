@@ -75,9 +75,10 @@ public class RobotContainer {
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
         joystick.a().onTrue(m_Superstructure.requestToggleFuelIntaking());
-        joystick.leftBumper().onTrue(m_Superstructure.requestIntakeEject());
-        joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeAgitating());
-            joystick.leftTrigger().onFalse(m_Superstructure.requestFuelIntaking());
+        joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeEject());
+        joystick.rightBumper().onTrue(m_Superstructure.requestRobotShooting());
+        joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
+        joystick.leftBumper().onFalse(m_Superstructure.requestFuelIntaking());
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
 
@@ -85,36 +86,7 @@ public class RobotContainer {
         // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
         autos.getCanRange().setSimProximitySupplier(joystick.x());
     }
-    /*
-     * 
-     * 
-        configureSuperstructureBindings();
-    // }
-
-    // /**
-    //  * Operator bindings for the superstructure. Before this existed, every
-    //  * {@code Superstructure.request*} method was unreachable from the controller and
-    //  * all five mechanisms sat in their initial state forever (K-6).
-    //  *
-    //  * <p>This mapping is a starting point, not a drive-team decision — change it
-    //  * freely.
-    //  */
-    // private void configureSuperstructureBindings() {
-    //     // Robot-level states.
-    //     joystick.a().onTrue(superstructure.requestRobotScoring());
-    //     joystick.b().onTrue(superstructure.requestRobotPassing());
-    //     joystick.y().onTrue(superstructure.requestRobotIdle());
-
-    //     // Intake: hold to deploy and run, release to retract.
-    //     joystick.leftBumper()
-    //             .onTrue(Commands.runOnce(superstructure::requestIntakeDeployed))
-    //             .onFalse(Commands.runOnce(superstructure::requestIntakeRetracted));
-
-    //     // Anti-jam. Currently a no-op until K-9 is implemented.
-    //     joystick.x().onTrue(Commands.runOnce(superstructure::requestIntakeAgitating))
-    //             // .onFalse(Commands.runOnce(superstructure::requestIntakeIdle));
-    //  
-
+  
     public Command getAutonomousCommand() {
         return autos.selectedCommand();
     }
