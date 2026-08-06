@@ -31,6 +31,9 @@ public class Intake extends SubsystemBase {
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
+        public static final double kKickerForwardVolts = 4.0;
+        public static final double kKickerEjectingRPM = -1000.0;
+        public static final double kKickerForwardRPM = 1000.0;
 
         // Roller PID Constants
         public static final double kRollerP = 0.2;
@@ -45,39 +48,29 @@ public class Intake extends SubsystemBase {
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
+        public static final double kRollerForwardVolts = 4.0;
+        public static final double kRollerEjectingRPM = -1000.0;
+        public static final double kRollerForwardRPM = 1000.0;
 
-
+        // Extension PID Constants
+        public static final double kExtensionP = 20;
+        // Extension Feedforward Constants
+        public static final double kExtensionV = 0.07;
+        // Extension Config Constants
         public static final double kExtensionStatorCurrentLimit = 80.0;
         public static final double kExtensionSupplyCurrentLimit = 40.0;
         public static final double kExtensionReduction = 3.33;
-
-        public static final double kVelMetersPerSecond = 0.5;
-        public static final double kAccelMetersPerSecondSquared = 0.5;
-
-        public static final double kExtensionP = 20;
-        public static final double kExtensionV = 0.07;
-
         public static final double kExtensionMaxMeters = 0.5;
         public static final double kExtensionMinMeters = 0.0;
-
         public static final double kDrumCircumferenceMeters = 0.119;
-
-        public static final double kRollerForwardVolts = 4.0;
-        public static final double kKickerForwardVolts = 4.0;
-
-        public static final double kRollerEjectingRPM = -1000.0;
-        public static final double kKickerEjectingRPM = -1000.0;
-
-        public static final double kRollerForwardRPM = 1000.0;
-        public static final double kKickerForwardRPM = 1000.0;
         public static final double acceleration = 200.0;
         public static final double velocity = 10.0;
 
         // Extension sweeps between these two positions while agitating,
         // swapping targets every kAgitateIntervalSeconds.
-        public static final double kAgitateNearMeters = 0.2;
+        public static final double kAgitateNearMeters = 0.26;
         public static final double kAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kAgitateIntervalSeconds = 0.4;
+        public static final double kAgitateIntervalSeconds = 0.3;
     }
 
     public enum IntakeState {
