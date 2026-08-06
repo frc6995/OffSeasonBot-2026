@@ -92,6 +92,7 @@ public class Autos {
                     c.addCommands(untilCloseToWall(Depot1, 5));
 
                     c.addCommands(untilCloseToWall(Depot2, 7));
+                    //Now make the intake idle until we are near the depot
 
                     c.addCommands(Depot3);
 

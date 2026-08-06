@@ -245,7 +245,7 @@ public class Intake extends SubsystemBase {
 
     private double resolveExtensionTargetPosition(IntakeState state) {
         return switch (state) {
-            case IDLE -> IntakeConstants.kExtensionMinMeters;
+            case IDLE -> IntakeConstants.kExtensionMaxMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
             case INTAKING -> IntakeConstants.kExtensionMaxMeters;
             case AGITATING -> resolveAgitationTargetPosition();

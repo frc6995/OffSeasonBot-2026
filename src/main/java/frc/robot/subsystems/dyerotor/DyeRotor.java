@@ -10,8 +10,8 @@ public class DyeRotor extends SubsystemBase {
     public static final int kLeadIndexMotorCANID = 21; // Tune
     public static final int kFollowIndexMotorCANID = 22; // Tune
 
-    public static final double kSpinReduction = 1.0; // Tune
-    public static final double kIndexReduction = 1.0;
+    public static final double kSpinReduction = 2.5;
+    public static final double kIndexReduction = 36.0;
     public static final double kSpinMOI = 0.004;
     public static final double kIndexMOI = 0.002;
 
