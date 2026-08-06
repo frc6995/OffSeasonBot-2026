@@ -1,5 +1,7 @@
 package frc.robot.subsystems.hood;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -8,6 +10,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.HoodIO.HoodIOInputs;
+import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Hood extends SubsystemBase {
 
@@ -21,8 +24,17 @@ public class Hood extends SubsystemBase {
 
     private HoodState hoodState = HoodState.DISABLED;
 
-    static class HoodConstants {
+    public static class HoodConstants {
         public static int kCANID = 44; // Should be right with doc
+
+        public static final double[][] kAngleData = {
+                // Distance (Meters), Angle(Degrees)
+                { 1, 12.5 },
+                { 2.5, 20 },
+                { 4, 26 },
+                { 5, 30},
+                { 6, 40}
+        };
 
         //Tune PID/FF constants
         public static final double kP = 120; //Double check this
@@ -51,9 +63,12 @@ public class Hood extends SubsystemBase {
         DISABLED,
         ACTIVE
     }
+    private final Supplier<ShooterTargetData> targetData;
 
-    public Hood(HoodIO io) {
+
+    public Hood(HoodIO io, Supplier<ShooterTargetData> targetData) {
         this.io = io;
+        this.targetData = targetData;
         RobotVisualizer.addHood(hoodLigament);
     }
     
@@ -104,7 +119,7 @@ public class Hood extends SubsystemBase {
     }
 
     public double applyLimits(double angle) {
-        double clamped = MathUtil.clamp(angle, Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
+        double clamped = MathUtil.clamp(targetData.get().hoodAngle(), Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
 
         if (clamped != angle) {
             DriverStation.reportWarning(

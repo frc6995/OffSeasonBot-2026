@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,7 +30,7 @@ import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-
+import frc.robot.util.ShotController;
 public class Superstructure extends SubsystemBase {
 
     public enum RobotState {
@@ -47,19 +49,23 @@ public class Superstructure extends SubsystemBase {
 
     private final Supplier<Pose2d> m_poseSupplier;
 
-    public Superstructure(Supplier<Pose2d> poseSupplier) {
-        this.m_poseSupplier = poseSupplier;
+    public final ShotController m_shotController;
+
+    public Superstructure(Supplier<SwerveDriveState> swerveState) {
+        this.m_poseSupplier = () -> swerveState.get().Pose;
+        m_shotController = new ShotController(m_poseSupplier, () -> swerveState.get().Speeds, null);
+
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
-            this.m_hood = new Hood(new HoodIOSimTalonFX());
-            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX());
+            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
             this.m_turret = new Turret(new TurretIOSimTalonFX());
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
             this.m_intake = new Intake(new IntakeIOTalonFX());
-            this.m_hood = new Hood(new HoodIOTalonFX());
-            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX());
+            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
             this.m_turret = new Turret(new TurretIOTalonFX());
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
@@ -114,6 +120,7 @@ public class Superstructure extends SubsystemBase {
     public void periodic() {
         //Just for sim testing, remove for actual use
        // System.out.println("[Superstructure] Shoot button would engage " + determineShootState() );
+       m_shotController.calculate();
     }
 
     //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
