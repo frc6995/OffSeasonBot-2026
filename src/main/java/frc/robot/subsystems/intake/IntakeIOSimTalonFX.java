@@ -92,8 +92,8 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         double extensionPositionMeters = extensionSim.getPositionMeters();
         double extensionVelocityMetersPerSecond = extensionSim.getVelocityMetersPerSecond();
 
-        rollerState.setRotorVelocity(rollerVelocityRPM / 60.0);
-        kickerState.setRotorVelocity(kickerVelocityRPM / 60.0);
+        rollerState.setRotorVelocity(rollerRotationsToMotorRotations(rollerVelocityRPM / 60.0));
+        kickerState.setRotorVelocity(kickerRotationsToMotorRotations(kickerVelocityRPM / 60.0));
 
         extensionState.setRawRotorPosition(simMetersToMotorRotations(extensionPositionMeters));
         extensionState.setRotorVelocity(simMetersToMotorRotations(extensionVelocityMetersPerSecond));
@@ -126,5 +126,13 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     private static double simMetersToMotorRotations(double meters) {
         return meters / (2.0 * Math.PI * kExtensionDrumRadiusMeters)
                 * IntakeConstants.kExtensionReduction;
+    }
+
+    protected static double kickerRotationsToMotorRotations(double rotations) {
+        return rotations * IntakeConstants.kKickerReduction;
+    }
+
+    protected static double rollerRotationsToMotorRotations(double rotations) {
+        return rotations * IntakeConstants.kRollerReduction;
     }
 }

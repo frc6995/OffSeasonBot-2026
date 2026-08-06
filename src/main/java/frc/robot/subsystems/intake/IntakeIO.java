@@ -4,27 +4,29 @@ public interface IntakeIO {
 
     default void updateInputs(IntakeInputs inputs) {}
 
-    default void setRollerVoltage(double volts) {}
+    default void setRollerVelocity(double velocityRPM) {}
 
-    default void setKickerVoltage(double volts) {}
+    default void setKickerVelocity(double velocityRPM) {}
 
     default void setExtensionPosition(double positionMeters) {}
 
     default void resetEncoder() {}
 
     default void stop() {
-        setRollerVoltage(0.0);
-        setKickerVoltage(0.0);
+        setRollerVelocity(0.0);
+        setKickerVelocity(0.0);
     }
 
     class IntakeInputs {
 
         public double rollerAppliedVolts;
+        public double rollerVelocityRPM;
         public double rollerStatorCurrentAmps;
         public double rollerSupplyCurrentAmps;
         public boolean rollerLeadMotorConnected;
         public boolean rollerFollowerMotorConnected;
 
+        public double kickerVelocityRPM;
         public double kickerAppliedVolts;
         public double kickerStatorCurrentAmps;
         public double kickerSupplyCurrentAmps;
