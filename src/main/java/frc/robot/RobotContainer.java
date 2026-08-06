@@ -74,7 +74,7 @@ public class RobotContainer {
         // negative X (left)
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.a().toggleOnTrue(m_Superstructure.requestFuelIntaking());
+        joystick.a().onTrue(m_Superstructure.requestToggleFuelIntaking());
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeEject());
         joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeAgitating());
             joystick.leftTrigger().onFalse(m_Superstructure.requestFuelIntaking());

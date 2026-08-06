@@ -66,12 +66,28 @@ public class Superstructure extends SubsystemBase {
 
     }
 
+    private boolean m_intakeDeployed = false;
+
     public Command requestFuelIntaking() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.INTAKING));
+        return Commands.runOnce(() -> {
+            m_intakeDeployed = true;
+            m_intake.setState(IntakeState.INTAKING);
+        });
     }
 
     public Command requestIntakeRetracted() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.RETRACTED));
+        return Commands.runOnce(() -> {
+            m_intakeDeployed = false;
+            m_intake.setState(IntakeState.RETRACTED);
+        });
+    }
+
+    /** Toggles the intake between intaking and retracted each time it's called. */
+    public Command requestToggleFuelIntaking() {
+        return Commands.either(
+                requestIntakeRetracted(),
+                requestFuelIntaking(),
+                () -> m_intakeDeployed);
     }
 
     public Command requestIntakeAgitating() {
