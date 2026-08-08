@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -41,7 +42,7 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
   //  private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-    private final Telemetry logger = new Telemetry();
+    private final Telemetry logger = new Telemetry(MaxSpeed);
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
@@ -51,9 +52,12 @@ public class RobotContainer {
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
     public Superstructure m_Superstructure = new Superstructure(drivetrain::getPose);
+    private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(drivetrain);
 
     public RobotContainer() {
+        VISUALIZER = logger.MECH_VISUALIZER;
+        SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
 
         configureBindings();

@@ -80,6 +80,7 @@ public class Turret extends SubsystemBase {
 
         io.updateInputs(inputs);
         turretLigament.setAngle(inputs.angle);
+        RobotVisualizer.updateTurret(Units.degreesToRadians(inputs.angle));
 
     }
 

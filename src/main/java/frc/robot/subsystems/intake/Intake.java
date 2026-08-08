@@ -230,6 +230,7 @@ public class Intake extends SubsystemBase {
     double extensionMeters = inputs.extensionPositionMeters;
 
     intakeLigament.setLength(retractedLengthMeters + extensionMeters);
+    RobotVisualizer.updateIntakeExtension(extensionMeters);
 
         io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
         io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));

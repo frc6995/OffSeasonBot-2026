@@ -75,6 +75,7 @@ public class Hood extends SubsystemBase {
         }
 
         hoodLigament.setAngle(getAngle());
+        RobotVisualizer.updateHood(Units.degreesToRadians(getAngle()));
     }
 
     public void disable() {
