@@ -54,9 +54,9 @@ public class Flywheel extends SubsystemBase {
 
   private FlywheelState flywheelState = FlywheelState.DISABLED;
 
-  public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> targetData) {
+  public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> shotData) {
     this.io = io;
-    this.targetData = targetData;
+    this.targetData = shotData;
   }
 
   public void setState(FlywheelState state) {
@@ -107,7 +107,7 @@ public class Flywheel extends SubsystemBase {
   private double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
-      case ACTIVE -> targetData.get().rpm();
+      case ACTIVE -> targetData.get().flywheelRpm();
     };
   }
 }

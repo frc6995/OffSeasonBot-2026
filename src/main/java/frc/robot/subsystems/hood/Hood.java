@@ -66,9 +66,9 @@ public class Hood extends SubsystemBase {
     private final Supplier<ShooterTargetData> targetData;
 
 
-    public Hood(HoodIO io, Supplier<ShooterTargetData> targetData) {
+    public Hood(HoodIO io, Supplier<ShooterTargetData> shotData) {
         this.io = io;
-        this.targetData = targetData;
+        this.targetData = shotData;
         RobotVisualizer.addHood(hoodLigament);
     }
     
@@ -123,7 +123,7 @@ public class Hood extends SubsystemBase {
     }
 
     public double applyLimits(double angle) {
-        double clamped = MathUtil.clamp(targetData.get().hoodAngle(), Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
+        double clamped = MathUtil.clamp(targetData.get().hoodAngleDeg(), Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
 
         if (clamped != angle) {
             DriverStation.reportWarning(
