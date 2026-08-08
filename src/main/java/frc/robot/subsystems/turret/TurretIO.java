@@ -2,10 +2,10 @@ package frc.robot.subsystems.turret;
 
 public interface TurretIO {
 
-    public void setAngle(double angle);
-    public void resetEncoder();
-    public void updateInputs(TurretIOInputs inputs);
-    public void disable();
+    public default void setAngle(double angle) {};
+    public default void resetEncoder() {};
+    public default void updateInputs(TurretIOInputs inputs) {};
+    public default void disable() {};
 
     public class TurretIOInputs {
         public double angle;

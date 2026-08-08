@@ -23,11 +23,11 @@ import frc.robot.Constants;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
 
 public class DyeRotorIOTalonFX implements DyeRotorIO {
-  protected final TalonFX m_spinMotor = new TalonFX(DyeRotorConstants.kSpinMotorCANID, Constants.CANBuses.LowerBus);
+  protected final TalonFX m_spinMotor = new TalonFX(DyeRotorConstants.kSpinMotorCANID, Constants.CANBuses.UpperBus);
   protected final TalonFX m_indexerLead = new TalonFX(DyeRotorConstants.kLeadIndexMotorCANID,
-      Constants.CANBuses.LowerBus);
+      Constants.CANBuses.UpperBus);
   protected final TalonFX m_indexerFollow = new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID,
-      Constants.CANBuses.LowerBus);
+      Constants.CANBuses.UpperBus);
 
   private final VelocityTorqueCurrentFOC m_spinRequest = new VelocityTorqueCurrentFOC(0);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);

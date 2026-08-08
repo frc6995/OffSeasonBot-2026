@@ -10,30 +10,30 @@ public class DyeRotor extends SubsystemBase {
         public static final int kLeadIndexMotorCANID = 21; // Tune
         public static final int kFollowIndexMotorCANID = 22; // Tune
 
-    public static final double kSpinReduction = 36.0;
-    public static final double kIndexReduction = 2.5;
-    public static final double kSpinMOI = 0.004;
-    public static final double kIndexMOI = 0.002;
+        public static final double kSpinReduction = 35;
+        public static final double kIndexReduction = 2.5;
+        public static final double kSpinMOI = 0.004;
+        public static final double kIndexMOI = 0.002;
 
         public static final double kSpinStatorCurrentLimit = 60.0;
         public static final double kSpinSupplyCurrentLimit = 40.0;
         public static final double kIndexStatorCurrentLimit = 60.0;
         public static final double kIndexSupplyCurrentLimit = 40.0;
 
-        public static final double kSpinKP = 5.0;
-        public static final double kSpinKS = 0.0;
+        public static final double kSpinKP = 20.0;
+        public static final double kSpinKS = 5.0;
         public static final double kSpinKV = 0.0;
 
-        public static final double kIndexKP = 5.0;
-        public static final double kIndexKS = 0.0;
+        public static final double kIndexKP = 7.0;
+        public static final double kIndexKS = 7.0;
         public static final double kIndexKV = 0.0;
 
         public static final double kSpinForwardRPM = 120.0;
         public static final double kSpinBackwardRPM = 30.0;
         public static final double kSpinVelocityToleranceRPM = 20.0;
 
-        public static final double kIndexForwardRPM = 300.0;
-        public static final double kIndexBackwardRPM = 300.0;
+        public static final double kIndexForwardRPM = 1000.0;
+        public static final double kIndexBackwardRPM = 30.0;
 
         private DyeRotorConstants() {
         }
