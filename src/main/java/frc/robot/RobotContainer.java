@@ -83,7 +83,7 @@ public class RobotContainer {
         joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeEject());
         joystick.leftTrigger().onFalse(m_Superstructure.requestIntakeActive());
 
-        joystick.rightBumper().onTrue(m_Superstructure.requestRobotShooting());
+        joystick.rightBumper().whileTrue(m_Superstructure.requestRobotShooting());
         joystick.rightBumper().onFalse(m_Superstructure.requestRobotIdle());
 
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
