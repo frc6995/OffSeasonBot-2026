@@ -68,8 +68,8 @@ public class Superstructure extends SubsystemBase {
 
         } else {
             this.m_intake = new Intake(new IntakeIO() {});
-            this.m_hood = new Hood(new HoodIO() {});
-            this.m_flywheel = new Flywheel(new FlywheelIO() {});
+            this.m_hood = new Hood(new HoodIO() {}, null);
+            this.m_flywheel = new Flywheel(new FlywheelIO() {}, null);
             this.m_turret = new Turret(new TurretIO() {} );
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
@@ -80,13 +80,6 @@ public class Superstructure extends SubsystemBase {
     public void periodic() {
        m_shotController.calculate();
 
-       System.out.println("RobotState: " + robotState
-                + " | Intake: " + m_intake.getState()
-                + " | Hood: " + m_hood.getState()
-                + " | Flywheel: " + m_flywheel.getState()
-                + " | Turret: " + m_turret.getState()
-                + " | DyeRotor(spin): " + m_dyeRotor.getSpinState()
-                + " | DyeRotor(index): " + m_dyeRotor.getIndexState());
     }
 
     public Command requestIntakeActive() {
