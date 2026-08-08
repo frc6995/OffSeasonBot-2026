@@ -1,7 +1,11 @@
 package frc.robot.subsystems.flywheel;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
+import frc.robot.util.ShotController;
+import frc.robot.util.ShotController.ShooterTargetData;
 
 // import frc.robot.util.CtreUtil;
 
@@ -28,37 +32,46 @@ public class Flywheel extends SubsystemBase {
     // Sim Constants
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
+    public static final double [][] kShooterData = {
+      {0.0, 1500},
+      {3.0, 1850},
+      {4.0, 1950},
+      {5.0, 2050},
+      {10, 2500},
+      {15.0, 3500}
+    };
 
   }
 
-  // public RealFlywheel() {
-  // new FlywheelIO() {
-  // };
-  // }
-
-  public Flywheel(FlywheelIO io) {
-    this.io = io;
-
+  public enum FlywheelState {
+    DISABLED,
+    ACTIVE
   }
 
   private final FlywheelIO io;
   private final FlywheelIO.FlywheelInputs inputs = new FlywheelIO.FlywheelInputs();
-
-  public enum FlywheelState {
-
-    DISABLED,
-
-    ACTIVE
-  }
+  private final Supplier<ShooterTargetData> targetData;
 
   private FlywheelState flywheelState = FlywheelState.DISABLED;
 
-  public void setState(FlywheelState state) {
-    flywheelState = state;
-
+  public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> targetData) {
+    this.io = io;
+    this.targetData = targetData;
   }
 
-  public FlywheelState getShootState() {
+  public void setState(FlywheelState state) {
+    flywheelState = state;
+  }
+
+  public void requestDisable() {
+    setState(FlywheelState.DISABLED);
+  }
+
+  public void requestActive() {
+    setState(FlywheelState.ACTIVE);
+  }
+
+  public FlywheelState getState() {
     return flywheelState;
   }
 
@@ -91,10 +104,10 @@ public class Flywheel extends SubsystemBase {
   }
 
   // shoot is NOT 10000 rpm
-  private static double resolveTargetRPM(FlywheelState state) {
+  private double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
-      case ACTIVE -> 3000;  // This may need to be mapped to the shooter controller
+      case ACTIVE -> targetData.get().rpm();
     };
   }
 }

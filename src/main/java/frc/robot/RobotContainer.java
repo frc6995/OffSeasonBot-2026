@@ -50,7 +50,7 @@ public class RobotContainer {
             TunerConstants.FrontRight,
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
-    public Superstructure m_Superstructure = new Superstructure(drivetrain::getPose);
+    public Superstructure m_Superstructure = new Superstructure(drivetrain::getState);
     public final Autos autos = new Autos(drivetrain);
 
     public RobotContainer() {
@@ -62,33 +62,32 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        // Note that X is defined as forward according to WPILib convention,
-        // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
-        // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() *
-        MaxSpeed) // Drive forward with
-        // negative Y
-        // (forward)
-        .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X
-        //(left)
-        .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive
-      //  counterclockwise with
-        // negative X (left)
+            drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
+                .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+                .withRotationalRate(-joystick.getRightX() * MaxAngularRate)
         ));
+        
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        joystick.a().onTrue(m_Superstructure.requestToggleFuelIntaking());
+        /* 
+        *
+        *
+        *   ACTUAL BINDINGS BELOW 
+        *
+        *
+        */
+
+        joystick.a().onTrue(m_Superstructure.requestIntakeToggle());
 
         joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeEject());
-        joystick.leftTrigger().onFalse(m_Superstructure.requestFuelIntaking());
+        joystick.leftTrigger().onFalse(m_Superstructure.requestIntakeActive());
 
-
-        joystick.rightBumper().whileTrue(m_Superstructure.requestRobotShooting());
+        joystick.rightBumper().onTrue(m_Superstructure.requestRobotShooting());
         joystick.rightBumper().onFalse(m_Superstructure.requestRobotIdle());
 
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
-        joystick.leftBumper().onFalse(m_Superstructure.requestFuelIntaking());
+        joystick.leftBumper().onFalse(m_Superstructure.requestIntakeActive());
 
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
@@ -99,8 +98,19 @@ public class RobotContainer {
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(drivetrain)));
 
-            // do not do this for actual bindings, test only
+
+        /* 
+        *
+        *
+        *   TEST BINDINGS BELOW 
+        *
+        *
+        */
+
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
+
+        // joystick.a().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestSpin()));
+        // joystick.b().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestIdle()));
 
         // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
         // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).

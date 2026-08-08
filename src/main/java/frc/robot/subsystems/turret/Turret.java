@@ -56,15 +56,15 @@ public class Turret extends SubsystemBase {
         RobotVisualizer.addTurret(turretLigament);
     }
 
-    public void aimClosest() {
+    public void requestAimClosest() {
         turretState = TurretState.AIM_CLOSEST;
     }
 
-    public void aimCentral() {
+    public void requestAimCentral() {
         turretState = TurretState.AIM_CENTRAL;
     }
 
-    public void disable() {
+    public void requestDisable() {
         turretState = TurretState.DISABLED;
     }
 
@@ -83,7 +83,7 @@ public class Turret extends SubsystemBase {
 
     }
 
-    public TurretState getTurretState() {
+    public TurretState getState() {
         return turretState;
     }
 
@@ -106,7 +106,7 @@ public class Turret extends SubsystemBase {
         return requestedAngle;
     }
 
-    public void selectClosestAngle(double angle) {
+    private void selectClosestAngle(double angle) {
         double currentAngle = this.getAngle();
 
         angle = MathUtil.inputModulus(angle, -180, 180);
@@ -138,7 +138,7 @@ public class Turret extends SubsystemBase {
         io.setAngle(smallestAngle);
     }
 
-    public void selectCentralAngle(double angle) {
+    private void selectCentralAngle(double angle) {
         angle = MathUtil.inputModulus(angle, -180, 180);
 
         io.setAngle(angle);

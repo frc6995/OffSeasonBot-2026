@@ -70,12 +70,16 @@ public class DyeRotor extends SubsystemBase {
     indexState = state;
   }
 
-  public void setSpinState(DyeRotorState state) {
-    spinState = state;
+  public void requestIdle() {
+    setState(DyeRotorState.IDLE);
   }
 
-  public void setIndexState(DyeRotorState state) {
-    indexState = state;
+  public void requestSpin() {
+    setState(DyeRotorState.SPIN);
+  }
+
+  public void requestSpinBackwards() {
+    setState(DyeRotorState.SPIN_BACKWARDS);
   }
 
   public DyeRotorState getSpinState() {
