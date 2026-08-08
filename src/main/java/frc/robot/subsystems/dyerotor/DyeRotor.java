@@ -4,121 +4,114 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DyeRotor extends SubsystemBase {
-  public static final class DyeRotorConstants {
+    public static final class DyeRotorConstants {
 
-    public static final int kSpinMotorCANID = 23; // Tune
-    public static final int kLeadIndexMotorCANID = 21; // Tune
-    public static final int kFollowIndexMotorCANID = 22; // Tune
+        public static final int kSpinMotorCANID = 23; // Tune
+        public static final int kLeadIndexMotorCANID = 21; // Tune
+        public static final int kFollowIndexMotorCANID = 22; // Tune
 
-    public static final double kSpinReduction = 2.5;
-    public static final double kIndexReduction = 36.0;
-    public static final double kSpinMOI = 0.004;
-    public static final double kIndexMOI = 0.002;
+        public static final double kSpinReduction = 2.5;
+        public static final double kIndexReduction = 36.0;
+        public static final double kSpinMOI = 0.004;
+        public static final double kIndexMOI = 0.002;
 
-    public static final double kSpinStatorCurrentLimit = 60.0;
-    public static final double kSpinSupplyCurrentLimit = 40.0;
-    public static final double kIndexStatorCurrentLimit = 60.0;
-    public static final double kIndexSupplyCurrentLimit = 40.0;
+        public static final double kSpinStatorCurrentLimit = 60.0;
+        public static final double kSpinSupplyCurrentLimit = 40.0;
+        public static final double kIndexStatorCurrentLimit = 60.0;
+        public static final double kIndexSupplyCurrentLimit = 40.0;
 
-    public static final double kSpinKP = 0.1;
-    public static final double kSpinKS = 0.0;
-    public static final double kSpinKV = 0.12;
+        public static final double kSpinKP = 0.1;
+        public static final double kSpinKS = 0.0;
+        public static final double kSpinKV = 0.12;
 
-    public static final double kIndexKP = 0.1;
-    public static final double kIndexKS = 0.0;
-    public static final double kIndexKV = 0.12;
+        public static final double kIndexKP = 0.1;
+        public static final double kIndexKS = 0.0;
+        public static final double kIndexKV = 0.12;
 
-    public static final double kSpinForwardRPM = 120.0;
-    public static final double kSpinBackwardRPM = 30.0;
-    public static final double kSpinVelocityToleranceRPM = 20.0;
+        public static final double kSpinForwardRPM = 120.0;
+        public static final double kSpinBackwardRPM = 30.0;
+        public static final double kSpinVelocityToleranceRPM = 20.0;
 
-    public static final double kIndexForwardRPM = 300.0;
-    public static final double kIndexBackwardRPM = 300.0;
+        public static final double kIndexForwardRPM = 300.0;
+        public static final double kIndexBackwardRPM = 300.0;
 
-    private DyeRotorConstants() {
+        private DyeRotorConstants() {
+        }
     }
-  }
 
-  public enum DyeRotorState {
-    IDLE,
-    SPIN,
-    SPIN_BACKWARDS
-  }
+    public enum DyeRotorState {
+        IDLE,
+        SPIN
+    }
 
-  private final DyeRotorIO io;
-  private final DyeRotorIO.DyeRotorInputs inputs = new DyeRotorIO.DyeRotorInputs();
+    private final DyeRotorIO io;
+    private final DyeRotorIO.DyeRotorInputs inputs = new DyeRotorIO.DyeRotorInputs();
 
-  private DyeRotorState spinState = DyeRotorState.IDLE;
-  private DyeRotorState indexState = DyeRotorState.IDLE;
+    private DyeRotorState spinState = DyeRotorState.IDLE;
+    private DyeRotorState indexState = DyeRotorState.IDLE;
 
-  public DyeRotor() {
-    this(new DyeRotorIO() {
-    });
-  }
+    public DyeRotor() {
+        this(new DyeRotorIO() {
+        });
+    }
 
-  public DyeRotor(DyeRotorIO io) {
-    this.io = io;
-  }
+    public DyeRotor(DyeRotorIO io) {
+        this.io = io;
+    }
 
-  public void stop() {
-    spinState = DyeRotorState.IDLE;
-    indexState = DyeRotorState.IDLE;
-  }
+    public void stop() {
+        spinState = DyeRotorState.IDLE;
+        indexState = DyeRotorState.IDLE;
+    }
 
-  public void setState(DyeRotorState state) {
-    spinState = state;
-    indexState = state;
-  }
+    public void setState(DyeRotorState state) {
+        spinState = state;
+        indexState = state;
+    }
 
-  public void requestIdle() {
-    setState(DyeRotorState.IDLE);
-  }
+    public void requestIdle() {
+        setState(DyeRotorState.IDLE);
+    }
 
-  public void requestSpin() {
-    setState(DyeRotorState.SPIN);
-  }
+    public void requestSpin() {
+        setState(DyeRotorState.SPIN);
+    }
 
-  public void requestSpinBackwards() {
-    setState(DyeRotorState.SPIN_BACKWARDS);
-  }
+    public DyeRotorState getSpinState() {
+        return spinState;
+    }
 
-  public DyeRotorState getSpinState() {
-    return spinState;
-  }
+    public DyeRotorState getIndexState() {
+        return indexState;
+    }
 
-  public DyeRotorState getIndexState() {
-    return indexState;
-  }
+    public double getSpinVelocityRPM() {
+        return inputs.spinVelocityRPM;
+    }
 
-  public double getSpinVelocityRPM() {
-    return inputs.spinVelocityRPM;
-  }
+    public double getIndexVoltage() {
+        return inputs.indexAppliedVolts;
+    }
 
-  public double getIndexVoltage() {
-    return inputs.indexAppliedVolts;
-  }
+    @Override
+    public void periodic() {
+        io.updateInputs(inputs);
 
-  @Override
-  public void periodic() {
-    io.updateInputs(inputs);
+        io.setSpinVelocity(resolveSpinTargetRPM(spinState));
+        io.setIndexVelocity(resolveIndexTargetRPM(indexState));
+    }
 
-    io.setSpinVelocity(resolveSpinTargetRPM(spinState));
-    io.setIndexVelocity(resolveIndexTargetRPM(indexState));
-  }
+    private static double resolveSpinTargetRPM(DyeRotorState state) {
+        return switch (state) {
+            case IDLE -> -DyeRotorConstants.kSpinBackwardRPM;
+            case SPIN -> DyeRotorConstants.kSpinForwardRPM;
+        };
+    }
 
-  private static double resolveSpinTargetRPM(DyeRotorState state) {
-    return switch (state) {
-      case IDLE -> 0.0;
-      case SPIN -> DyeRotorConstants.kSpinForwardRPM;
-      case SPIN_BACKWARDS -> -DyeRotorConstants.kSpinBackwardRPM;
-    };
-  }
-
-  private static double resolveIndexTargetRPM(DyeRotorState state) {
-    return switch (state) {
-      case IDLE -> 0.0;
-      case SPIN -> DyeRotorConstants.kIndexForwardRPM;
-      case SPIN_BACKWARDS -> 0.0;
-    };
-  }
+    private static double resolveIndexTargetRPM(DyeRotorState state) {
+        return switch (state) {
+            case IDLE -> 0.0;
+            case SPIN -> DyeRotorConstants.kIndexForwardRPM;
+        };
+    }
 }

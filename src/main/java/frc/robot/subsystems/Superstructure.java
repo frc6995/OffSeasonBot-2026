@@ -118,7 +118,7 @@ public class Superstructure extends SubsystemBase {
 
     public Command requestRobotIdle() {
         return Commands.runOnce(() -> {
-            m_dyeRotor.requestSpinBackwards();
+            m_dyeRotor.requestIdle();
             m_turret.requestAimCentral();
             m_flywheel.requestDisable();
             m_hood.requestDisable();
