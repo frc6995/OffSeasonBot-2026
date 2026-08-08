@@ -55,7 +55,7 @@ public class Intake extends SubsystemBase {
 
     public enum IntakeState {
         RETRACTED,
-        INTAKING,
+        ACTIVE,
         IDLE,
         AGITATING,
         EJECTING
@@ -93,23 +93,23 @@ public class Intake extends SubsystemBase {
         return intakeState;
     }
 
-    public void retract() {
+    public void requestRetract() {
         setState(IntakeState.RETRACTED);
     }
 
-    public void intakeFuel() {
-        setState(IntakeState.INTAKING);
+    public void requestActive() {
+        setState(IntakeState.ACTIVE);
     }
 
-    public void setIdle() {
+    public void requestIdle() {
         setState(IntakeState.IDLE);
     }
 
-    public void agitate() {
+    public void requestAgitate() {
         setState(IntakeState.AGITATING);
     }
 
-    public void eject() {
+    public void requestEject() {
         setState(IntakeState.EJECTING);
     }
 
@@ -153,6 +153,10 @@ public class Intake extends SubsystemBase {
         return inputs.extensionSupplyCurrentAmps;
     }
 
+    public boolean areMotorsConnected() {
+        return areRollerMotorsConnected() && areExtensionMotorsConnected();
+    }
+
     public boolean areRollerMotorsConnected() {
         return inputs.rollerLeadMotorConnected
                 && inputs.rollerFollowerMotorConnected;
@@ -185,7 +189,7 @@ public class Intake extends SubsystemBase {
         return switch (state) {
             case IDLE -> IntakeConstants.kExtensionMinMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
-            case INTAKING -> IntakeConstants.kExtensionMaxMeters;
+            case ACTIVE -> IntakeConstants.kExtensionMaxMeters;
             case AGITATING -> IntakeConstants.kExtensionMinMeters; // fix this
             case EJECTING -> IntakeConstants.kExtensionMaxMeters;
         };
@@ -195,7 +199,7 @@ public class Intake extends SubsystemBase {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case INTAKING -> IntakeConstants.kRollerForwardVolts;
+            case ACTIVE -> IntakeConstants.kRollerForwardVolts;
             case AGITATING -> IntakeConstants.kRollerForwardVolts;
             case EJECTING -> IntakeConstants.kRollerEjectingVolts;
 
@@ -206,7 +210,7 @@ public class Intake extends SubsystemBase {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case INTAKING -> IntakeConstants.kKickerForwardVolts;
+            case ACTIVE -> IntakeConstants.kKickerForwardVolts;
             case AGITATING -> IntakeConstants.kKickerForwardVolts;
             case EJECTING -> IntakeConstants.kKickerEjectingVolts;
 

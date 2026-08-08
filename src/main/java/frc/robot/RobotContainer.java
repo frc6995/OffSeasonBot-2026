@@ -70,15 +70,15 @@ public class RobotContainer {
         // negative X (left)
         ));
         drivetrain.registerTelemetry(logger::telemeterize);
-        joystick.a().onTrue(m_Superstucture.requestFuelIntaking());
+        joystick.a().onTrue(m_Superstucture.requestIntakeActive());
         joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
         joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
 
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
 
-        joystick.a().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.SPIN)));
-        joystick.b().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.setIndexState(DyeRotorState.IDLE)));
+        joystick.a().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.requestSpin()));
+        joystick.b().onTrue(Commands.runOnce(() -> m_Superstucture.m_dyeRotor.requestIdle()));
 
         // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
         // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).

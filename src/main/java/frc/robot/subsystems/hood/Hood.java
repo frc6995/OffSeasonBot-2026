@@ -92,21 +92,25 @@ public class Hood extends SubsystemBase {
         hoodLigament.setAngle(getAngle());
     }
 
-    public void disable() {
-        hoodState = HoodState.DISABLED;
+    public void setState(HoodState state) {
+        hoodState = state;
+    }
+
+    public void requestActive() {
+        setState(HoodState.ACTIVE);
+    }
+
+    public void requestDisable() {
+        setState(HoodState.DISABLED);
     }
 
     public double getRequestedAngle() {
         return requestedAngle;
     }
 
-    public HoodState getHoodState() {
+    public HoodState getState() {
         return hoodState;
-    }
-
-    public void setState(HoodState state) {
-        hoodState = state;
-    }
+    }    
 
     public double getAngle() {
         return hoodIOInputs.angle;

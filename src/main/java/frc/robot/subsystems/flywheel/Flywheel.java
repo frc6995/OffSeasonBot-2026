@@ -61,10 +61,17 @@ public class Flywheel extends SubsystemBase {
 
   public void setState(FlywheelState state) {
     flywheelState = state;
-
   }
 
-  public FlywheelState getShootState() {
+  public void requestDisable() {
+    setState(FlywheelState.DISABLED);
+  }
+
+  public void requestActive() {
+    setState(FlywheelState.ACTIVE);
+  }
+
+  public FlywheelState getState() {
     return flywheelState;
   }
 

@@ -72,34 +72,53 @@ public class Superstructure extends SubsystemBase {
 
     }
 
-    public Command requestFuelIntaking() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.INTAKING));
+    @Override
+    public void periodic() {
+       m_shotController.calculate();
+    }
+
+    public Command requestIntakeActive() {
+        return Commands.runOnce(() -> m_intake.requestActive());
     }
 
     public Command requestIntakeRetracted() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.RETRACTED));
+        return Commands.runOnce(() -> m_intake.requestRetract());
     }
 
     public Command requestIntakeAgitating() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.AGITATING));
+        return Commands.runOnce(() -> m_intake.requestAgitate());
     }
 
     // In actual use, Idle can mean slow roller velocity
     public Command requestIntakeIdle() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.IDLE));
+        return Commands.runOnce(() -> m_intake.requestIdle());
     }
 
     public Command requestIntakeEject() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.EJECTING));
+        return Commands.runOnce(() -> m_intake.requestEject());
     }
 
     public Command requestRobotIdle() {
-
         return Commands.runOnce(() -> {
-            robotState = RobotState.IDLE;
-            m_dyeRotor.setState(DyeRotorState.SPIN_BACKWARDS);
-            m_turret.setState(TurretState.DISABLED);
-            m_flywheel.setState(FlywheelState.DISABLED);
+            m_dyeRotor.requestSpinBackwards();
+            m_turret.requestAimCentral();
+            m_flywheel.requestDisable();
+        });
+    }
+
+    public Command requestRobotScoring() {
+        return Commands.runOnce(() -> engageShootState(RobotState.SCORING));
+    }
+
+    public Command requestRobotPassing() {
+        return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
+    }
+
+    //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
+    public Command requestRobotShooting() {
+        return Commands.runOnce(() -> {
+            RobotState targetState = determineShootState();
+            engageShootState(targetState);
         });
     }
 
@@ -114,28 +133,5 @@ public class Superstructure extends SubsystemBase {
         m_dyeRotor.setState(DyeRotorState.SPIN);
         m_turret.setState(TurretState.AIM_CLOSEST);
         m_flywheel.setState(FlywheelState.ACTIVE);
-    }
-
-    @Override
-    public void periodic() {
-        //Just for sim testing, remove for actual use
-       // System.out.println("[Superstructure] Shoot button would engage " + determineShootState() );
-       m_shotController.calculate();
-    }
-
-    //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
-    public Command requestRobotShooting() {
-        return Commands.runOnce(() -> {
-            RobotState targetState = determineShootState();
-            engageShootState(targetState);
-        });
-    }
-
-    public Command requestRobotScoring() {
-        return Commands.runOnce(() -> engageShootState(RobotState.SCORING));
-    }
-
-    public Command requestRobotPassing() {
-        return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
     }
 }
