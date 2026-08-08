@@ -12,7 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -22,9 +22,6 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
-import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
-import frc.robot.subsystems.intake.Intake.IntakeState;
-import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.util.AutoAlign.RotationControlMode;
 
 import java.util.Set;
@@ -39,7 +36,6 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-  //  private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
@@ -51,9 +47,12 @@ public class RobotContainer {
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
     public Superstructure m_Superstructure = new Superstructure(drivetrain::getState);
+    private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(drivetrain, m_Superstructure);
 
     public RobotContainer() {
+        VISUALIZER = logger.MECH_VISUALIZER;
+        SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
 
         configureBindings();
@@ -89,6 +88,10 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_Superstructure.requestIntakeActive());
 
+        /* For Cadsim testing */
+        // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));
+        // joystick.y().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(0)));
+    
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
                 () -> new AutoAlignFixedHeading(

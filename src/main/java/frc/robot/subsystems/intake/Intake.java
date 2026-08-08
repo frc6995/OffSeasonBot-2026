@@ -2,7 +2,6 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -60,8 +59,9 @@ public class Intake extends SubsystemBase {
         public static final double kExtensionStatorCurrentLimit = 80.0;
         public static final double kExtensionSupplyCurrentLimit = 40.0;
         public static final double kExtensionReduction = 3.33;
-        public static final double kExtensionMaxMeters = 0.5;
+        public static final double kExtensionMaxMeters = 0.31;
         public static final double kExtensionMinMeters = 0.0;
+        public static final double kIntakeAngleDegrees = 10.8;
         public static final double kDrumCircumferenceMeters = 0.119;
         public static final double acceleration = 200.0;
         public static final double velocity = 10.0;
@@ -103,7 +103,6 @@ public class Intake extends SubsystemBase {
     public Intake(IntakeIO io) {
         this.io = io;
         RobotVisualizer.addIntake(intakeLigament);
-
     }
 
     public void stop() {
@@ -215,30 +214,19 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-    io.updateInputs(inputs);
+        io.updateInputs(inputs);
 
-    double retractedLengthMeters = Units.inchesToMeters(8.0);
-    double extensionMeters = inputs.extensionPositionMeters;
-
-    intakeLigament.setLength(retractedLengthMeters + extensionMeters);
-
-    io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
-    io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-    io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
+        io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
+        io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
+        io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
     }
 
-    /**
-     * Sweeps the extension back and forth between two positions while the rollers
-     * and kicker keep spinning forward.
-     *
-     * @param nearMeters      the retracted end of the sweep
-     * @param farMeters       the extended end of the sweep
-     * @param intervalSeconds how long to hold each end before swapping targets
-     */
-    public void agitate(double nearMeters, double farMeters, double intervalSeconds) {
-        agitateNearMeters = clampExtension(nearMeters);
-        agitateFarMeters = clampExtension(farMeters);
-        agitateIntervalSeconds = Math.max(intervalSeconds, 0.02);
+    @Override
+    public void simulationPeriodic() {
+        double retractedLengthMeters = Units.inchesToMeters(8.0);
+        double extensionMeters = inputs.extensionPositionMeters;
+        intakeLigament.setLength(retractedLengthMeters + extensionMeters);
+        RobotVisualizer.updateIntakeExtension(extensionMeters);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {

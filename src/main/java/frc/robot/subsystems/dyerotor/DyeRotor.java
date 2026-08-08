@@ -1,7 +1,7 @@
 package frc.robot.subsystems.dyerotor;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotVisualizer;
 
 public class DyeRotor extends SubsystemBase {
     public static final class DyeRotorConstants {
@@ -10,10 +10,10 @@ public class DyeRotor extends SubsystemBase {
         public static final int kLeadIndexMotorCANID = 21; // Tune
         public static final int kFollowIndexMotorCANID = 22; // Tune
 
-        public static final double kSpinReduction = 2.5;
-        public static final double kIndexReduction = 36.0;
-        public static final double kSpinMOI = 0.004;
-        public static final double kIndexMOI = 0.002;
+    public static final double kSpinReduction = 36.0;
+    public static final double kIndexReduction = 2.5;
+    public static final double kSpinMOI = 0.004;
+    public static final double kIndexMOI = 0.002;
 
         public static final double kSpinStatorCurrentLimit = 60.0;
         public static final double kSpinSupplyCurrentLimit = 40.0;
@@ -41,7 +41,7 @@ public class DyeRotor extends SubsystemBase {
 
     public enum DyeRotorState {
         IDLE,
-        SPIN
+        SPIN;
     }
 
     private final DyeRotorIO io;
@@ -100,6 +100,11 @@ public class DyeRotor extends SubsystemBase {
         io.setSpinVelocity(resolveSpinTargetRPM(spinState));
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
     }
+
+  @Override
+  public void simulationPeriodic() {
+    RobotVisualizer.updateHook(inputs.spinVelocityRPM * 2 * Math.PI / 60.0 * 0.02);
+  }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {
         return switch (state) {
