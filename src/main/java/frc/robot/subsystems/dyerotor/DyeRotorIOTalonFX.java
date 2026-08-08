@@ -7,8 +7,9 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -28,9 +29,9 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   protected final TalonFX m_indexerFollow = new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID,
       Constants.CANBuses.UpperBus);
 
-  private final VelocityVoltage m_spinRequest = new VelocityVoltage(0);
+  private final VelocityTorqueCurrentFOC m_spinRequest = new VelocityTorqueCurrentFOC(0);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);
-  private final VelocityVoltage m_indexerVelocityRequest = new VelocityVoltage(0);
+  private final VelocityTorqueCurrentFOC m_indexerVelocityRequest = new VelocityTorqueCurrentFOC(0);
 
   final StatusSignal<AngularVelocity> m_spinVelocity = m_spinMotor.getVelocity();
   final StatusSignal<Voltage> m_spinVoltage = m_spinMotor.getMotorVoltage();
@@ -66,6 +67,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         .withKP(DyeRotorConstants.kSpinKP)
         .withKS(DyeRotorConstants.kSpinKS)
         .withKV(DyeRotorConstants.kSpinKV);
+    spinConfig.TorqueCurrent = new TorqueCurrentConfigs();
     m_spinMotor.getConfigurator().apply(spinConfig);
   }
 
@@ -85,6 +87,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         .withKP(DyeRotorConstants.kIndexKP)
         .withKS(DyeRotorConstants.kIndexKS)
         .withKV(DyeRotorConstants.kIndexKV);
+    indexConfig.TorqueCurrent = new TorqueCurrentConfigs();
     m_indexerLead.getConfigurator().apply(indexConfig);
     m_indexerFollow.getConfigurator().apply(indexConfig);
 

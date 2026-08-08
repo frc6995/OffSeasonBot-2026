@@ -75,7 +75,7 @@ public class Intake extends SubsystemBase {
 
     public enum IntakeState {
         RETRACTED,
-        INTAKING,
+        ACTIVE,
         IDLE,
         AGITATING,
         EJECTING
@@ -123,40 +123,27 @@ public class Intake extends SubsystemBase {
         return intakeState;
     }
 
-    public void retract() {
+    public boolean isDeployed() {
+        return getState().compareTo(IntakeState.RETRACTED) > 0;
+    }
+
+    public void requestRetract() {
         setState(IntakeState.RETRACTED);
     }
 
-    public void intakeFuel() {
-        setState(IntakeState.INTAKING);
+    public void requestActive() {
+        setState(IntakeState.ACTIVE);
     }
 
-    public void setIdle() {
+    public void requestIdle() {
         setState(IntakeState.IDLE);
     }
 
-    public void agitate() {
-        agitate(IntakeConstants.kAgitateNearMeters,
-                IntakeConstants.kAgitateFarMeters,
-                IntakeConstants.kAgitateIntervalSeconds);
-    }
-
-    /**
-     * Sweeps the extension back and forth between two positions while the rollers
-     * and kicker keep spinning forward.
-     *
-     * @param nearMeters      the retracted end of the sweep
-     * @param farMeters       the extended end of the sweep
-     * @param intervalSeconds how long to hold each end before swapping targets
-     */
-    public void agitate(double nearMeters, double farMeters, double intervalSeconds) {
-        agitateNearMeters = clampExtension(nearMeters);
-        agitateFarMeters = clampExtension(farMeters);
-        agitateIntervalSeconds = Math.max(intervalSeconds, 0.02);
+    public void requestAgitate() {
         setState(IntakeState.AGITATING);
     }
 
-    public void eject() {
+    public void requestEject() {
         setState(IntakeState.EJECTING);
     }
 
@@ -208,6 +195,10 @@ public class Intake extends SubsystemBase {
         return inputs.extensionSupplyCurrentAmps;
     }
 
+    public boolean areMotorsConnected() {
+        return areRollerMotorsConnected() && areExtensionMotorsConnected();
+    }
+
     public boolean areRollerMotorsConnected() {
         return inputs.rollerLeadMotorConnected
                 && inputs.rollerFollowerMotorConnected;
@@ -231,16 +222,30 @@ public class Intake extends SubsystemBase {
 
     intakeLigament.setLength(retractedLengthMeters + extensionMeters);
 
-        io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
-        io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-        io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
+    io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
+    io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
+    io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
+    }
+
+    /**
+     * Sweeps the extension back and forth between two positions while the rollers
+     * and kicker keep spinning forward.
+     *
+     * @param nearMeters      the retracted end of the sweep
+     * @param farMeters       the extended end of the sweep
+     * @param intervalSeconds how long to hold each end before swapping targets
+     */
+    public void agitate(double nearMeters, double farMeters, double intervalSeconds) {
+        agitateNearMeters = clampExtension(nearMeters);
+        agitateFarMeters = clampExtension(farMeters);
+        agitateIntervalSeconds = Math.max(intervalSeconds, 0.02);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {
         return switch (state) {
             case IDLE -> IntakeConstants.kExtensionMaxMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
-            case INTAKING -> IntakeConstants.kExtensionMaxMeters;
+            case ACTIVE -> IntakeConstants.kExtensionMaxMeters;
             case AGITATING -> resolveAgitationTargetPosition();
             case EJECTING -> IntakeConstants.kExtensionMaxMeters;
         };
@@ -264,7 +269,7 @@ public class Intake extends SubsystemBase {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case INTAKING -> IntakeConstants.kRollerForwardRPM;
+            case ACTIVE -> IntakeConstants.kRollerForwardRPM;
             case AGITATING -> IntakeConstants.kRollerForwardRPM;
             case EJECTING -> IntakeConstants.kRollerEjectingRPM;
 
@@ -275,7 +280,7 @@ public class Intake extends SubsystemBase {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case INTAKING -> IntakeConstants.kKickerForwardRPM;
+            case ACTIVE -> IntakeConstants.kKickerForwardRPM;
             case AGITATING -> IntakeConstants.kKickerForwardRPM;
             case EJECTING -> IntakeConstants.kKickerEjectingRPM;
 

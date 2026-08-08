@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -32,7 +34,7 @@ import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-
+import frc.robot.util.ShotController;
 public class Superstructure extends SubsystemBase {
 
     public enum RobotState {
@@ -51,12 +53,16 @@ public class Superstructure extends SubsystemBase {
 
     private final Supplier<Pose2d> m_poseSupplier;
 
-    public Superstructure(Supplier<Pose2d> poseSupplier) {
-        this.m_poseSupplier = poseSupplier;
+    public final ShotController m_shotController;
+
+    public Superstructure(Supplier<SwerveDriveState> swerveState) {
+        this.m_poseSupplier = () -> swerveState.get().Pose;
+        m_shotController = new ShotController(m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER);
+
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
-            this.m_hood = new Hood(new HoodIOSimTalonFX());
-            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX());
+            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
             this.m_turret = new Turret(new TurretIOSimTalonFX());
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
@@ -70,56 +76,73 @@ public class Superstructure extends SubsystemBase {
 
     }
 
-    private boolean m_intakeDeployed = false;
+    @Override
+    public void periodic() {
+       m_shotController.calculate();
 
-    public Command requestFuelIntaking() {
-        return Commands.runOnce(() -> {
-            m_intakeDeployed = true;
-            m_intake.setState(IntakeState.INTAKING);
-        });
+       System.out.println("RobotState: " + robotState
+                + " | Intake: " + m_intake.getState()
+                + " | Hood: " + m_hood.getState()
+                + " | Flywheel: " + m_flywheel.getState()
+                + " | Turret: " + m_turret.getState()
+                + " | DyeRotor(spin): " + m_dyeRotor.getSpinState()
+                + " | DyeRotor(index): " + m_dyeRotor.getIndexState());
+    }
+
+    public Command requestIntakeActive() {
+        return Commands.runOnce(() -> m_intake.requestActive());
     }
 
     public Command requestIntakeRetracted() {
-        return Commands.runOnce(() -> {
-            m_intakeDeployed = false;
-            m_intake.setState(IntakeState.RETRACTED);
-        });
-    }
-
-    /** Toggles the intake between intaking and retracted each time it's called. */
-    public Command requestToggleFuelIntaking() {
-        return Commands.either(
-                requestIntakeRetracted(),
-                requestFuelIntaking(),
-                () -> m_intakeDeployed);
+        return Commands.runOnce(() -> m_intake.requestRetract());
     }
 
     public Command requestIntakeAgitating() {
-        return Commands.runOnce(() -> m_intake.agitate());
-    }
-
-    // Sweeps the extension between the two given distances every intervalSeconds
-    // while the rollers and kicker keep spinning
-    public Command requestIntakeAgitating(double nearMeters, double farMeters, double intervalSeconds) {
-        return Commands.runOnce(() -> m_intake.agitate(nearMeters, farMeters, intervalSeconds));
+        return Commands.runOnce(() -> m_intake.requestAgitate());
     }
 
     // In actual use, Idle can mean slow roller velocity
     public Command requestIntakeIdle() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.IDLE));
+        return Commands.runOnce(() -> m_intake.requestIdle());
     }
 
     public Command requestIntakeEject() {
-        return Commands.runOnce(() -> m_intake.setState(IntakeState.EJECTING));
+        return Commands.runOnce(() -> m_intake.requestEject());
+    }
+
+    public Command requestIntakeToggle() {
+        return Commands.runOnce(() -> {
+            if(m_intake.isDeployed()) {
+                m_intake.requestRetract();
+            } else {
+                m_intake.requestActive();
+            }
+        });
     }
 
     public Command requestRobotIdle() {
-
         return Commands.runOnce(() -> {
             robotState = RobotState.IDLE;
-            m_dyeRotor.setState(DyeRotorState.SPIN_BACKWARDS);
-            m_turret.setState(TurretState.DISABLED);
-            m_flywheel.setState(FlywheelState.DISABLED);
+            m_dyeRotor.requestIdle();
+            m_turret.requestAimCentral();
+            m_flywheel.requestDisable();
+            m_hood.requestDisable();
+        });
+    }
+
+    public Command requestRobotScoring() {
+        return Commands.runOnce(() -> engageShootState(RobotState.SCORING));
+    }
+
+    public Command requestRobotPassing() {
+        return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
+    }
+
+    //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
+    public Command requestRobotShooting() {
+        return Commands.runOnce(() -> {
+            RobotState targetState = determineShootState();
+            engageShootState(targetState);
         });
     }
 
@@ -131,38 +154,9 @@ public class Superstructure extends SubsystemBase {
 
     private void engageShootState(RobotState state) {
         robotState = state;
-        m_dyeRotor.setState(DyeRotorState.SPIN);
-        m_turret.setState(TurretState.AIM_CLOSEST);
-        m_flywheel.setState(FlywheelState.ACTIVE);
-    }
-
-    @Override
-    public void periodic() {
-        //Just for sim testing, remove for actual use
-       // System.out.println("[Superstructure] Shoot button would engage " + determineShootState() );
-
-        // System.out.println("RobotState: " + robotState
-        //         + " | Intake: " + m_intake.getState()
-        //         + " | Hood: " + m_hood.getHoodState()
-        //         + " | Flywheel: " + m_flywheel.getShootState()
-        //         + " | Turret: " + m_turret.getTurretState()
-        //         + " | DyeRotor(spin): " + m_dyeRotor.getSpinState()
-        //         + " | DyeRotor(index): " + m_dyeRotor.getIndexState());
-    }
-
-    //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
-    public Command requestRobotShooting() {
-        return Commands.runOnce(() -> {
-            RobotState targetState = determineShootState();
-            engageShootState(targetState);
-        });
-    }
-
-    public Command requestRobotScoring() {
-        return Commands.runOnce(() -> engageShootState(RobotState.SCORING));
-    }
-
-    public Command requestRobotPassing() {
-        return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
+        m_dyeRotor.requestSpin();
+        m_turret.requestAimClosest();
+        m_flywheel.requestActive();
+        m_hood.requestActive();
     }
 }
