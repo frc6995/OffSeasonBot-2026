@@ -51,7 +51,7 @@ public class RobotContainer {
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
     public Superstructure m_Superstructure = new Superstructure(drivetrain::getState);
-    public final Autos autos = new Autos(drivetrain);
+    public final Autos autos = new Autos(drivetrain, m_Superstructure);
 
     public RobotContainer() {
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
