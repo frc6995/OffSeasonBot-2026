@@ -1,11 +1,12 @@
 package frc.robot.subsystems.hood;
 
+
 public interface HoodIO {
 
-    public void setAngle(double angle);
-    public void resetEncoder();
-    public void updateInputs(HoodIOInputs inputs);
-    public void disable();
+    public default void setAngle(double angle) {};
+    public default void resetEncoder() {};
+    public default void updateInputs(HoodIOInputs inputs) {};
+    public default void disable() {};
     
     public static class HoodIOInputs {
         public double angle;

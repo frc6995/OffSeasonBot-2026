@@ -16,17 +16,21 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
+import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.hood.Hood.HoodState;
+import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSimTalonFX;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
+import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 
 public class Superstructure extends SubsystemBase {
@@ -57,10 +61,10 @@ public class Superstructure extends SubsystemBase {
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            this.m_intake = new Intake(new IntakeIOTalonFX());
-            this.m_hood = new Hood(new HoodIOTalonFX());
-            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX());
-            this.m_turret = new Turret(new TurretIOTalonFX());
+            this.m_intake = new Intake(new IntakeIO() {});
+            this.m_hood = new Hood(new HoodIO() {});
+            this.m_flywheel = new Flywheel(new FlywheelIO() {});
+            this.m_turret = new Turret(new TurretIO() {} );
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
