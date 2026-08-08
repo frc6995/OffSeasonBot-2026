@@ -20,19 +20,19 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexStatorCurrentLimit = 60.0;
         public static final double kIndexSupplyCurrentLimit = 40.0;
 
-        public static final double kSpinKP = 5.0;
-        public static final double kSpinKS = 0.0;
+        public static final double kSpinKP = 20.0;
+        public static final double kSpinKS = 5.0;
         public static final double kSpinKV = 0.0;
 
-        public static final double kIndexKP = 5.0;
-        public static final double kIndexKS = 0.0;
+        public static final double kIndexKP = 7.0;
+        public static final double kIndexKS = 7.0;
         public static final double kIndexKV = 0.0;
 
         public static final double kSpinForwardRPM = 120.0;
         public static final double kSpinBackwardRPM = 30.0;
         public static final double kSpinVelocityToleranceRPM = 20.0;
 
-        public static final double kIndexForwardRPM = 500.0;
+        public static final double kIndexForwardRPM = 1000.0;
         public static final double kIndexBackwardRPM = 30.0;
 
         private DyeRotorConstants() {
