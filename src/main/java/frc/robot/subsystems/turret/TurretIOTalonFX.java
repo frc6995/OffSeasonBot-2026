@@ -114,7 +114,6 @@ public class TurretIOTalonFX implements TurretIO {
             );
         }
         
-        // System.out.println("trying to set to " + angle + " degrees " + angleToRotations(clampedAngle) + " rotations");
         double rotations = clampedAngle / 360;
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }

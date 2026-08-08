@@ -1,7 +1,7 @@
 package frc.robot.subsystems.dyerotor;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotVisualizer;
 
 public class DyeRotor extends SubsystemBase {
   public static final class DyeRotorConstants {
@@ -10,8 +10,8 @@ public class DyeRotor extends SubsystemBase {
     public static final int kLeadIndexMotorCANID = 21; // Tune
     public static final int kFollowIndexMotorCANID = 22; // Tune
 
-    public static final double kSpinReduction = 2.5;
-    public static final double kIndexReduction = 36.0;
+    public static final double kSpinReduction = 36.0;
+    public static final double kIndexReduction = 2.5;
     public static final double kSpinMOI = 0.004;
     public static final double kIndexMOI = 0.002;
 
@@ -20,13 +20,13 @@ public class DyeRotor extends SubsystemBase {
     public static final double kIndexStatorCurrentLimit = 60.0;
     public static final double kIndexSupplyCurrentLimit = 40.0;
 
-    public static final double kSpinKP = 0.1;
+    public static final double kSpinKP = 0.25;
     public static final double kSpinKS = 0.0;
-    public static final double kSpinKV = 0.12;
+    public static final double kSpinKV = 0.30;
 
-    public static final double kIndexKP = 0.1;
+    public static final double kIndexKP = 0.25;
     public static final double kIndexKS = 0.0;
-    public static final double kIndexKV = 0.12;
+    public static final double kIndexKV = 0.30;
 
     public static final double kSpinForwardRPM = 120.0;
     public static final double kSpinBackwardRPM = 30.0;
@@ -100,6 +100,13 @@ public class DyeRotor extends SubsystemBase {
 
     io.setSpinVelocity(resolveSpinTargetRPM(spinState));
     io.setIndexVelocity(resolveIndexTargetRPM(indexState));
+
+    RobotVisualizer.updateHook(inputs.spinVelocityRPM * 2 * Math.PI / 60.0 * 0.02);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    RobotVisualizer.updateHook(inputs.spinVelocityRPM * 2 * Math.PI / 60.0 * 0.02);
   }
 
   private static double resolveSpinTargetRPM(DyeRotorState state) {

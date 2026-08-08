@@ -73,7 +73,10 @@ public class Hood extends SubsystemBase {
                 io.setAngle(clampedAngle);
 
         }
+    }
 
+    @Override
+    public void simulationPeriodic() {
         hoodLigament.setAngle(getAngle());
         RobotVisualizer.updateHood(Units.degreesToRadians(getAngle()));
     }

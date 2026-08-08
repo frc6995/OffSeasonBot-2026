@@ -79,9 +79,12 @@ public class Turret extends SubsystemBase {
         }
 
         io.updateInputs(inputs);
+    }
+
+    @Override
+    public void simulationPeriodic() {
         turretLigament.setAngle(inputs.angle);
         RobotVisualizer.updateTurret(Units.degreesToRadians(inputs.angle));
-
     }
 
     public TurretState getTurretState() {

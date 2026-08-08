@@ -116,6 +116,7 @@ public class Superstructure extends SubsystemBase {
             m_dyeRotor.setState(DyeRotorState.SPIN_BACKWARDS);
             m_turret.setState(TurretState.DISABLED);
             m_flywheel.setState(FlywheelState.DISABLED);
+            m_hood.setAngle(0);
         });
     }
 
@@ -130,6 +131,8 @@ public class Superstructure extends SubsystemBase {
         m_dyeRotor.setState(DyeRotorState.SPIN);
         m_turret.setState(TurretState.AIM_CLOSEST);
         m_flywheel.setState(FlywheelState.ACTIVE);
+        m_hood.setState(HoodState.ACTIVE);
+        m_hood.setAngle(40);
     }
 
     @Override
