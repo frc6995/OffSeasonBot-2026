@@ -27,7 +27,7 @@ public final class RobotVisualizer {
   private static final int HOOK_COMPONENT = 1;
 
   private static final Pose3d INTAKE_LINEAR_LOCATION = new Pose3d(
-      Units.inchesToMeters(10.239),
+      Units.inchesToMeters(-10.239),
       0.0,
       Units.inchesToMeters(0.0),
       new Rotation3d(Units.degreesToRadians(180.0), 0.0, 0.0));
@@ -71,14 +71,14 @@ public final class RobotVisualizer {
 
   /** Updates telescoping intake travel. The input is meters. */
   public static void updateIntakeExtension(double extensionMeters) {
-    intakeExtensionMeters = -extensionMeters;
+    intakeExtensionMeters = extensionMeters;
     updateIntakePose();
   }
 
   private static void updateIntakePose() {
     COMPONENTS[INTAKE_COMPONENT] = INTAKE_LINEAR_LOCATION.transformBy(
         new Transform3d(
-            new Translation3d(intakeExtensionMeters, 0.0, -(intakeExtensionMeters * Math.sin(Math.toRadians(IntakeConstants.kIntakeAngleDegrees)))),
+            new Translation3d(intakeExtensionMeters, 0.0, (intakeExtensionMeters * Math.sin(Math.toRadians(IntakeConstants.kIntakeAngleDegrees)))),
             new Rotation3d(0.0, 0.0, 0.0)));
 
     publishComponents();
