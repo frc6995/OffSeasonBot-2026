@@ -32,9 +32,9 @@ public class Autos {
 
     private final Path workshopTest1 = new Path("workshop-test-1");
     private final Path workshopTest2 = new Path("workshop-test-2");
-    private final Path Depot1Path = new Path("Left-Center-Line-Depot");
-    private final Path Depot2Path = new Path("Depot-2");
-    private final Path Depot3Path = new Path("Depot-3");
+    private final Path Depot1Path = new Path("left-center-line-depot");
+    private final Path Depot2Path = new Path("depot-2");
+    private final Path Depot3Path = new Path("depot-3");
 
     private final CANRange m_canRange = new CANRange();
 
