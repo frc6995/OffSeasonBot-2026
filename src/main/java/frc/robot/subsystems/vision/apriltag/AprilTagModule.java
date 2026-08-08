@@ -21,7 +21,7 @@ import frc.robot.util.LimelightHelpers;
  * Records vision data to NetworkTables for debugging. 
  */
 public class AprilTagModule {
-    public static record AprilTagEstimate(Pose2d estimatedPose, double timestampSeconds, boolean isMegaTag2, double avgTagDistMeters, double tagCount, double avgAmbiguity) {}
+    public static record AprilTagEstimate(Pose2d estimatedPose, double timestampSeconds, boolean isMegaTag2, double avgTagDistMeters, double tagCount, double avgAmbiguity, double tagArea) {}
     
     public enum EstimationMode {
         MEGATAG1, 
@@ -156,7 +156,7 @@ public class AprilTagModule {
         int tagCount = (int) LimelightHelpers.extractArrayEntry(poseArray, 7);
         // double tagSpan = LimelightHelpers.extractArrayEntry(poseArray, 8);
         double tagDist = LimelightHelpers.extractArrayEntry(poseArray, 9);
-        // double tagArea = LimelightHelpers.extractArrayEntry(poseArray, 10);
+        double tagArea = LimelightHelpers.extractArrayEntry(poseArray, 10);
         
         // Convert server timestamp from microseconds to seconds and adjust for latency
         double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
@@ -179,7 +179,7 @@ public class AprilTagModule {
         avgAmbiguity /= tagCount;
 
         lastMode = isMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
-        return Optional.of(new AprilTagEstimate(pose, adjustedTimestamp, isMegaTag2, tagDist, tagCount, avgAmbiguity));
+        return Optional.of(new AprilTagEstimate(pose, adjustedTimestamp, isMegaTag2, tagDist, tagCount, avgAmbiguity, tagArea));
     }
 
     /**
