@@ -30,11 +30,10 @@ public class Autos {
 
     // ============= BLINE PATHS =============
 
-    private final Path workshopTest1 = new Path("workshop-test-1");
-    private final Path workshopTest2 = new Path("workshop-test-2");
-    private final Path Depot1Path = new Path("left-center-line-depot");
-    private final Path Depot2Path = new Path("depot-2");
-    private final Path Depot3Path = new Path("depot-3");
+    private final Path workshopTest1 = new Path("workshop-test-1".toLowerCase());
+    private final Path Depot1Path = new Path("left-center-line-depot".toLowerCase());
+    private final Path Depot2Path = new Path("depot-2".toLowerCase());
+    private final Path Depot3Path = new Path("depot-3".toLowerCase());
 
     private final CANRange m_canRange = new CANRange();
 
@@ -54,8 +53,8 @@ public class Autos {
                 new PIDController(7.0, 0.0, 0.0), // rotation — minimizes heading error
                 new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
-                .withDefaultShouldFlip(); // auto-flip when on the red alliance
-        // .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
+                .withDefaultShouldFlip() // auto-flip when on the red alliance
+         .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
 
         registerAutos();
     }
@@ -103,12 +102,6 @@ public class Autos {
                     Command workshopTest1Auto = pathBuilder.build(workshopTest1);
 
                     c.addCommands(workshopTest1Auto);
-                }));
-        autos.put("Bline_Workshop_test2",
-                () -> auto(c -> {
-                    Command workshopTest2Auto = pathBuilder.build(workshopTest2);
-
-                    c.addCommands(workshopTest2Auto);
                 }));
 
         autos.forEach(autoChooser::addCmd);
