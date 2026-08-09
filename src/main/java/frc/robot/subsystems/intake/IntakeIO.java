@@ -13,6 +13,12 @@ public interface IntakeIO {
     /** Caps the closed-loop torque current (amps) the extension is allowed to command. */
     default void setExtensionTorqueCurrentLimit(double peakTorqueCurrentAmps) {}
 
+    /** Caps the closed-loop torque current (amps) the roller is allowed to command. */
+    default void setRollerTorqueCurrentLimit(double peakTorqueCurrentAmps) {}
+
+    /** Caps the closed-loop torque current (amps) the kicker is allowed to command. */
+    default void setKickerTorqueCurrentLimit(double peakTorqueCurrentAmps) {}
+
     default void resetEncoder() {}
 
     default void stop() {

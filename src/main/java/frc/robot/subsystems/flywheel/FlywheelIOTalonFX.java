@@ -7,9 +7,10 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -19,6 +20,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.Constants.CANBuses;
+import frc.robot.util.TorqueCurrentLimiter;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
 
@@ -34,7 +36,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   protected final TalonFX m_flywheelFollowMotor3 = new TalonFX(FlywheelConstants.kFollowMotor3CANID, CANBuses.UpperBus);
 
-  protected VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
+  protected VelocityTorqueCurrentFOC m_velocityRequest = new VelocityTorqueCurrentFOC(0);
+
+  // Caps closed-loop torque current for the lead motor; a call is only ever
+  // sent over CAN when the requested limit actually changes.
+  private final TorqueCurrentLimiter m_torqueCurrentLimiter = new TorqueCurrentLimiter(m_flywheelLeadMotor);
 
   final StatusSignal<AngularVelocity> m_FlywheelVelocity = m_flywheelLeadMotor.getVelocity();
   final StatusSignal<Voltage> m_FlywheelVoltage = m_flywheelLeadMotor.getMotorVoltage();
@@ -62,9 +68,13 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     flywheelConfig.Voltage = new VoltageConfigs()
         .withPeakForwardVoltage(FlywheelConstants.kNewMaxVoltage)
         .withPeakReverseVoltage(FlywheelConstants.kNewMinVoltage);
+    // Closed-loop output is torque current (see m_velocityRequest above);
+    // m_torqueCurrentLimiter owns the actual peak-current values below.
+    flywheelConfig.TorqueCurrent = new TorqueCurrentConfigs();
     // CtreUtil.reportIfNotOk("configure example",
     // m_exMotor.getConfigurator().apply(config));
     m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig);
+    m_torqueCurrentLimiter.setPeakTorqueCurrentAmps(FlywheelConstants.kNormalPeakTorqueCurrentAmps);
   }
 
   @Override
@@ -84,6 +94,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   @Override
   public void setVelocityRPM(double velocityRPM) {
     m_flywheelLeadMotor.setControl(m_velocityRequest.withVelocity(velocityRPM / 60));
+  }
+
+  @Override
+  public void setPeakTorqueCurrentLimit(double peakTorqueCurrentAmps) {
+    m_torqueCurrentLimiter.setPeakTorqueCurrentAmps(peakTorqueCurrentAmps);
   }
 
   @Override

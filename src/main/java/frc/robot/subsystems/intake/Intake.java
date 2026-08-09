@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
+import frc.robot.util.CurrentLimitCoordinator.LimitedMechanism;
 
 public class Intake extends SubsystemBase {
 
@@ -17,7 +18,9 @@ public class Intake extends SubsystemBase {
         public static final int kEXTENSION_LEAD_MOTOR_ID = 32;
         public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
 
-        // Kicker PID Constants
+        // Kicker PID Constants (amps/rotation, amps/(rot/s) - kicker runs closed-loop
+        // control over VelocityTorqueCurrentFOC. TODO: retune on robot, these were
+        // tuned for voltage-mode control.
         public static final double kKickerP = 0.2;
         // Kicker Feedforward Constants
         public static final double kKickerS = 0.25;
@@ -33,8 +36,16 @@ public class Intake extends SubsystemBase {
         public static final double kKickerForwardVolts = 4.0;
         public static final double kKickerEjectingRPM = -1000.0;
         public static final double kKickerForwardRPM = 1000.0;
+        // Peak torque current (closed-loop output cap) the kicker is normally allowed
+        // to command, and the tighter cap CurrentLimitCoordinator applies while the
+        // robot is shooting (see Superstructure) so the flywheel gets priority on the
+        // current budget. TODO: tune both values on robot.
+        public static final double kKickerNormalPeakTorqueCurrentAmps = 60.0;
+        public static final double kKickerShootingPeakTorqueCurrentAmps = 20.0;
 
-        // Roller PID Constants
+        // Roller PID Constants (amps/rotation, amps/(rot/s) - roller runs closed-loop
+        // control over VelocityTorqueCurrentFOC. TODO: retune on robot, these were
+        // tuned for voltage-mode control.
         public static final double kRollerP = 0.2;
         // Roller Feedforward Constants
         public static final double kRollerS = 0.25;
@@ -50,6 +61,12 @@ public class Intake extends SubsystemBase {
         public static final double kRollerForwardVolts = 4.0;
         public static final double kRollerEjectingRPM = -1000.0;
         public static final double kRollerForwardRPM = 1000.0;
+        // Peak torque current (closed-loop output cap) the roller is normally allowed
+        // to command, and the tighter cap CurrentLimitCoordinator applies while the
+        // robot is shooting (see Superstructure) so the flywheel gets priority on the
+        // current budget. TODO: tune both values on robot.
+        public static final double kRollerNormalPeakTorqueCurrentAmps = 60.0;
+        public static final double kRollerShootingPeakTorqueCurrentAmps = 20.0;
 
         // Extension PID Constants (units are amps/rotation, amps/(rot/s), etc.,
         // since the extension runs closed-loop control over TorqueCurrentFOC.
@@ -216,6 +233,18 @@ public class Intake extends SubsystemBase {
     public boolean areExtensionMotorsConnected() {
         return inputs.extensionLeadMotorConnected
                 && inputs.extensionFollowerMotorConnected;
+    }
+
+    /** For CurrentLimitCoordinator: lets a cross-subsystem rule cap the roller's torque current. */
+    public LimitedMechanism rollerCurrentLimit() {
+        return new LimitedMechanism(
+                "Intake/Roller", IntakeConstants.kRollerNormalPeakTorqueCurrentAmps, io::setRollerTorqueCurrentLimit);
+    }
+
+    /** For CurrentLimitCoordinator: lets a cross-subsystem rule cap the kicker's torque current. */
+    public LimitedMechanism kickerCurrentLimit() {
+        return new LimitedMechanism(
+                "Intake/Kicker", IntakeConstants.kKickerNormalPeakTorqueCurrentAmps, io::setKickerTorqueCurrentLimit);
     }
 
     public boolean isKickMotorConnected() {

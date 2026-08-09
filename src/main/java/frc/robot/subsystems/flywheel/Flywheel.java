@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
+import frc.robot.util.CurrentLimitCoordinator.LimitedMechanism;
 import frc.robot.util.ShotController;
 import frc.robot.util.ShotController.ShooterTargetData;
 
@@ -11,7 +12,9 @@ import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Flywheel extends SubsystemBase {
   public static class FlywheelConstants {
-    // PID Constants
+    // PID Constants (amps/rotation, amps/(rot/s) - flywheel runs closed-loop
+    // control over VelocityTorqueCurrentFOC. TODO: retune on robot, these were
+    // tuned for voltage-mode control.
     public static final double kP = 0.1;
     // Feedforward Constants
     public static final double kS = 0.25;
@@ -29,6 +32,12 @@ public class Flywheel extends SubsystemBase {
     public static final double kReduction = 1;
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
+    // Peak torque current (closed-loop output cap) the flywheel is normally
+    // allowed to command. Exposed as a CurrentLimitCoordinator LimitedMechanism
+    // (see currentLimit() below) so a future rule can throttle it too, but no
+    // rule reduces it today - it's the trigger for the "reduce everyone else
+    // while shooting" rule, not a target. TODO: tune on robot.
+    public static final double kNormalPeakTorqueCurrentAmps = 80.0;
     // Sim Constants
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
@@ -86,6 +95,12 @@ public class Flywheel extends SubsystemBase {
 
   public double getAppliedVolts() {
     return inputs.appliedVolts;
+  }
+
+  /** For CurrentLimitCoordinator: lets a cross-subsystem rule cap the flywheel's torque current. */
+  public LimitedMechanism currentLimit() {
+    return new LimitedMechanism(
+        "Flywheel", FlywheelConstants.kNormalPeakTorqueCurrentAmps, io::setPeakTorqueCurrentLimit);
   }
 
   public boolean areMotorsConnected() {

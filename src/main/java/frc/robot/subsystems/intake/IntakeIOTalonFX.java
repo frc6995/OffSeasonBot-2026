@@ -11,7 +11,7 @@ import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -22,7 +22,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
-import frc.robot.util.CtreUtil;
+import frc.robot.util.TorqueCurrentLimiter;
 
 public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_rollerLeadMotor
@@ -40,18 +40,17 @@ public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_kickerMotor
     = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
-    protected VelocityVoltage m_rollerVelocityRequest = new VelocityVoltage(0);
-    protected VelocityVoltage m_kickerVelocityRequest = new VelocityVoltage(0);
+    protected VelocityTorqueCurrentFOC m_rollerVelocityRequest = new VelocityTorqueCurrentFOC(0);
+    protected VelocityTorqueCurrentFOC m_kickerVelocityRequest = new VelocityTorqueCurrentFOC(0);
 
     protected final MotionMagicTorqueCurrentFOC m_extensionRequest =
     new MotionMagicTorqueCurrentFOC(0.0);
 
-    // Reused/mutated in place so setExtensionTorqueCurrentLimit() only ever
-    // sends a config frame when the requested limit actually changes.
-    private final TorqueCurrentConfigs m_extensionTorqueCurrentConfig = new TorqueCurrentConfigs()
-        .withPeakForwardTorqueCurrent(IntakeConstants.kExtensionNormalPeakTorqueCurrentAmps)
-        .withPeakReverseTorqueCurrent(-IntakeConstants.kExtensionNormalPeakTorqueCurrentAmps);
-    private double m_extensionPeakTorqueCurrentAmps = IntakeConstants.kExtensionNormalPeakTorqueCurrentAmps;
+    // Each caps closed-loop torque current for its motor(s); a call is only ever
+    // sent over CAN when the requested limit actually changes.
+    private final TorqueCurrentLimiter m_extensionTorqueCurrentLimiter = new TorqueCurrentLimiter(m_extensionLeadMotor);
+    private final TorqueCurrentLimiter m_rollerTorqueCurrentLimiter = new TorqueCurrentLimiter(m_rollerLeadMotor);
+    private final TorqueCurrentLimiter m_kickerTorqueCurrentLimiter = new TorqueCurrentLimiter(m_kickerMotor);
 
     private final StatusSignal<Voltage> m_rollerAppliedVoltage = m_rollerLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_rollerStatorCurrent = m_rollerLeadMotor.getStatorCurrent();
@@ -96,9 +95,13 @@ public class IntakeIOTalonFX implements IntakeIO {
         kickConfig.Voltage = new VoltageConfigs()
             .withPeakForwardVoltage(IntakeConstants.kKickerMaxVoltage)
             .withPeakReverseVoltage(IntakeConstants.kKickerMinVoltage);
+        // Closed-loop output is torque current (see m_kickerVelocityRequest below);
+        // m_kickerTorqueCurrentLimiter owns the actual peak-current values below.
+        kickConfig.TorqueCurrent = new TorqueCurrentConfigs();
         // CtreUtil.reportIfNotOk("configure example",
         // m_exMotor.getConfigurator().apply(config));
         m_kickerMotor.getConfigurator().apply(kickConfig);
+        m_kickerTorqueCurrentLimiter.setPeakTorqueCurrentAmps(IntakeConstants.kKickerNormalPeakTorqueCurrentAmps);
     }
 
     private void configureRollerMotors() {
@@ -120,9 +123,13 @@ public class IntakeIOTalonFX implements IntakeIO {
         rollerConfig.Voltage = new VoltageConfigs()
             .withPeakForwardVoltage(IntakeConstants.kRollerMaxVoltage)
             .withPeakReverseVoltage(IntakeConstants.kRollerMinVoltage);
+        // Closed-loop output is torque current (see m_rollerVelocityRequest above);
+        // m_rollerTorqueCurrentLimiter owns the actual peak-current values below.
+        rollerConfig.TorqueCurrent = new TorqueCurrentConfigs();
         // CtreUtil.reportIfNotOk("configure example",
         // m_exMotor.getConfigurator().apply(config));
         m_rollerLeadMotor.getConfigurator().apply(rollerConfig);
+        m_rollerTorqueCurrentLimiter.setPeakTorqueCurrentAmps(IntakeConstants.kRollerNormalPeakTorqueCurrentAmps);
     }
 
     private void configureExtensionMotors() {
@@ -141,12 +148,10 @@ public class IntakeIOTalonFX implements IntakeIO {
         extensionConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kExtensionReduction);
 
-        // Closed-loop output is torque current (see m_extensionRequest below), so this
-        // caps how much torque the extension's control loop is allowed to command.
-        // setExtensionTorqueCurrentLimit() lowers this further while agitating.
-        // NOTE: PeakReverseTorqueCurrent must stay negative - CTRE clamps it to 0 if
-        // it's positive, which silently kills all retract-direction torque.
-        extensionConfig.TorqueCurrent = m_extensionTorqueCurrentConfig;
+        // Closed-loop output is torque current (see m_extensionRequest below);
+        // m_extensionTorqueCurrentLimiter owns the actual peak-current values below
+        // (and lowers them further while agitating - see setExtensionTorqueCurrentLimit()).
+        extensionConfig.TorqueCurrent = new TorqueCurrentConfigs();
 
         extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration)
              .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
@@ -158,6 +163,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         m_extensionLeadMotor.getConfigurator().apply(extensionConfig);
         m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
         m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        m_extensionTorqueCurrentLimiter.setPeakTorqueCurrentAmps(IntakeConstants.kExtensionNormalPeakTorqueCurrentAmps);
     }
 
     @Override
@@ -225,19 +231,17 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     @Override
     public void setExtensionTorqueCurrentLimit(double peakTorqueCurrentAmps) {
-        // Config applications are CAN frames handled off the control-loop fast path,
-        // so only send one when the limit actually changes (e.g. entering/leaving
-        // AGITATING) rather than every periodic() call.
-        if (Math.abs(peakTorqueCurrentAmps - m_extensionPeakTorqueCurrentAmps) < 1e-3) {
-            return;
-        }
-        m_extensionPeakTorqueCurrentAmps = peakTorqueCurrentAmps;
-        m_extensionTorqueCurrentConfig
-            .withPeakForwardTorqueCurrent(peakTorqueCurrentAmps)
-            .withPeakReverseTorqueCurrent(-peakTorqueCurrentAmps);
-        CtreUtil.reportIfNotOk(
-            "set extension peak torque current",
-            m_extensionLeadMotor.getConfigurator().apply(m_extensionTorqueCurrentConfig));
+        m_extensionTorqueCurrentLimiter.setPeakTorqueCurrentAmps(peakTorqueCurrentAmps);
+    }
+
+    @Override
+    public void setRollerTorqueCurrentLimit(double peakTorqueCurrentAmps) {
+        m_rollerTorqueCurrentLimiter.setPeakTorqueCurrentAmps(peakTorqueCurrentAmps);
+    }
+
+    @Override
+    public void setKickerTorqueCurrentLimit(double peakTorqueCurrentAmps) {
+        m_kickerTorqueCurrentLimiter.setPeakTorqueCurrentAmps(peakTorqueCurrentAmps);
     }
 
     public double getExtensionPosition() {

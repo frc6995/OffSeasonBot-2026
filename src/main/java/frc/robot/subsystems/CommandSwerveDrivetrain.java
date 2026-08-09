@@ -27,10 +27,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.util.CurrentLimitCoordinator.LimitedMechanism;
+import frc.robot.util.TorqueCurrentLimiter;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -43,6 +47,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final double kSimLoopPeriod = 0.004; // 4 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
+
+    // Peak torque current (closed-loop output cap) the drive motors are normally
+    // allowed to command, and the tighter cap CurrentLimitCoordinator applies
+    // while the robot is shooting (see Superstructure) so the flywheel gets
+    // priority on the current budget. Only affects closed-loop drive requests
+    // (e.g. path following) - teleop driving defaults to OpenLoopVoltage, which
+    // this doesn't cap. TODO: tune both values on robot.
+    public static final double kDriveNormalPeakTorqueCurrentAmps = 80.0;
+    public static final double kDriveShootingPeakTorqueCurrentAmps = 40.0;
+
+    // Caps closed-loop torque current across all drive motors; a call is only
+    // ever sent over CAN when the requested limit actually changes.
+    private final TorqueCurrentLimiter m_driveCurrentLimiter = new TorqueCurrentLimiter(collectDriveMotors());
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -140,6 +157,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SwerveDrivetrainConstants drivetrainConstants,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
+        m_driveCurrentLimiter.setPeakTorqueCurrentAmps(kDriveNormalPeakTorqueCurrentAmps);
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -167,6 +185,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double odometryUpdateFrequency,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
+        m_driveCurrentLimiter.setPeakTorqueCurrentAmps(kDriveNormalPeakTorqueCurrentAmps);
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -210,6 +229,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation,
                 modules);
+        m_driveCurrentLimiter.setPeakTorqueCurrentAmps(kDriveNormalPeakTorqueCurrentAmps);
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -225,6 +245,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public Command applyRequest(Supplier<SwerveRequest> request) {
         return run(() -> this.setControl(request.get()));
+    }
+
+    /** Caps the closed-loop torque current (amps) every drive motor is allowed to command. */
+    public void setDrivePeakTorqueCurrentLimitAmps(double peakTorqueCurrentAmps) {
+        m_driveCurrentLimiter.setPeakTorqueCurrentAmps(peakTorqueCurrentAmps);
+    }
+
+    /** For CurrentLimitCoordinator: lets a cross-subsystem rule cap the drive motors' torque current. */
+    public LimitedMechanism driveCurrentLimit() {
+        return new LimitedMechanism(
+                "Drivetrain/Drive", kDriveNormalPeakTorqueCurrentAmps, this::setDrivePeakTorqueCurrentLimitAmps);
+    }
+
+    private TalonFX[] collectDriveMotors() {
+        var modules = getModules();
+        TalonFX[] driveMotors = new TalonFX[modules.length];
+        for (int i = 0; i < modules.length; i++) {
+            driveMotors[i] = modules[i].getDriveMotor();
+        }
+        return driveMotors;
     }
 
     /**

@@ -8,6 +8,10 @@ public interface FlywheelIO {
     default void setVelocityRPM(double velocityRPM) {
     }
 
+    /** Caps the closed-loop torque current (amps) the flywheel is allowed to command. */
+    default void setPeakTorqueCurrentLimit(double peakTorqueCurrentAmps) {
+    }
+
     default void stop() {
     }
 

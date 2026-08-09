@@ -30,6 +30,8 @@ import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.subsystems.intake.Intake.IntakeState;
+import frc.robot.subsystems.intake.Intake.IntakeConstants;
+import frc.robot.util.CurrentLimitCoordinator;
 import frc.robot.util.ShotController;
 public class Superstructure extends SubsystemBase {
 
@@ -51,7 +53,11 @@ public class Superstructure extends SubsystemBase {
 
     public final ShotController m_shotController;
 
-    public Superstructure(Supplier<SwerveDriveState> swerveState) {
+    // Declarative "while shooting, throttle everyone competing for current with
+    // the flywheel" rules. See CurrentLimitCoordinator for how to add more.
+    private final CurrentLimitCoordinator m_currentLimitCoordinator = new CurrentLimitCoordinator();
+
+    public Superstructure(Supplier<SwerveDriveState> swerveState, CommandSwerveDrivetrain drivetrain) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
         m_shotController = new ShotController(m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER);
 
@@ -70,11 +76,23 @@ public class Superstructure extends SubsystemBase {
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
+        m_currentLimitCoordinator.limitWhile(
+                this::isShooting, m_intake.rollerCurrentLimit(), IntakeConstants.kRollerShootingPeakTorqueCurrentAmps);
+        m_currentLimitCoordinator.limitWhile(
+                this::isShooting, m_intake.kickerCurrentLimit(), IntakeConstants.kKickerShootingPeakTorqueCurrentAmps);
+        m_currentLimitCoordinator.limitWhile(
+                this::isShooting, drivetrain.driveCurrentLimit(), CommandSwerveDrivetrain.kDriveShootingPeakTorqueCurrentAmps);
+    }
+
+    /** True while the flywheel is spun up to shoot (PASSING or SCORING). */
+    public boolean isShooting() {
+        return robotState != RobotState.IDLE;
     }
 
     @Override
     public void periodic() {
        m_shotController.calculate();
+       m_currentLimitCoordinator.update();
 
        System.out.println("RobotState: " + robotState
                 + " | Intake: " + m_intake.getState()
