@@ -3,18 +3,6 @@
     {
       "type": "waypoint",
       "translation_target": {
-        "x_meters": 5.64077,
-        "y_meters": 4.03516,
-        "intermediate_handoff_radius_meters": 0.45
-      },
-      "rotation_target": {
-        "rotation_radians": 3.14148,
-        "profiled_rotation": true
-      }
-    },
-    {
-      "type": "waypoint",
-      "translation_target": {
         "x_meters": 6.10645,
         "y_meters": 4.37518,
         "intermediate_handoff_radius_meters": 0.45
@@ -54,6 +42,11 @@
       "lib_key": "startShooting"
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.51377,
+      "lib_key": "depotSensorActivation"
+    },
+    {
       "type": "waypoint",
       "translation_target": {
         "x_meters": 0.25993,
@@ -69,24 +62,19 @@
   "constraints": {
     "max_velocity_meters_per_sec": [
       {
-        "value": 2.0,
-        "start_ordinal": 0,
-        "end_ordinal": 0
-      },
-      {
         "value": 2.95,
-        "start_ordinal": 1,
-        "end_ordinal": 2
+        "start_ordinal": 0,
+        "end_ordinal": 1
       },
       {
         "value": 3.0,
-        "start_ordinal": 3,
-        "end_ordinal": 3
+        "start_ordinal": 2,
+        "end_ordinal": 2
       },
       {
         "value": 0.6,
-        "start_ordinal": 4,
-        "end_ordinal": 4
+        "start_ordinal": 3,
+        "end_ordinal": 3
       }
     ]
   }

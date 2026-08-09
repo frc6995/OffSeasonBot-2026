@@ -4,13 +4,13 @@ import static edu.wpi.first.units.Units.Meters;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -36,9 +36,6 @@ public class Autos {
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
 
     private final CANRange m_canRange = new CANRange();
-
-    // Delay before CANRange readings are trusted, so the sensor can't trip a path early
-    private static final double kCANRangeDelaySeconds = 2.5;
 
     public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -88,9 +85,9 @@ public class Autos {
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(untilCloseToWall(Depot1, 5));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 5));
 
-                    c.addCommands(untilCloseToWall(Depot2, 7));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 7));
                     //Now make the intake idle until we are near the depot
 
                     c.addCommands(Depot3);
@@ -108,15 +105,16 @@ public class Autos {
     }
 
     // Runs path until timeoutSeconds elapses or CANRange reports close-to-wall,
-    // ignoring the sensor for the first specified seconds of the path.
-    private Command untilCloseToWall(Command path, double timeoutSeconds) {
-        Timer sensorDelayTimer = new Timer();
+    // ignoring the sensor until the given BLine event marker (lib_key) has fired
+    // along the path, so the sensor can't trip the path early.
+    private Command untilCloseToWallAfterEvent(Command path, String eventKey, double timeoutSeconds) {
+        AtomicBoolean eventFired = new AtomicBoolean(false);
+        FollowPath.registerEventTrigger(eventKey, () -> eventFired.set(true));
 
         return Commands.sequence(
-                Commands.runOnce(sensorDelayTimer::restart),
+                Commands.runOnce(() -> eventFired.set(false)),
                 path.withTimeout(timeoutSeconds)
-                        .until(() -> sensorDelayTimer.hasElapsed(kCANRangeDelaySeconds)
-                                && m_canRange.isCloseToWall()));
+                        .until(() -> eventFired.get() && m_canRange.isCloseToWall()));
     }
 
     public Command selectedCommand() {
