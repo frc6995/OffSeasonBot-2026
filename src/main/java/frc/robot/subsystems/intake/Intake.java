@@ -87,7 +87,7 @@ public class Intake extends SubsystemBase {
     private final MechanismLigament2d intakeLigament = new MechanismLigament2d("intake", Units.inchesToMeters(8), 10.854, 6,
             new Color8Bit(52, 235, 137));
             
-    private IntakeState intakeState = IntakeState.IDLE;
+    private IntakeState intakeState = IntakeState.RETRACTED;
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
