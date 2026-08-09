@@ -51,7 +51,9 @@ public class Intake extends SubsystemBase {
         public static final double kRollerEjectingRPM = -1000.0;
         public static final double kRollerForwardRPM = 1000.0;
 
-        // Extension PID Constants
+        // Extension PID Constants (units are amps/rotation, amps/(rot/s), etc.,
+        // since the extension runs closed-loop control over TorqueCurrentFOC.
+        // TODO: retune on robot - these were tuned for voltage-mode control.
         public static final double kExtensionP = 20;
         // Extension Feedforward Constants
         public static final double kExtensionV = 0.07;
@@ -65,6 +67,14 @@ public class Intake extends SubsystemBase {
         public static final double kDrumCircumferenceMeters = 0.119;
         public static final double acceleration = 200.0;
         public static final double velocity = 10.0;
+
+        // Peak torque current (closed-loop output cap) the extension motors are
+        // allowed to command. Normally this just needs to be high enough to move
+        // the carriage; while agitating with a full intake, it's clamped way down
+        // so the carriage can't squeeze stored balls with full motor authority.
+        // TODO: tune both values on robot.
+        public static final double kExtensionNormalPeakTorqueCurrentAmps = 60.0;
+        public static final double kExtensionAgitatePeakTorqueCurrentAmps = 20.0;
 
         // Extension sweeps between these two positions while agitating,
         // swapping targets every kAgitateIntervalSeconds.
@@ -218,6 +228,7 @@ public class Intake extends SubsystemBase {
 
         io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
         io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
+        io.setExtensionTorqueCurrentLimit(resolveExtensionTorqueCurrentLimitAmps(intakeState));
         io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
     }
 
@@ -244,6 +255,13 @@ public class Intake extends SubsystemBase {
             agitateAtFarPosition = !agitateAtFarPosition;
         }
         return agitateAtFarPosition ? agitateFarMeters : agitateNearMeters;
+    }
+
+    private static double resolveExtensionTorqueCurrentLimitAmps(IntakeState state) {
+        return switch (state) {
+            case AGITATING -> IntakeConstants.kExtensionAgitatePeakTorqueCurrentAmps;
+            case IDLE, RETRACTED, ACTIVE, EJECTING -> IntakeConstants.kExtensionNormalPeakTorqueCurrentAmps;
+        };
     }
 
     private static double clampExtension(double positionMeters) {

@@ -10,6 +10,9 @@ public interface IntakeIO {
 
     default void setExtensionPosition(double positionMeters) {}
 
+    /** Caps the closed-loop torque current (amps) the extension is allowed to command. */
+    default void setExtensionTorqueCurrentLimit(double peakTorqueCurrentAmps) {}
+
     default void resetEncoder() {}
 
     default void stop() {
