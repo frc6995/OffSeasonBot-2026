@@ -18,14 +18,12 @@ import frc.robot.CANRange;
 import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.POI;
 
 public class Autos {
 
     private final CommandSwerveDrivetrain drivetrain;
-    private final Superstructure superstructure;
     private final AutoChooser autoChooser = new AutoChooser();
     private final Map<String, Supplier<Command>> autos = new LinkedHashMap<>();
     private final FollowPath.Builder pathBuilder;
@@ -42,12 +40,8 @@ public class Autos {
     // Delay before CANRange readings are trusted, so the sensor can't trip a path early
     private static final double kCANRangeDelaySeconds = 2.5;
 
-    public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
+    public Autos(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
-        this.superstructure = superstructure;
-
-        // Register Bline event triggers
-        FollowPath.registerEventTrigger("startShooting", superstructure.requestRobotScoring());
 
         // Bline Configurations
         pathBuilder = new FollowPath.Builder(
@@ -59,8 +53,8 @@ public class Autos {
                 new PIDController(7.0, 0.0, 0.0), // rotation — minimizes heading error
                 new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
-                .withDefaultShouldFlip() // auto-flip when on the red alliance
-         .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
+                .withDefaultShouldFlip(); // auto-flip when on the red alliance
+     //    .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
 
         registerAutos();
     }
