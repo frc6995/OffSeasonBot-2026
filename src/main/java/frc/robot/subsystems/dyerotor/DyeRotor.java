@@ -35,6 +35,10 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexForwardRPM = 1000.0;
         public static final double kIndexBackwardRPM = 30.0;
 
+        // Peak applied torque (current) for the spin motor, in amps. Always clamped to [0, 100]
+        // so the forward direction and idle's reverse direction never exceed this magnitude.
+        public static final double kSpinPeakTorqueAmps = 100.0;
+
         private DyeRotorConstants() {
         }
     }
@@ -49,6 +53,9 @@ public class DyeRotor extends SubsystemBase {
 
     private DyeRotorState spinState = DyeRotorState.IDLE;
     private DyeRotorState indexState = DyeRotorState.IDLE;
+
+    private double loggedPeakForwardTorqueAmps = Double.NaN;
+    private double loggedPeakReverseTorqueAmps = Double.NaN;
 
     public DyeRotor() {
         this(new DyeRotorIO() {
@@ -99,6 +106,25 @@ public class DyeRotor extends SubsystemBase {
 
         io.setSpinVelocity(resolveSpinTargetRPM(spinState));
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
+
+        double peakForwardTorqueAmps = MathUtil.clamp(DyeRotorConstants.kSpinPeakTorqueAmps, 0.0, 100.0);
+        // The spin (hook) motor has to spin backward while idle, so negative torque limiting is
+        // only applied outside of the idle state - everywhere else, reverse torque is never allowed.
+        double peakReverseTorqueAmps = spinState == DyeRotorState.IDLE
+                ? -peakForwardTorqueAmps
+                : 0.0;
+        io.setSpinTorqueLimits(peakForwardTorqueAmps, peakReverseTorqueAmps);
+
+        // Only print on change - this runs every periodic cycle, and unconditional console I/O
+        // here is a real source of loop overruns on the RIO.
+        if (peakForwardTorqueAmps != loggedPeakForwardTorqueAmps
+                || peakReverseTorqueAmps != loggedPeakReverseTorqueAmps) {
+            loggedPeakForwardTorqueAmps = peakForwardTorqueAmps;
+            loggedPeakReverseTorqueAmps = peakReverseTorqueAmps;
+            // System.out.printf(
+            //         "[DyeRotor] Spin peak torque limits (state=%s): forward=%.2fA reverse=%.2fA%n",
+            //         spinState, peakForwardTorqueAmps, peakReverseTorqueAmps);
+        }
     }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {

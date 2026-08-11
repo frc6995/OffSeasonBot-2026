@@ -43,6 +43,10 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   final StatusSignal<Current> m_indexSupCurrent = m_indexerLead.getSupplyCurrent();
   final StatusSignal<Current> m_indexStatCurrent = m_indexerLead.getStatorCurrent();
 
+  private final TorqueCurrentConfigs m_spinTorqueCurrentConfigs = new TorqueCurrentConfigs();
+  private double m_appliedPeakForwardTorqueAmps = Double.NaN;
+  private double m_appliedPeakReverseTorqueAmps = Double.NaN;
+
   public DyeRotorIOTalonFX() {
     configureMotors();
   }
@@ -119,6 +123,21 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   public void setSpinVelocity(double velocityRPM) {
     // Phoenix velocity setpoints are in rotations per second
     m_spinMotor.setControl(m_spinRequest.withVelocity(velocityRPM / 60.0));
+  }
+
+  @Override
+  public void setSpinTorqueLimits(double peakForwardTorqueAmps, double peakReverseTorqueAmps) {
+    // Avoid spamming the CAN bus with a config apply every periodic loop when nothing changed.
+    if (peakForwardTorqueAmps == m_appliedPeakForwardTorqueAmps
+        && peakReverseTorqueAmps == m_appliedPeakReverseTorqueAmps) {
+      return;
+    }
+    m_appliedPeakForwardTorqueAmps = peakForwardTorqueAmps;
+    m_appliedPeakReverseTorqueAmps = peakReverseTorqueAmps;
+    m_spinMotor.getConfigurator().apply(
+        m_spinTorqueCurrentConfigs
+            .withPeakForwardTorqueCurrent(peakForwardTorqueAmps)
+            .withPeakReverseTorqueCurrent(peakReverseTorqueAmps));
   }
 
   @Override
