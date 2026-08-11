@@ -20,13 +20,13 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexStatorCurrentLimit = 60.0;
         public static final double kIndexSupplyCurrentLimit = 40.0;
 
-        public static final double kSpinKP = 20.0;
-        public static final double kSpinKS = 5.0;
-        public static final double kSpinKV = 0.0;
+        public static final double kSpinKP = 18.0;
+        public static final double kSpinKS = 0.5;
+        public static final double kSpinKV = 2.0;
 
-        public static final double kIndexKP = 7.0;
-        public static final double kIndexKS = 7.0;
-        public static final double kIndexKV = 0.0;
+        public static final double kIndexKP = 3.0;
+        public static final double kIndexKS = 1.0;
+        public static final double kIndexKV = 0.4;
 
         public static final double kSpinForwardRPM = 120.0;
         public static final double kSpinBackwardRPM = 30.0;
@@ -34,6 +34,13 @@ public class DyeRotor extends SubsystemBase {
 
         public static final double kIndexForwardRPM = 1000.0;
         public static final double kIndexBackwardRPM = 30.0;
+
+        // Applied voltage while actively spinning/indexing forward: clamped to [0, 10], never negative.
+        public static final double kMinAppliedVolts = 0.0;
+        public static final double kMaxAppliedVolts = 10.0;
+
+        // Peak reverse voltage allowed only while the spin/hook wheel idles backward.
+        public static final double kSpinIdleReverseVolts = -10.0;
 
         private DyeRotorConstants() {
         }
@@ -49,6 +56,7 @@ public class DyeRotor extends SubsystemBase {
 
     private DyeRotorState spinState = DyeRotorState.IDLE;
     private DyeRotorState indexState = DyeRotorState.IDLE;
+    private DyeRotorState appliedSpinVoltageLimitState = null;
 
     public DyeRotor() {
         this(new DyeRotorIO() {
@@ -97,8 +105,23 @@ public class DyeRotor extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
 
+        if (spinState != appliedSpinVoltageLimitState) {
+            applySpinVoltageLimits(spinState);
+            appliedSpinVoltageLimitState = spinState;
+        }
+
         io.setSpinVelocity(resolveSpinTargetRPM(spinState));
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
+    }
+
+    private void applySpinVoltageLimits(DyeRotorState state) {
+        double hookPeakForwardVolts = DyeRotorConstants.kMaxAppliedVolts;
+        double hookPeakReverseVolts = switch (state) {
+            case SPIN -> DyeRotorConstants.kMinAppliedVolts;
+            case IDLE -> DyeRotorConstants.kSpinIdleReverseVolts;
+        };
+
+        io.setSpinVoltageLimits(hookPeakForwardVolts, hookPeakReverseVolts);
     }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {
