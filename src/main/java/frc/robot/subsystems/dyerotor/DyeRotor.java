@@ -35,11 +35,9 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexForwardRPM = 1000.0;
         public static final double kIndexBackwardRPM = 30.0;
 
-        // Applied voltage while actively spinning/indexing forward: clamped to [0, 10], never negative.
         public static final double kMinAppliedVolts = 0.0;
         public static final double kMaxAppliedVolts = 10.0;
 
-        // Peak reverse voltage allowed only while the spin/hook wheel idles backward.
         public static final double kSpinIdleReverseVolts = -10.0;
 
         private DyeRotorConstants() {
