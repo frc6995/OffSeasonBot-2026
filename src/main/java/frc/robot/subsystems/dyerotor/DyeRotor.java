@@ -108,15 +108,12 @@ public class DyeRotor extends SubsystemBase {
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
 
         double peakForwardTorqueAmps = MathUtil.clamp(DyeRotorConstants.kSpinPeakTorqueAmps, 0.0, 100.0);
-        // The spin (hook) motor has to spin backward while idle, so negative torque limiting is
-        // only applied outside of the idle state - everywhere else, reverse torque is never allowed.
         double peakReverseTorqueAmps = spinState == DyeRotorState.IDLE
                 ? -peakForwardTorqueAmps
                 : 0.0;
         io.setSpinTorqueLimits(peakForwardTorqueAmps, peakReverseTorqueAmps);
 
-        // Only print on change - this runs every periodic cycle, and unconditional console I/O
-        // here is a real source of loop overruns on the RIO.
+        
         if (peakForwardTorqueAmps != loggedPeakForwardTorqueAmps
                 || peakReverseTorqueAmps != loggedPeakReverseTorqueAmps) {
             loggedPeakForwardTorqueAmps = peakForwardTorqueAmps;

@@ -127,7 +127,6 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
   @Override
   public void setSpinTorqueLimits(double peakForwardTorqueAmps, double peakReverseTorqueAmps) {
-    // Avoid spamming the CAN bus with a config apply every periodic loop when nothing changed.
     if (peakForwardTorqueAmps == m_appliedPeakForwardTorqueAmps
         && peakReverseTorqueAmps == m_appliedPeakReverseTorqueAmps) {
       return;
