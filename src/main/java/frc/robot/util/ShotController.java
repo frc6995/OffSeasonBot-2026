@@ -71,7 +71,7 @@ public class ShotController {
     }
 
     private double calculateTurretAngle(Rotation2d robotAngle, Translation2d robotToGoal, double targetTanVelocity) {
-        double baseAngle = robotToGoal.getAngle().getDegrees() + robotAngle.getDegrees();
+        double baseAngle = robotToGoal.getAngle().getDegrees() - robotAngle.getDegrees();
         double velocityComp = targetTanVelocity * ShotConstants.kTurretVelocityComp;
         return baseAngle + velocityComp;
     }

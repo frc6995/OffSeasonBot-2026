@@ -95,7 +95,7 @@ public class TurretIOTalonFX implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        inputs.angle = motorRotationsToAngle(angleSignal.getValueAsDouble());
+        inputs.angle = mechanismToAngleRotations(angleSignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
@@ -120,10 +120,6 @@ public class TurretIOTalonFX implements TurretIO {
     
     protected double angleToMotorRotations(double angle) {
         return (angle/360)*kReduction;
-    }
-
-    protected double motorRotationsToAngle(double rotations) {
-        return rotations*(1/kReduction)*360;
     }
 
     protected double angleToMechanismRotations(double angle) {
