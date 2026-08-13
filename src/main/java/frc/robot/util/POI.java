@@ -31,6 +31,8 @@ public class POI {
     public static final Supplier<Rectangle2d> PASSING_ZONE = flipped(
             new Rectangle2d(PASSING_ZONE_CORNER_A, PASSING_ZONE_CORNER_B));
 
+    public static final Supplier<Rotation2d> PASSING_ANGLE = flipped(Rotation2d.fromDegrees(180));
+
     private POI() {
     }
 }

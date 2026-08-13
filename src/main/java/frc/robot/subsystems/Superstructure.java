@@ -53,7 +53,8 @@ public class Superstructure extends SubsystemBase {
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
-        m_shotController = new ShotController(m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER);
+        m_shotController = new ShotController(
+            m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
@@ -74,7 +75,7 @@ public class Superstructure extends SubsystemBase {
 
     @Override
     public void periodic() {
-       m_shotController.calculate();
+       m_shotController.calculate(robotState == RobotState.PASSING);
 
        System.out.println("RobotState: " + robotState
                 + " | Intake: " + m_intake.getState()

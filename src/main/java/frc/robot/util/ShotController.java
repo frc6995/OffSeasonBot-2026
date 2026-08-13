@@ -24,17 +24,20 @@ public class ShotController {
     private final Supplier<Pose2d> robotPose;
     private final Supplier<ChassisSpeeds> robotSpeeds;
     private final Supplier<Pose2d> goalPose;
+    private final Supplier<Rotation2d> passingAngle;
 
     private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
 
     public ShotController(
         Supplier<Pose2d> robotPose,
         Supplier<ChassisSpeeds> robotSpeeds,
-        Supplier<Pose2d> goalPose
+        Supplier<Pose2d> goalPose,
+        Supplier<Rotation2d> passingAngle
     ) {
         this.robotPose = robotPose;
         this.robotSpeeds = robotSpeeds;
         this.goalPose = goalPose;
+        this.passingAngle = passingAngle;
         populateLUTs();
     }
 
@@ -50,6 +53,14 @@ public class ShotController {
     }
 
     public ShooterTargetData calculate() {
+        return calculate(false);
+    }
+
+    /**
+     * @param isPassing when true, the turret points at the fixed {@link POI#PASSING_ANGLE}
+     *                  field-relative heading instead of tracking {@code goalPose}.
+     */
+    public ShooterTargetData calculate(boolean isPassing) {
         Pose2d currentPose = robotPose.get();
         Pose2d targetPose = goalPose.get();
 
@@ -57,10 +68,14 @@ public class ShotController {
 
         double[] polarSpeeds = convertToTargetPolar(robotToGoal, robotSpeeds.get());
 
+        double turretAngleDeg = isPassing
+            ? calculatePassingTurretAngle(currentPose.getRotation())
+            : calculateTurretAngle(currentPose.getRotation(), robotToGoal, polarSpeeds[0]);
+
         ShooterTargetData targetData = new ShooterTargetData(
             calculateFlywheelRpm(robotToGoal, polarSpeeds[1]),
-            calculateHoodAngle(robotToGoal, polarSpeeds[1]), 
-            calculateTurretAngle(currentPose.getRotation(), robotToGoal, polarSpeeds[0]));
+            calculateHoodAngle(robotToGoal, polarSpeeds[1]),
+            turretAngleDeg);
 
         cachedData = targetData;
         return cachedData;
@@ -68,6 +83,14 @@ public class ShotController {
 
     public ShooterTargetData getCachedData() {
         return cachedData;
+    }
+
+    /**
+     * This converts the field-relative {@link POI#PASSING_ANGLE} into a robot-relative
+     * angle, the same way {@link #calculateTurretAngle} does.
+     */
+    private double calculatePassingTurretAngle(Rotation2d robotAngle) {
+        return passingAngle.get().getDegrees() - robotAngle.getDegrees();
     }
 
     private double calculateTurretAngle(Rotation2d robotAngle, Translation2d robotToGoal, double targetTanVelocity) {
