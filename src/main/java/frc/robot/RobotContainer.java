@@ -88,6 +88,9 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_Superstructure.requestIntakeActive());
 
+        joystick.x().onTrue(m_Superstructure.requestExampleExtend());
+        joystick.y().onTrue(m_Superstructure.requestExampleRetract());
+
         /* For Cadsim testing */
         // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));
         // joystick.y().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(0)));

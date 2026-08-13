@@ -14,6 +14,8 @@ import frc.robot.subsystems.dyerotor.DyeRotor;
 import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotorIOTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
+import frc.robot.subsystems.example.Example;
+import frc.robot.subsystems.example.ExampleIOSimTalonFX;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
@@ -44,6 +46,7 @@ public class Superstructure extends SubsystemBase {
     public Flywheel m_flywheel;
     public Turret m_turret;
     public DyeRotor m_dyeRotor;
+    public Example m_example;
 
     RobotState robotState = RobotState.IDLE;
 
@@ -61,6 +64,7 @@ public class Superstructure extends SubsystemBase {
             this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
             this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
+            this.m_example = new Example(new ExampleIOSimTalonFX());
 
         } else {
             this.m_intake = new Intake(new IntakeIOTalonFX());
@@ -104,6 +108,14 @@ public class Superstructure extends SubsystemBase {
 
     public Command requestIntakeEject() {
         return Commands.runOnce(() -> m_intake.requestEject());
+    }
+
+    public Command requestExampleExtend() {
+        return Commands.runOnce(() -> m_example.setState(Example.ExampleState.TEST_FORWARD));
+    }
+
+    public Command requestExampleRetract() {
+        return Commands.runOnce(() -> m_example.setState(Example.ExampleState.TEST_REVERSE));
     }
 
     public Command requestIntakeToggle() {

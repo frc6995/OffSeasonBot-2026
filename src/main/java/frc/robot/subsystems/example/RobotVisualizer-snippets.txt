@@ -1,0 +1,17 @@
+// 2D root — paste into the Mechanism2d roots block
+
+    private static final MechanismRoot2d EXAMPLE_BASE = MECH_VISUALIZER.getRoot(
+            "example-base",
+            BASE_X + Units.inchesToMeters(0.0),
+            Units.inchesToMeters(10.0));
+
+
+// 2D add method — paste into the add* methods, near addIntake()
+
+    /** No-op on a real robot. */
+    public static void addExample(MechanismLigament2d example) {
+        if (!IS_SIM) {
+            return;
+        }
+        EXAMPLE_BASE.append(example);
+    }

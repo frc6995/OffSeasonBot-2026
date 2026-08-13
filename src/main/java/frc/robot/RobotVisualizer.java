@@ -167,6 +167,12 @@ public final class RobotVisualizer {
             BASE_X - Units.inchesToMeters(8),
             Units.inchesToMeters(10));
 
+                private static final MechanismRoot2d EXAMPLE_BASE = MECH_VISUALIZER.getRoot(
+            "example-base",
+            BASE_X + Units.inchesToMeters(0.0),
+            Units.inchesToMeters(10.0));
+
+
     private static final MechanismLigament2d BACK_DRIVETRAIN_HALF = new MechanismLigament2d(
             "drive-back", Units.inchesToMeters(14), 180, 4, ORANGE);
     private static final MechanismLigament2d FRONT_DRIVETRAIN_HALF = new MechanismLigament2d(
@@ -209,4 +215,11 @@ public final class RobotVisualizer {
         }
         TURRET_BASE.append(turret);
     }
+        public static void addExample(MechanismLigament2d example) {
+        if (!IS_SIM) {
+            return;
+        }
+        EXAMPLE_BASE.append(example);
+    }
+
 }
