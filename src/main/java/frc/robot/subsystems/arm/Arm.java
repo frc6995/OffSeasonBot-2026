@@ -25,8 +25,8 @@ public class Arm extends SubsystemBase {
         public static final double kElevatorReduction = 20.0;
         public static final double kElevatorMinMeters = 0.0;
         public static final double kElevatorMaxMeters = 1.0;
-        public static final double kElevatorCruiseVelocity = 5.0;
-        public static final double kElevatorAcceleration = 20.0;
+        public static final double kElevatorCruiseVelocity = 10.0;
+        public static final double kElevatorAcceleration = 200.0;
         public static final double kElevatorDrumRadiusMeters = 0.019;
         public static final double kElevatorDrumCircumferenceMeters =
                 2.0 * Math.PI * kElevatorDrumRadiusMeters;
@@ -36,10 +36,10 @@ public class Arm extends SubsystemBase {
         public static final int kARM_MOTOR_ID = 61;
 
         // Arm gains
-        public static final double kArmP = 50.0;
+        public static final double kArmP = 10.0;
         public static final double kArmS = 0.0;
         public static final double kArmV = 0.0;
-        public static final double kArmG = 0.1;
+        public static final double kArmG = 0.3;
 
         // Arm configuration
         public static final double kArmStatorCurrentLimit = 80.0;
@@ -53,7 +53,7 @@ public class Arm extends SubsystemBase {
         public static final double kArmLengthMeters = 0.7;
 
         // Hand motor ids
-        public static final int kHAND_MOTOR_ID = 62;
+        public static final int kHAND_MOTOR_ID = 32;
 
         // Hand configuration
         public static final double kHandStatorCurrentLimit = 80.0;
@@ -80,12 +80,19 @@ public class Arm extends SubsystemBase {
 
     private ArmState state = ArmState.IDLE;
 
+    private final MechanismLigament2d elevatorLigament = new MechanismLigament2d(
+            "elevator",
+            Units.inchesToMeters(8.0),
+            90.0,
+            6.0,
+            new Color8Bit(102, 25, 137));
+
     private final MechanismLigament2d armLigament = new MechanismLigament2d(
             "arm",
             Units.inchesToMeters(8.0),
-            10.854,
+            0.0,
             6.0,
-            new Color8Bit(52, 235, 137));
+            new Color8Bit(102, 25, 137));
 
     public Arm() {
         this(new ArmIO() {
@@ -94,7 +101,8 @@ public class Arm extends SubsystemBase {
 
     public Arm(ArmIO io) {
         this.io = io;
-        RobotVisualizer.addArm(armLigament);
+        RobotVisualizer.addArm(elevatorLigament);
+        elevatorLigament.append(armLigament);
     }
 
     public void setState(ArmState state) {
@@ -167,8 +175,9 @@ public class Arm extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
 
-        armLigament.setLength(
+        elevatorLigament.setLength(
                 Units.inchesToMeters(8.0) + inputs.elevatorPositionMeters);
+        armLigament.setAngle(inputs.armPositionDegrees);
 
         io.setElevatorPosition(resolveElevatorTargetPosition(state));
         io.setArmPosition(resolveArmTargetPosition(state));
