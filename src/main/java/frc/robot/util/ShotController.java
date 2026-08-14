@@ -20,11 +20,15 @@ public class ShotController {
 
     private final InterpolatingDoubleTreeMap rpmMap = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap hoodMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap passingRpmMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap passingHoodMap = new InterpolatingDoubleTreeMap();
 
     private final Supplier<Pose2d> robotPose;
     private final Supplier<ChassisSpeeds> robotSpeeds;
     private final Supplier<Pose2d> goalPose;
     private final Supplier<Rotation2d> passingAngle;
+    private final Supplier<Translation2d> passingWallStart;
+    private final Supplier<Translation2d> passingWallEnd;
 
     private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
 
@@ -32,12 +36,16 @@ public class ShotController {
         Supplier<Pose2d> robotPose,
         Supplier<ChassisSpeeds> robotSpeeds,
         Supplier<Pose2d> goalPose,
-        Supplier<Rotation2d> passingAngle
+        Supplier<Rotation2d> passingAngle,
+        Supplier<Translation2d> passingWallStart,
+        Supplier<Translation2d> passingWallEnd
     ) {
         this.robotPose = robotPose;
         this.robotSpeeds = robotSpeeds;
         this.goalPose = goalPose;
         this.passingAngle = passingAngle;
+        this.passingWallStart = passingWallStart;
+        this.passingWallEnd = passingWallEnd;
         populateLUTs();
     }
 
@@ -49,6 +57,14 @@ public class ShotController {
 
         for(var value : HoodConstants.kAngleData) {
             hoodMap.put(value[0], value[1]);
+        }
+
+        for(var value : FlywheelConstants.kPassingShooterData) {
+            passingRpmMap.put(value[0], value[1]);
+        }
+
+        for(var value : HoodConstants.kPassingAngleData) {
+            passingHoodMap.put(value[0], value[1]);
         }
     }
 
@@ -62,23 +78,36 @@ public class ShotController {
      */
     public ShooterTargetData calculate(boolean isPassing) {
         Pose2d currentPose = robotPose.get();
+
+        ShooterTargetData targetData = isPassing
+            ? calculatePassingData(currentPose)
+            : calculateScoringData(currentPose);
+
+        cachedData = targetData;
+        return cachedData;
+    }
+
+    private ShooterTargetData calculateScoringData(Pose2d currentPose) {
         Pose2d targetPose = goalPose.get();
 
         Translation2d robotToGoal = targetPose.getTranslation().minus(currentPose.getTranslation());
 
         double[] polarSpeeds = convertToTargetPolar(robotToGoal, robotSpeeds.get());
 
-        double turretAngleDeg = isPassing
-            ? calculatePassingTurretAngle(currentPose.getRotation())
-            : calculateTurretAngle(currentPose.getRotation(), robotToGoal, polarSpeeds[0]);
-
-        ShooterTargetData targetData = new ShooterTargetData(
+        return new ShooterTargetData(
             calculateFlywheelRpm(robotToGoal, polarSpeeds[1]),
             calculateHoodAngle(robotToGoal, polarSpeeds[1]),
-            turretAngleDeg);
+            calculateTurretAngle(currentPose.getRotation(), robotToGoal, polarSpeeds[0]));
+    }
 
-        cachedData = targetData;
-        return cachedData;
+    private ShooterTargetData calculatePassingData(Pose2d currentPose) {
+        double wallDistance = distanceFromLine(
+            currentPose.getTranslation(), passingWallStart.get(), passingWallEnd.get());
+
+        return new ShooterTargetData(
+            passingRpmMap.get(wallDistance),
+            passingHoodMap.get(wallDistance),
+            calculatePassingTurretAngle(currentPose.getRotation()));
     }
 
     public ShooterTargetData getCachedData() {
@@ -119,5 +148,15 @@ public class ShotController {
         double vTangential = speeds.vxMetersPerSecond * tHat.getX() + speeds.vyMetersPerSecond * tHat.getY();
 
         return new double[] {vRadial, vTangential};
+    }
+
+    /** Perpendicular distance from {@code point} to the infinite line through {@code lineStart}/{@code lineEnd}. */
+    private double distanceFromLine(Translation2d point, Translation2d lineStart, Translation2d lineEnd) {
+        Translation2d lineVec = lineEnd.minus(lineStart);
+        Translation2d pointVec = point.minus(lineStart);
+
+        double cross = lineVec.getX() * pointVec.getY() - lineVec.getY() * pointVec.getX();
+
+        return Math.abs(cross) / lineVec.getNorm();
     }
 }

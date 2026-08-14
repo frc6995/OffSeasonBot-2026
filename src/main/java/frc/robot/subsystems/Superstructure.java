@@ -54,7 +54,8 @@ public class Superstructure extends SubsystemBase {
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
         m_shotController = new ShotController(
-            m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE);
+            m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
+            POI.PASSING_WALL_START, POI.PASSING_WALL_END);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());

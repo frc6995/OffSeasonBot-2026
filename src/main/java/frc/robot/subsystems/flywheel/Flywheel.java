@@ -41,6 +41,16 @@ public class Flywheel extends SubsystemBase {
       {15.0, 3500}
     };
 
+    // distance from POI.PASSING_WALL
+    public static final double [][] kPassingShooterData = {
+      {0.0, 1500},
+      {3.0, 1850},
+      {4.0, 1950},
+      {5.0, 2050},
+      {10, 2500},
+      {15.0, 3500}
+    };
+
   }
 
   public enum FlywheelState {

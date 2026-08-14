@@ -33,6 +33,10 @@ public class POI {
 
     public static final Supplier<Rotation2d> PASSING_ANGLE = flipped(Rotation2d.fromDegrees(180));
 
+    // Endpoints of the field-wall line used for the passing shot
+    public static final Supplier<Translation2d> PASSING_WALL_START = flipped(new Translation2d(0.0, 0.0));
+    public static final Supplier<Translation2d> PASSING_WALL_END = flipped(new Translation2d(0.0, 10.0));
+
     private POI() {
     }
 }
