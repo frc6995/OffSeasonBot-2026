@@ -1,0 +1,17 @@
+// 2D root. paste into the Mechanism2d roots block
+
+    private static final MechanismRoot2d ARM_BASE = MECH_VISUALIZER.getRoot(
+            "arm-base",
+            BASE_X + Units.inchesToMeters(11.5),
+            Units.inchesToMeters(9.5));
+
+
+// 2D add method. paste into the add* methods, near addIntake()
+
+    /** No-op on a real robot. */
+    public static void addArm(MechanismLigament2d arm) {
+        if (!IS_SIM) {
+            return;
+        }
+        ARM_BASE.append(arm);
+    }

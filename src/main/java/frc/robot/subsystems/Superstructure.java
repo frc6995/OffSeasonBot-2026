@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.util.POI;
+import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.arm.ArmIOSimTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotor;
 import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotorIOTalonFX;
@@ -47,6 +49,7 @@ public class Superstructure extends SubsystemBase {
     public Turret m_turret;
     public DyeRotor m_dyeRotor;
     public Example m_example;
+    public Arm  m_arm;
 
     RobotState robotState = RobotState.IDLE;
 
@@ -65,6 +68,7 @@ public class Superstructure extends SubsystemBase {
             this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
             this.m_example = new Example(new ExampleIOSimTalonFX());
+            this.m_arm = new Arm(new ArmIOSimTalonFX());
 
         } else {
             this.m_intake = new Intake(new IntakeIOTalonFX());
@@ -116,6 +120,14 @@ public class Superstructure extends SubsystemBase {
 
     public Command requestExampleRetract() {
         return Commands.runOnce(() -> m_example.setState(Example.ExampleState.TEST_REVERSE));
+    }
+
+    public Command requestArmExtend() {
+        return Commands.runOnce(() -> m_arm.requestTestForward());
+    }
+
+    public Command requestArmRetract() {
+        return Commands.runOnce(() -> m_arm.requestTestReverse());
     }
 
     public Command requestIntakeToggle() {

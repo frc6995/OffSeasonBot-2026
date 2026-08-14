@@ -171,7 +171,10 @@ public final class RobotVisualizer {
             "example-base",
             BASE_X + Units.inchesToMeters(0.0),
             Units.inchesToMeters(10.0));
-
+    private static final MechanismRoot2d ARM_BASE = MECH_VISUALIZER.getRoot(
+            "arm-base",
+            BASE_X + Units.inchesToMeters(11.5),
+            Units.inchesToMeters(9.5));
 
     private static final MechanismLigament2d BACK_DRIVETRAIN_HALF = new MechanismLigament2d(
             "drive-back", Units.inchesToMeters(14), 180, 4, ORANGE);
@@ -199,6 +202,14 @@ public final class RobotVisualizer {
         }
         HOOD_BASE.append(hood);
     }
+        /** No-op on a real robot. */
+    public static void addArm(MechanismLigament2d arm) {
+        if (!IS_SIM) {
+            return;
+        }
+        ARM_BASE.append(arm);
+    }
+
 
     /** No-op on a real robot. */
     public static void addIntake(MechanismLigament2d intake) {
