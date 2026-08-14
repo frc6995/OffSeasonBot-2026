@@ -18,12 +18,14 @@ import frc.robot.CANRange;
 import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.POI;
 
 public class Autos {
 
-    private final CommandSwerveDrivetrain drivetrain;
+    private final CommandSwerveDrivetrain m_drivetrain;
+    private final Superstructure m_superstructure;
     private final AutoChooser autoChooser = new AutoChooser();
     private final Map<String, Supplier<Command>> autos = new LinkedHashMap<>();
     private final FollowPath.Builder pathBuilder;
@@ -37,15 +39,20 @@ public class Autos {
 
     private final CANRange m_canRange = new CANRange();
 
-    public Autos(CommandSwerveDrivetrain drivetrain) {
-        this.drivetrain = drivetrain;
+    public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
+        this.m_drivetrain = drivetrain;
+        this.m_superstructure = superstructure;
+
+        FollowPath.registerEventTrigger("startShooting", Commands.parallel(
+        m_superstructure.requestRobotScoring(), superstructure.requestIntakeAgitating()));
+        FollowPath.registerEventTrigger("stopScoring", Commands.parallel(m_superstructure.requestRobotIdle(),superstructure.requestIntakeActive()));
 
         // Bline Configurations
         pathBuilder = new FollowPath.Builder(
-                drivetrain, // Subsystem requirement
-                drivetrain::getPose, // Supplier<Pose2d>
-                drivetrain::getChassisSpeeds, // Supplier<ChassisSpeeds> (robot-relative)
-                drivetrain::drive, // Consumer<ChassisSpeeds> (robot-relative)
+                m_drivetrain, // Subsystem requirement
+                m_drivetrain::getPose, // Supplier<Pose2d>
+                m_drivetrain::getChassisSpeeds, // Supplier<ChassisSpeeds> (robot-relative)
+                m_drivetrain::drive, // Consumer<ChassisSpeeds> (robot-relative)
                 new PIDController(5.0, 0.0, 0.0), // translation — minimizes remaining distance
                 new PIDController(7.0, 0.0, 0.0), // rotation — minimizes heading error
                 new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
@@ -64,16 +71,16 @@ public class Autos {
                 () -> auto(POI.TRENCH_START.get(), c -> {
 
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kHighJerkProfile,
-                            POI.M_1.get(), drivetrain, Meters.of(1.0)));
+                            POI.M_1.get(), m_drivetrain, Meters.of(1.0)));
 
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kHighJerkProfile,
-                            POI.M_2.get(), drivetrain, Meters.of(1.0)));
+                            POI.M_2.get(), m_drivetrain, Meters.of(1.0)));
 
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kSlowDriveProfile,
-                            POI.M_3.get(), drivetrain, Meters.of(1.0)));
+                            POI.M_3.get(), m_drivetrain, Meters.of(1.0)));
 
                     c.addCommands(new AutoAlign(
-                            POI.HUB_BEHIND_INTAKE.get(), drivetrain, AutoAlign.kSlowDriveProfile,
+                            POI.HUB_BEHIND_INTAKE.get(), m_drivetrain, AutoAlign.kSlowDriveProfile,
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_DEFAULT_VELOCITY).withTimeout(2.0));
                 }));
 
@@ -85,7 +92,7 @@ public class Autos {
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 5));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 5).alongWith(m_superstructure.requestIntakeActive()));
 
                     c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 7));
                     //Now make the intake idle until we are near the depot
@@ -134,7 +141,7 @@ public class Autos {
     private Command auto(Pose2d startPose, Consumer<SequentialCommandGroup> builder) {
         SequentialCommandGroup group = new SequentialCommandGroup();
 
-        group.addCommands(Commands.runOnce(() -> drivetrain.resetPose(startPose), drivetrain));
+        group.addCommands(Commands.runOnce(() -> m_drivetrain.resetPose(startPose), m_drivetrain));
         builder.accept(group);
 
         return group;

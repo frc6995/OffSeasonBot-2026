@@ -40,15 +40,15 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-    public final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain(
+    public final CommandSwerveDrivetrain m_drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
             TunerConstants.FrontLeft,
             TunerConstants.FrontRight,
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
-    public Superstructure m_Superstructure = new Superstructure(drivetrain::getState);
+    public Superstructure m_superstructure = new Superstructure(m_drivetrain::getState);
     private Mechanism2d VISUALIZER;
-    public final Autos autos = new Autos(drivetrain);
+    public final Autos autos = new Autos(m_drivetrain, m_superstructure);
 
     public RobotContainer() {
         VISUALIZER = logger.MECH_VISUALIZER;
@@ -61,13 +61,13 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        drivetrain.setDefaultCommand(
-            drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
+        m_drivetrain.setDefaultCommand(
+            m_drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
                 .withVelocityY(-joystick.getLeftX() * MaxSpeed)
                 .withRotationalRate(-joystick.getRightX() * MaxAngularRate)
         ));
         
-        drivetrain.registerTelemetry(logger::telemeterize);
+        m_drivetrain.registerTelemetry(logger::telemeterize);
 
         /* 
         *
@@ -77,16 +77,16 @@ public class RobotContainer {
         *
         */
 
-        joystick.a().onTrue(m_Superstructure.requestIntakeToggle());
+        joystick.a().onTrue(m_superstructure.requestIntakeToggle());
 
-        joystick.leftTrigger().onTrue(m_Superstructure.requestIntakeEject());
-        joystick.leftTrigger().onFalse(m_Superstructure.requestIntakeActive());
+        joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
+        joystick.leftTrigger().onFalse(m_superstructure.requestIntakeActive());
 
-        joystick.rightBumper().whileTrue(m_Superstructure.requestRobotShooting());
-        joystick.rightBumper().onFalse(m_Superstructure.requestRobotIdle());
+        joystick.rightBumper().whileTrue(m_superstructure.requestRobotShooting());
+        joystick.rightBumper().onFalse(m_superstructure.requestRobotIdle());
 
-        joystick.leftBumper().onTrue(m_Superstructure.requestIntakeAgitating());
-        joystick.leftBumper().onFalse(m_Superstructure.requestIntakeActive());
+        joystick.leftBumper().onTrue(m_superstructure.requestIntakeAgitating());
+        joystick.leftBumper().onFalse(m_superstructure.requestIntakeActive());
 
         /* For Cadsim testing */
         // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));
@@ -95,11 +95,11 @@ public class RobotContainer {
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
                 () -> new AutoAlignFixedHeading(
-                        drivetrain.getPose(),
-                        drivetrain,
+                        m_drivetrain.getPose(),
+                        m_drivetrain,
                         true,
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
-                Set.of(drivetrain)));
+                Set.of(m_drivetrain)));
 
 
         /* 

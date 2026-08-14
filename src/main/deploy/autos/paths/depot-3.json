@@ -25,6 +25,11 @@
       }
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.8424,
+      "lib_key": "stopScoring"
+    },
+    {
       "type": "waypoint",
       "translation_target": {
         "x_meters": 4.50709,
