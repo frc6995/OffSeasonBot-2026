@@ -43,9 +43,19 @@ public class Autos {
         this.m_drivetrain = drivetrain;
         this.m_superstructure = superstructure;
 
+                FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
+
+
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
-        m_superstructure.requestRobotScoring(), superstructure.requestIntakeAgitating()));
-        FollowPath.registerEventTrigger("stopScoring", Commands.parallel(m_superstructure.requestRobotIdle(),superstructure.requestIntakeActive()));
+                m_superstructure.requestRobotScoring()));
+
+                                FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeAgitating());
+
+
+        FollowPath.registerEventTrigger("stopScoring",
+                Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
+
+
 
         // Bline Configurations
         pathBuilder = new FollowPath.Builder(
@@ -58,7 +68,8 @@ public class Autos {
                 new PIDController(0.0, 0.0, 0.0) // cross-track — minimizes perpendicular deviation
         )
                 .withDefaultShouldFlip(); // auto-flip when on the red alliance
-     //    .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start pose
+        // .withPoseReset(drivetrain::resetPose); // reset odometry at each path's start
+        // pose
 
         registerAutos();
     }
@@ -92,14 +103,15 @@ public class Autos {
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 5).alongWith(m_superstructure.requestIntakeActive()));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 5)
+                            .alongWith(m_superstructure.requestIntakeActive()));
 
                     c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 7));
-                    //Now make the intake idle until we are near the depot
+                    // Now make the intake idle until we are near the depot
 
                     c.addCommands(Depot3);
 
-                }));
+                }).alongWith(m_superstructure.requestFlywheelActiveAfterDelay(1.0)));
 
         autos.put("Bline_Workshop_test1",
                 () -> auto(c -> {
@@ -112,8 +124,8 @@ public class Autos {
     }
 
     // Runs path until timeoutSeconds elapses or CANRange reports close-to-wall,
-    // ignoring the sensor until the given BLine event marker (lib_key) has fired
-    // along the path, so the sensor can't trip the path early.
+    // ignoring the sensor until the given BLine event marker has fired
+    // along the path so the sensor can't trip the path early.
     private Command untilCloseToWallAfterEvent(Command path, String eventKey, double timeoutSeconds) {
         AtomicBoolean eventFired = new AtomicBoolean(false);
         FollowPath.registerEventTrigger(eventKey, () -> eventFired.set(true));

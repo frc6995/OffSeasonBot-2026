@@ -51,7 +51,7 @@ public class RobotContainer {
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
 
     public RobotContainer() {
-        VISUALIZER = logger.MECH_VISUALIZER;
+        VISUALIZER = Telemetry.MECH_VISUALIZER;
         SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
 

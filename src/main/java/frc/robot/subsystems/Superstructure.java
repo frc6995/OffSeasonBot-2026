@@ -118,12 +118,21 @@ public class Superstructure extends SubsystemBase {
         });
     }
 
+    public Command requestFlywheelActive() {
+        return Commands.runOnce(() -> m_flywheel.requestActive());
+    }
+
+    // Keeps the flywheel disabled for the given delay
+    public Command requestFlywheelActiveAfterDelay(double seconds) {
+        return Commands.runOnce(() -> m_flywheel.requestActiveAfterDelay(seconds));
+    }
+
     public Command requestRobotIdle() {
         return Commands.runOnce(() -> {
             robotState = RobotState.IDLE;
             m_dyeRotor.requestIdle();
             m_turret.requestAimCentral();
-            m_flywheel.requestDisable();
+            m_flywheel.requestActive();
             m_hood.requestDisable();
         });
     }

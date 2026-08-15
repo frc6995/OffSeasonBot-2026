@@ -15,14 +15,19 @@
     {
       "type": "waypoint",
       "translation_target": {
-        "x_meters": 6.08117,
-        "y_meters": 5.24065,
+        "x_meters": 6.37069,
+        "y_meters": 5.31958,
         "intermediate_handoff_radius_meters": 0.45
       },
       "rotation_target": {
         "rotation_radians": -3.1381,
         "profiled_rotation": true
       }
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.5527,
+      "lib_key": "intakeIdle"
     },
     {
       "type": "waypoint",
@@ -43,8 +48,13 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.51377,
+      "t_ratio": 0.51499,
       "lib_key": "depotSensorActivation"
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.45998,
+      "lib_key": "startIntakingAgain"
     },
     {
       "type": "waypoint",
@@ -72,7 +82,7 @@
         "end_ordinal": 2
       },
       {
-        "value": 0.6,
+        "value": 0.55,
         "start_ordinal": 3,
         "end_ordinal": 3
       }

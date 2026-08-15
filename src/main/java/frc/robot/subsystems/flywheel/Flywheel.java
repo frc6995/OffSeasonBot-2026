@@ -64,6 +64,11 @@ public class Flywheel extends SubsystemBase {
 
   private FlywheelState flywheelState = FlywheelState.DISABLED;
 
+  private static final double kLoopPeriodSecs = 0.02;
+
+  private boolean activeLockedOut = false;
+  private int lockoutTicksRemaining = 0;
+
   public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> shotData) {
     this.io = io;
     this.targetData = shotData;
@@ -74,11 +79,24 @@ public class Flywheel extends SubsystemBase {
   }
 
   public void requestDisable() {
+    activeLockedOut = false;
     setState(FlywheelState.DISABLED);
   }
 
   public void requestActive() {
+    if (activeLockedOut) {
+      return;
+    }
     setState(FlywheelState.ACTIVE);
+  }
+
+  /**
+   * Forces the flywheel disabled for {@code seconds}
+   */
+  public void requestActiveAfterDelay(double seconds) {
+    activeLockedOut = true;
+    lockoutTicksRemaining = (int) Math.ceil(seconds / kLoopPeriodSecs);
+    setState(FlywheelState.DISABLED);
   }
 
   public FlywheelState getState() {
@@ -107,6 +125,11 @@ public class Flywheel extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    if (activeLockedOut && --lockoutTicksRemaining <= 0) {
+      activeLockedOut = false;
+      setState(FlywheelState.ACTIVE);
+    }
 
     io.updateInputs(inputs);
     io.setVelocityRPM(resolveTargetRPM(flywheelState));

@@ -46,7 +46,7 @@ public class Turret extends SubsystemBase {
         MANUAL;
     }
 
-    private TurretState turretState = TurretState.DISABLED;
+    private TurretState turretState = TurretState.AIM_CLOSEST;
     private double requestedAngle = 0;
 
     private TurretIO io;
