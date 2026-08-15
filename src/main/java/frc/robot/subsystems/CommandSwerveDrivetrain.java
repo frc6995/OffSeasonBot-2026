@@ -16,6 +16,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -60,8 +61,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.RobotCentric m_robotCentricDriveRequest = new SwerveRequest.RobotCentric()
             .withDriveRequestType(DriveRequestType.Velocity);
 
+    /* Cached once per periodic() tick so both m_vision and the vision-measurement check below reuse a single Pigeon2 read */
+    private Rotation3d m_cachedGyroRotation = Rotation3d.kZero;
+
     public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
-            : new RealATVision(getPigeon2()::getRotation3d, this::resetPose);
+            : new RealATVision(() -> m_cachedGyroRotation, this::resetPose);
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -291,15 +295,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             });
         }
 
+        m_cachedGyroRotation = getPigeon2().getRotation3d();
         m_vision.periodic();
 
         if (Math.abs(state().Speeds.omegaRadiansPerSecond) < (Math.PI / 2)) {
 
             var estimates = m_vision.getAllEstimates();
-            var gyroRotation = getPigeon2().getRotation3d();
             for (var estimate : estimates) {
-                if (estimate.avgAmbiguity() < 0.65 && !(Math.abs(gyroRotation.getX()) > Math.toRadians(20)
-                        || Math.abs(gyroRotation.getY()) > Math.toRadians(20))) {
+                if (estimate.avgAmbiguity() < 0.65 && !(Math.abs(m_cachedGyroRotation.getX()) > Math.toRadians(20)
+                        || Math.abs(m_cachedGyroRotation.getY()) > Math.toRadians(20))) {
                     if (DriverStation.isEnabled()) {
                         addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(),
                                 AprilTagVision.getStdDevs(estimate));

@@ -3,7 +3,6 @@ package frc.robot.subsystems.turret;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import java.util.ArrayList;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
@@ -121,27 +120,24 @@ public class Turret extends SubsystemBase {
 
         angle = MathUtil.inputModulus(angle, -180, 180);
 
-        ArrayList<Double> possibleAngles = new ArrayList<>(2);
-
-        possibleAngles.add(angle);
-
-        if (angle >= 0) {
-            possibleAngles.add(angle - 360);
-        }
-
-        if (angle <= 0) {
-            possibleAngles.add(angle + 360);
-        }
-
         double smallestAngle = angle;
         double smallestDifference = Math.abs(angle - currentAngle);
 
-        for (int i = 1; i < possibleAngles.size(); i++) {
-            double diff = Math.abs(possibleAngles.get(i) - currentAngle);
-
+        if (angle >= 0) {
+            double alt = angle - 360;
+            double diff = Math.abs(alt - currentAngle);
             if (diff < smallestDifference) {
                 smallestDifference = diff;
-                smallestAngle = possibleAngles.get(i);
+                smallestAngle = alt;
+            }
+        }
+
+        if (angle <= 0) {
+            double alt = angle + 360;
+            double diff = Math.abs(alt - currentAngle);
+            if (diff < smallestDifference) {
+                smallestDifference = diff;
+                smallestAngle = alt;
             }
         }
 

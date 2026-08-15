@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
@@ -47,6 +48,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Voltage> m_rollerAppliedVoltage = m_rollerLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_rollerStatorCurrent = m_rollerLeadMotor.getStatorCurrent();
     private final StatusSignal<Current> m_rollerSupplyCurrent = m_rollerLeadMotor.getSupplyCurrent();
+    private final StatusSignal<AngularVelocity> m_rollerVelocity = m_rollerLeadMotor.getVelocity();
     private final StatusSignal<Voltage> m_rollerFollowerAppliedVoltage = m_rollerFollowerMotor.getMotorVoltage();
 
     private final StatusSignal<Angle> m_extensionPosition = m_extensionLeadMotor.getPosition();
@@ -148,45 +150,37 @@ public class IntakeIOTalonFX implements IntakeIO {
     @Override
     public void updateInputs(IntakeInputs inputs) {
 
-        inputs.rollerLeadMotorConnected =
-            BaseStatusSignal.refreshAll(
-                m_rollerAppliedVoltage,
-                m_rollerStatorCurrent,
-                m_rollerSupplyCurrent)
-                .isOK();
-        inputs.rollerFollowerMotorConnected =
-            BaseStatusSignal.refreshAll(m_rollerFollowerAppliedVoltage).isOK();
+        BaseStatusSignal.refreshAll(
+            m_rollerAppliedVoltage,
+            m_rollerStatorCurrent,
+            m_rollerSupplyCurrent,
+            m_rollerVelocity,
+            m_rollerFollowerAppliedVoltage,
+            m_extensionPosition,
+            m_extensionAppliedVoltage,
+            m_extensionStatorCurrent,
+            m_extensionSupplyCurrent,
+            m_extensionFollowerAppliedVoltage,
+            m_kickerAppliedVoltage,
+            m_kickerStatorCurrent,
+            m_kickerSupplyCurrent);
 
-        inputs.extensionLeadMotorConnected =
-            BaseStatusSignal.refreshAll(
-                m_extensionPosition,
-                m_extensionAppliedVoltage,
-                m_extensionStatorCurrent,
-                m_extensionSupplyCurrent)
-                .isOK();
-        inputs.extensionFollowerMotorConnected =
-            BaseStatusSignal.refreshAll(m_extensionFollowerAppliedVoltage).isOK();
+        inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
+        inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
+        inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
+        inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
+        inputs.kickerMotorConnected = m_kickerMotor.isConnected();
 
-        
-            
-        inputs.kickerMotorConnected =
-            BaseStatusSignal.refreshAll(
-                m_kickerAppliedVoltage,
-                m_kickerStatorCurrent,
-                m_kickerSupplyCurrent)
-                .isOK();
-
-        inputs.rollerVelocityRPM = m_rollerLeadMotor.getVelocity().getValueAsDouble() * 60;
+        inputs.rollerVelocityRPM = m_rollerVelocity.getValueAsDouble() * 60;
         inputs.rollerAppliedVolts = m_rollerAppliedVoltage.getValueAsDouble();
         inputs.rollerStatorCurrentAmps = m_rollerStatorCurrent.getValueAsDouble();
         inputs.rollerSupplyCurrentAmps = m_rollerSupplyCurrent.getValueAsDouble();
-        
+
         inputs.extensionPositionMeters = mechanismRotationsToMeters(m_extensionPosition.getValueAsDouble());
         inputs.extensionAppliedVolts = m_extensionAppliedVoltage.getValueAsDouble();
         inputs.extensionStatorCurrentAmps = m_extensionStatorCurrent.getValueAsDouble();
         inputs.extensionSupplyCurrentAmps = m_extensionSupplyCurrent.getValueAsDouble();
 
-        inputs.rollerVelocityRPM = m_rollerLeadMotor.getVelocity().getValueAsDouble() * 60;
         inputs.kickerAppliedVolts = m_kickerAppliedVoltage.getValueAsDouble();
         inputs.kickerStatorCurrentAmps = m_kickerStatorCurrent.getValueAsDouble();
         inputs.kickerSupplyCurrentAmps = m_kickerSupplyCurrent.getValueAsDouble();

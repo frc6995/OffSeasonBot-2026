@@ -45,6 +45,8 @@ public class AprilTagModule {
     private double hb = 0;
     private double lastHb = 0;
 
+    private Optional<AprilTagEstimate> cachedEstimate = Optional.empty();
+
     public AprilTagModule(String limelightID, Pose3d offset, NetworkTable visionTable) {
         this.limelightID = limelightID;
 
@@ -67,9 +69,19 @@ public class AprilTagModule {
     }
 
     /**
-     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}
+     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}.
+     * Fetches the pose using {@link #defaultMode}.
      */
     public void periodic() {
+        periodic(defaultMode == EstimationMode.MEGATAG2);
+    }
+
+    /**
+     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}.
+     * Fetches the pose once per call and caches it for both telemetry and {@link #getCachedPose()},
+     * instead of re-fetching from NetworkTables for each consumer.
+     */
+    public void periodic(boolean isMegaTag2) {
         lastHb = hb;
         hb = LimelightHelpers.getHeartbeat(limelightID);
 
@@ -77,6 +89,7 @@ public class AprilTagModule {
             DriverStation.reportError(limelightID + " is not connected.", false);
         }
 
+        cachedEstimate = getPose(isMegaTag2);
         updateTelemetry();
     }
 
@@ -88,13 +101,20 @@ public class AprilTagModule {
      */
     private void updateTelemetry() {
         if(true) {
-            var poseOpt = getPose();
-            estimatePublisher.accept(poseOpt.isPresent() ? new Pose3d(poseOpt.get().estimatedPose) : Pose3d.kZero);
+            estimatePublisher.accept(cachedEstimate.isPresent() ? new Pose3d(cachedEstimate.get().estimatedPose) : Pose3d.kZero);
             isActivePublisher.accept(hasTargets());
             modePublisher.accept(lastMode.toString());
             defaultModePublisher.accept(defaultMode.toString());
         }
         isConnectedPublisher.accept(isConnected());
+    }
+
+    /**
+     * Returns the pose estimate fetched by the most recent {@link #periodic()}/{@link #periodic(boolean)} call,
+     * without triggering another NetworkTables fetch.
+     */
+    public Optional<AprilTagEstimate> getCachedPose() {
+        return cachedEstimate;
     }
 
     public Pose3d getOffset() {
