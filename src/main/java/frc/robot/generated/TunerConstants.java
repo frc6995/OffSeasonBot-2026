@@ -56,7 +56,10 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(120);
+    // Public so that RobotCurrentLimits/
+    // CommandSwerveDrivetrain can set the drive motors' stator limit to this 
+    // whenever they reapply current limits.
+    public static final Current kSlipCurrent = Amps.of(120);
 
     // Default supply current limit for the drive motors; can be lowered at runtime (e.g. by
     // RobotCurrentLimits) to free up current budget for other subsystems. Supply current

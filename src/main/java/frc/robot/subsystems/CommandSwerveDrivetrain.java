@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
@@ -262,9 +263,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * Sets the supply current limit on every drive motor. Uses a 0-second config timeout so the
      * call returns immediately instead of blocking on a CAN response, making it safe to call from
      * periodic() when the limit changes (e.g. from a {@link frc.robot.RobotCurrentLimits} rule).
+     *
+     * <p>{@code CurrentLimitsConfigs} is a config *group*: applying one overwrites every field in
+     * the group on the motor, including ones this call doesn't set, resetting them to their class
+     * defaults. So the stator limit is re-asserted to {@link TunerConstants#kSlipCurrent} on every
+     * call here as well, even though this method only ever changes the supply limit. Otherwise a
+     * dynamic supply-limit change would silently wipe out the slip-current-based stator limit that
+     * TunerConstants configures.
      */
     public void setDriveSupplyCurrentLimit(double supplyCurrentLimitAmps) {
         CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(TunerConstants.kSlipCurrent)
+            .withStatorCurrentLimitEnable(true)
             .withSupplyCurrentLimit(supplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
         for (var module : getModules()) {

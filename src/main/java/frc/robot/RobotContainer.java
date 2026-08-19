@@ -78,7 +78,9 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
         joystick.a().onTrue(m_Superstucture.requestFuelIntaking());
         joystick.b().onFalse(m_Superstucture.requestIntakeIdle());
-        joystick.x().onFalse(m_Superstucture.requestIntakeRetracted());
+        joystick.x().onTrue(m_Superstucture.requestRobotScoring());
+                joystick.x().onFalse(m_Superstucture.requestRobotIdle());
+
 
             // do not do this for actual bindings, test only
         // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
