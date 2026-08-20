@@ -23,12 +23,8 @@ import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 public class RealATVision extends AprilTagVision {
     public static class ATVisionConstants {
         public static final String[] LL_IDS = {
-            // "limelight-climb", 
-            // "limelight-right", 
-            // "limelight-left",
-            // "limelight-front"
+            "limelight-turret"
         };
-
 
         public static final Pose3d[] LL_OFFSETS = {
             // new Pose3d( // climb
@@ -49,6 +45,7 @@ public class RealATVision extends AprilTagVision {
 
         public static final double[] kMT2StdDevCoefficients = {0.085, 0.0}; // deviation order is [xy, theta]
         public static final double[] kMT1StdDevCoefficients = {0.1, 0.075};
+        public static final int kOptimalTagCount = 2;
 
     }
 

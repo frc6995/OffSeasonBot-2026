@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Main {
   private Main() {}
 
+// NEVER click this Run / Debug button. It will break the project.
   public static void main(String... args) {
     RobotBase.startRobot(Robot::new);
   }

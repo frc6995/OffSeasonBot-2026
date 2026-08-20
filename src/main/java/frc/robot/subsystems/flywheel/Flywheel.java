@@ -41,6 +41,16 @@ public class Flywheel extends SubsystemBase {
       {15.0, 3500}
     };
 
+    // distance from POI.PASSING_WALL
+    public static final double [][] kPassingShooterData = {
+      {0.0, 1500},
+      {3.0, 1850},
+      {4.0, 1950},
+      {5.0, 2050},
+      {10, 2500},
+      {15.0, 3500}
+    };
+
   }
 
   public enum FlywheelState {
@@ -54,9 +64,14 @@ public class Flywheel extends SubsystemBase {
 
   private FlywheelState flywheelState = FlywheelState.DISABLED;
 
-  public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> targetData) {
+  private static final double kLoopPeriodSecs = 0.02;
+
+  private boolean activeLockedOut = false;
+  private int lockoutTicksRemaining = 0;
+
+  public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> shotData) {
     this.io = io;
-    this.targetData = targetData;
+    this.targetData = shotData;
   }
 
   public void setState(FlywheelState state) {
@@ -64,11 +79,24 @@ public class Flywheel extends SubsystemBase {
   }
 
   public void requestDisable() {
+    activeLockedOut = false;
     setState(FlywheelState.DISABLED);
   }
 
   public void requestActive() {
+    if (activeLockedOut) {
+      return;
+    }
     setState(FlywheelState.ACTIVE);
+  }
+
+  /**
+   * Forces the flywheel disabled for {@code seconds}
+   */
+  public void requestActiveAfterDelay(double seconds) {
+    activeLockedOut = true;
+    lockoutTicksRemaining = (int) Math.ceil(seconds / kLoopPeriodSecs);
+    setState(FlywheelState.DISABLED);
   }
 
   public FlywheelState getState() {
@@ -98,16 +126,26 @@ public class Flywheel extends SubsystemBase {
   @Override
   public void periodic() {
 
-    io.updateInputs(inputs);
-    io.setVelocityRPM(resolveTargetRPM(flywheelState));
+    if (activeLockedOut && --lockoutTicksRemaining <= 0) {
+      activeLockedOut = false;
+      setState(FlywheelState.ACTIVE);
+    }
 
+    io.updateInputs(inputs);
+
+    // DISABLED coasts the flywheel down instead of holding 0 RPM with closed-loop control.
+    if (flywheelState == FlywheelState.DISABLED) {
+      io.stop();
+    } else {
+      io.setVelocityRPM(resolveTargetRPM(flywheelState));
+    }
   }
 
   // shoot is NOT 10000 rpm
   private double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
-      case ACTIVE -> targetData.get().rpm();
+      case ACTIVE -> targetData.get().flywheelRpm();
     };
   }
 }

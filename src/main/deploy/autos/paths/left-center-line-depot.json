@@ -49,6 +49,11 @@
       }
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.62898,
+      "lib_key": "hubSensorActivation"
+    },
+    {
       "type": "waypoint",
       "translation_target": {
         "x_meters": 6.71807,

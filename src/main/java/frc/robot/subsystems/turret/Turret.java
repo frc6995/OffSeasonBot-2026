@@ -4,22 +4,16 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
+import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
-
-    private TurretState turretState = TurretState.DISABLED;
-    private double requestedAngle;
-    private TurretIO io;
-    private TurretIOInputs inputs = new TurretIOInputs();
-    private final MechanismLigament2d turretLigament = new MechanismLigament2d("turret", Units.inchesToMeters(12), 0, 6,
-        new Color8Bit(137, 52, 235));
-
     static class TurretConstants {
         public static int kCANID = 45;
 
@@ -48,11 +42,24 @@ public class Turret extends SubsystemBase {
     public enum TurretState {
         DISABLED,
         AIM_CLOSEST,
-        AIM_CENTRAL
+        AIM_CENTRAL,
+        MANUAL;
     }
 
-    public Turret(TurretIO io) {
+    private TurretState turretState = TurretState.AIM_CLOSEST;
+    private double requestedAngle = 0;
+
+    private TurretIO io;
+    private Supplier<ShooterTargetData> shotData;
+
+    private TurretIOInputs inputs = new TurretIOInputs();
+
+    private final MechanismLigament2d turretLigament = new MechanismLigament2d("turret", Units.inchesToMeters(12), 0, 6,
+        new Color8Bit(137, 52, 235));
+
+    public Turret(TurretIO io, Supplier<ShooterTargetData> shotData) {
         this.io = io;
+        this.shotData = shotData;
         RobotVisualizer.addTurret(turretLigament);
     }
 
@@ -72,15 +79,18 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         switch (turretState) {
             case DISABLED -> io.disable();
-
-            // need to fix this because currently this will only command 0 degrees
-            case AIM_CENTRAL -> selectCentralAngle(requestedAngle);
-            case AIM_CLOSEST -> selectClosestAngle(requestedAngle);
+            case AIM_CENTRAL -> selectCentralAngle(shotData.get().turretAngleDeg());
+            case AIM_CLOSEST -> selectClosestAngle(shotData.get().turretAngleDeg());
+            case MANUAL -> selectClosestAngle(requestedAngle);
         }
 
         io.updateInputs(inputs);
-        turretLigament.setAngle(inputs.angle);
+    }
 
+    @Override
+    public void simulationPeriodic() {
+        turretLigament.setAngle(inputs.angle);
+        RobotVisualizer.updateTurret(Units.degreesToRadians(inputs.angle));
     }
 
     public TurretState getState() {
@@ -99,7 +109,7 @@ public class Turret extends SubsystemBase {
     public void setAngle(double angle) {
         requestedAngle = angle;
 
-        this.turretState = TurretState.AIM_CENTRAL;
+        this.turretState = TurretState.MANUAL;
     }
 
     public double getRequestedAngle() {

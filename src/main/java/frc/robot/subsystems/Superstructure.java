@@ -18,21 +18,17 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
-import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.hood.Hood.HoodState;
-import frc.robot.subsystems.hood.HoodIO;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSimTalonFX;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
-import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.util.ShotController;
 public class Superstructure extends SubsystemBase {
@@ -57,29 +53,39 @@ public class Superstructure extends SubsystemBase {
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
-        m_shotController = new ShotController(m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER);
+        m_shotController = new ShotController(
+            m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
+            POI.PASSING_WALL_START, POI.PASSING_WALL_END);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
             this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
             this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOSimTalonFX());
+            this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            this.m_intake = new Intake(new IntakeIO() {});
-            this.m_hood = new Hood(new HoodIO() {}, m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIO() {},  m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIO() {} );
+            this.m_intake = new Intake(new IntakeIOTalonFX());
+            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
+            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotController::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
     }
 
+
     @Override
     public void periodic() {
-       m_shotController.calculate();
+       m_shotController.calculate(robotState == RobotState.PASSING);
 
+       System.out.println("RobotState: " + robotState
+                + " | Intake: " + m_intake.getState()
+                + " | Hood: " + m_hood.getState()
+                + " | Flywheel: " + m_flywheel.getState()
+                + " | Turret: " + m_turret.getState()
+                + " | DyeRotor(spin): " + m_dyeRotor.getSpinState()
+                + " | DyeRotor(index): " + m_dyeRotor.getIndexState());
     }
 
     public Command requestIntakeActive() {
@@ -111,6 +117,15 @@ public class Superstructure extends SubsystemBase {
                 m_intake.requestActive();
             }
         });
+    }
+
+    public Command requestFlywheelActive() {
+        return Commands.runOnce(() -> m_flywheel.requestActive());
+    }
+
+    // Keeps the flywheel disabled for the given delay
+    public Command requestFlywheelActiveAfterDelay(double seconds) {
+        return Commands.runOnce(() -> m_flywheel.requestActiveAfterDelay(seconds));
     }
 
     public Command requestRobotIdle() {
@@ -151,5 +166,9 @@ public class Superstructure extends SubsystemBase {
         m_turret.requestAimClosest();
         m_flywheel.requestActive();
         m_hood.requestActive();
+    }
+
+    public RobotState getRobotState() {
+        return robotState;
     }
 }

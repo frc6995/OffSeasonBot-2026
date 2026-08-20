@@ -80,6 +80,9 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
+
+        CommandScheduler.getInstance().schedule(
+                m_robotContainer.m_superstructure.requestFlywheelActiveAfterDelay(1.0));
     }
 
     @Override

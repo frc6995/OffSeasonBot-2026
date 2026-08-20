@@ -1,33 +1,51 @@
 package frc.robot.util;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.subsystems.hood.Hood.HoodConstants;
 public class ShotController {
+    public static final class ShotConstants {
+        public static final double kTurretVelocityComp = 5.0;
+        public static final double kFlywheelVelocityComp = 0.0;
+        public static final double kHoodVelocityComp = 0.0;
+    }
 
-    public static record ShooterTargetData(double rpm, double hoodAngle) {}
+    public static record ShooterTargetData(double flywheelRpm, double hoodAngleDeg, double turretAngleDeg) {}
 
     private final InterpolatingDoubleTreeMap rpmMap = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap hoodMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap passingRpmMap = new InterpolatingDoubleTreeMap();
+    private final InterpolatingDoubleTreeMap passingHoodMap = new InterpolatingDoubleTreeMap();
 
     private final Supplier<Pose2d> robotPose;
     private final Supplier<ChassisSpeeds> robotSpeeds;
     private final Supplier<Pose2d> goalPose;
+    private final Supplier<Rotation2d> passingAngle;
+    private final Supplier<Translation2d> passingWallStart;
+    private final Supplier<Translation2d> passingWallEnd;
 
-    private ShooterTargetData cachedData = new ShooterTargetData(0, 0);
+    private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
 
     public ShotController(
         Supplier<Pose2d> robotPose,
         Supplier<ChassisSpeeds> robotSpeeds,
-        Supplier<Pose2d> goalPose
+        Supplier<Pose2d> goalPose,
+        Supplier<Rotation2d> passingAngle,
+        Supplier<Translation2d> passingWallStart,
+        Supplier<Translation2d> passingWallEnd
     ) {
         this.robotPose = robotPose;
         this.robotSpeeds = robotSpeeds;
         this.goalPose = goalPose;
+        this.passingAngle = passingAngle;
+        this.passingWallStart = passingWallStart;
+        this.passingWallEnd = passingWallEnd;
         populateLUTs();
     }
 
@@ -40,21 +58,105 @@ public class ShotController {
         for(var value : HoodConstants.kAngleData) {
             hoodMap.put(value[0], value[1]);
         }
+
+        for(var value : FlywheelConstants.kPassingShooterData) {
+            passingRpmMap.put(value[0], value[1]);
+        }
+
+        for(var value : HoodConstants.kPassingAngleData) {
+            passingHoodMap.put(value[0], value[1]);
+        }
     }
 
     public ShooterTargetData calculate() {
+        return calculate(false);
+    }
+
+    /**
+     * @param isPassing when true, the turret points at the fixed {@link POI#PASSING_ANGLE}
+     *                  field-relative heading instead of tracking {@code goalPose}.
+     */
+    public ShooterTargetData calculate(boolean isPassing) {
         Pose2d currentPose = robotPose.get();
-        Pose2d goPose = goalPose.get();
 
-        double distance = currentPose.getTranslation().getDistance(goPose.getTranslation());
-
-        ShooterTargetData targetData = new ShooterTargetData(rpmMap.get(distance), hoodMap.get(distance));
+        ShooterTargetData targetData = isPassing
+            ? calculatePassingData(currentPose)
+            : calculateScoringData(currentPose);
 
         cachedData = targetData;
         return cachedData;
     }
 
+    private ShooterTargetData calculateScoringData(Pose2d currentPose) {
+        Pose2d targetPose = goalPose.get();
+
+        Translation2d robotToGoal = targetPose.getTranslation().minus(currentPose.getTranslation());
+
+        double[] polarSpeeds = convertToTargetPolar(robotToGoal, robotSpeeds.get());
+
+        return new ShooterTargetData(
+            calculateFlywheelRpm(robotToGoal, polarSpeeds[1]),
+            calculateHoodAngle(robotToGoal, polarSpeeds[1]),
+            calculateTurretAngle(currentPose.getRotation(), robotToGoal, polarSpeeds[0]));
+    }
+
+    private ShooterTargetData calculatePassingData(Pose2d currentPose) {
+        double wallDistance = distanceFromLine(
+            currentPose.getTranslation(), passingWallStart.get(), passingWallEnd.get());
+
+        return new ShooterTargetData(
+            passingRpmMap.get(wallDistance),
+            passingHoodMap.get(wallDistance),
+            calculatePassingTurretAngle(currentPose.getRotation()));
+    }
+
     public ShooterTargetData getCachedData() {
         return cachedData;
+    }
+
+    /**
+     * This converts the field-relative {@link POI#PASSING_ANGLE} into a robot-relative
+     * angle, the same way {@link #calculateTurretAngle} does.
+     */
+    private double calculatePassingTurretAngle(Rotation2d robotAngle) {
+        return passingAngle.get().getDegrees() - robotAngle.getDegrees();
+    }
+
+    private double calculateTurretAngle(Rotation2d robotAngle, Translation2d robotToGoal, double targetTanVelocity) {
+        double baseAngle = robotToGoal.getAngle().getDegrees() - robotAngle.getDegrees();
+        double velocityComp = targetTanVelocity * ShotConstants.kTurretVelocityComp;
+        return baseAngle + velocityComp;
+    }
+
+    private double calculateHoodAngle(Translation2d robotToGoal, double targetRadialVelocity) {
+        double baseAngle = hoodMap.get(robotToGoal.getNorm());
+        double velocityComp = targetRadialVelocity * ShotConstants.kHoodVelocityComp;
+        return baseAngle + velocityComp;
+    }
+
+    private double calculateFlywheelRpm(Translation2d robotToGoal, double targetRadialVelocity) {
+        double baseSpeed = rpmMap.get(robotToGoal.getNorm());
+        double velocityComp = targetRadialVelocity * ShotConstants.kFlywheelVelocityComp;
+        return baseSpeed + velocityComp;
+    }
+
+    private double[] convertToTargetPolar(Translation2d robotToGoal, ChassisSpeeds speeds) {
+        Translation2d rHat = robotToGoal.div(robotToGoal.getNorm());
+        Translation2d tHat = new Translation2d(-rHat.getY(), rHat.getX());
+
+        double vRadial = speeds.vxMetersPerSecond * rHat.getX() + speeds.vyMetersPerSecond * rHat.getY();
+        double vTangential = speeds.vxMetersPerSecond * tHat.getX() + speeds.vyMetersPerSecond * tHat.getY();
+
+        return new double[] {vRadial, vTangential};
+    }
+
+    /** Perpendicular distance from {@code point} to the infinite line through {@code lineStart}/{@code lineEnd}. */
+    private double distanceFromLine(Translation2d point, Translation2d lineStart, Translation2d lineEnd) {
+        Translation2d lineVec = lineEnd.minus(lineStart);
+        Translation2d pointVec = point.minus(lineStart);
+
+        double cross = lineVec.getX() * pointVec.getY() - lineVec.getY() * pointVec.getX();
+
+        return Math.abs(cross) / lineVec.getNorm();
     }
 }

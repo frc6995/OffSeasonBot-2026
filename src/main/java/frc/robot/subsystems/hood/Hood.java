@@ -36,6 +36,16 @@ public class Hood extends SubsystemBase {
                 { 6, 40}
         };
 
+        // distance from the POI.PASSING_WALL line
+        public static final double[][] kPassingAngleData = {
+                { 4, 15 },
+                { 6.5, 25 },
+                { 8, 30 },
+                { 10, 40}
+
+ 
+        };
+
         //Tune PID/FF constants
         public static final double kP = 120; //Double check this
         public static final double kD = 0;
@@ -66,9 +76,9 @@ public class Hood extends SubsystemBase {
     private final Supplier<ShooterTargetData> targetData;
 
 
-    public Hood(HoodIO io, Supplier<ShooterTargetData> targetData) {
+    public Hood(HoodIO io, Supplier<ShooterTargetData> shotData) {
         this.io = io;
-        this.targetData = targetData;
+        this.targetData = shotData;
         RobotVisualizer.addHood(hoodLigament);
     }
     
@@ -83,13 +93,17 @@ public class Hood extends SubsystemBase {
                 break;
             case ACTIVE:
 
-                double clampedAngle = applyLimits(requestedAngle);
+                double clampedAngle = applyLimits(targetData.get().hoodAngleDeg());
 
                 io.setAngle(clampedAngle);
 
         }
+    }
 
+    @Override
+    public void simulationPeriodic() {
         hoodLigament.setAngle(getAngle());
+        RobotVisualizer.updateHood(Units.degreesToRadians(getAngle()));
     }
 
     public void setState(HoodState state) {
@@ -123,7 +137,7 @@ public class Hood extends SubsystemBase {
     }
 
     public double applyLimits(double angle) {
-        double clamped = MathUtil.clamp(targetData.get().hoodAngle(), Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
+        double clamped = MathUtil.clamp(angle, Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
 
         // if (clamped != angle) {
         //     DriverStation.reportWarning(

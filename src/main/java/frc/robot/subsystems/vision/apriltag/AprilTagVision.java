@@ -42,8 +42,7 @@ public abstract class AprilTagVision {
     }
 
     private static Matrix<N3, N1> getStdDevsMT2(AprilTagEstimate estimate) {
-        double xydevs = ATVisionConstants.kMT2StdDevCoefficients[0] * Math.pow(estimate.avgTagDistMeters(), 2.0)
-                / Math.pow(estimate.tagCount(), 2.0);
+        double xydevs = ATVisionConstants.kMT2StdDevCoefficients[0] / estimate.tagArea() / ATVisionConstants.kOptimalTagCount;
         return VecBuilder.fill(
                 xydevs,
                 xydevs,
@@ -51,8 +50,8 @@ public abstract class AprilTagVision {
     }
 
     private static Matrix<N3, N1> getStdDevsMT1(AprilTagEstimate estimate) {
-        double xydevs = 0.0001;
-        double thetadevs = 0.0001;
+        double xydevs = ATVisionConstants.kMT1StdDevCoefficients[0] / estimate.tagArea() / ATVisionConstants.kOptimalTagCount;
+        double thetadevs = ATVisionConstants.kMT1StdDevCoefficients[1] / estimate.tagArea() / ATVisionConstants.kOptimalTagCount;
         return VecBuilder.fill(
                 xydevs,
                 xydevs,

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.dyerotor;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotVisualizer;
 
 public class DyeRotor extends SubsystemBase {
     public static final class DyeRotorConstants {
@@ -34,6 +35,10 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexForwardRPM = 1000.0;
         public static final double kIndexBackwardRPM = 30.0;
 
+        // Delay after the state is set to shoot before each mechanism spins up.
+        public static final double kIndexSpinUpDelaySecs = 0.001;
+        public static final double kSpinSpinUpDelaySecs = 0.001;
+
         public static final double kMinAppliedVolts = 0.0;
         public static final double kMaxAppliedVolts = 10.0;
 
@@ -45,7 +50,7 @@ public class DyeRotor extends SubsystemBase {
 
     public enum DyeRotorState {
         IDLE,
-        SPIN
+        SPIN;
     }
 
     private final DyeRotorIO io;
@@ -53,6 +58,12 @@ public class DyeRotor extends SubsystemBase {
 
     private DyeRotorState spinState = DyeRotorState.IDLE;
     private DyeRotorState indexState = DyeRotorState.IDLE;
+
+    private static final double kLoopPeriodSecs = 0.02;
+
+    // Ticks remaining before the index (rollers) / spin motor are allowed to spin up.
+    private int indexSpinUpTicksRemaining = 0;
+    private int spinSpinUpTicksRemaining = 0;
 
     public DyeRotor() {
         this(new DyeRotorIO() {
@@ -64,6 +75,7 @@ public class DyeRotor extends SubsystemBase {
     }
 
     public void stop() {
+        cancelPendingSpinUp();
         spinState = DyeRotorState.IDLE;
         indexState = DyeRotorState.IDLE;
     }
@@ -74,11 +86,25 @@ public class DyeRotor extends SubsystemBase {
     }
 
     public void requestIdle() {
+        cancelPendingSpinUp();
         setState(DyeRotorState.IDLE);
     }
 
+    /** Requests SPIN, delaying the rollers (index) and the hood motor after the request depending on their variables. */
     public void requestSpin() {
-        setState(DyeRotorState.SPIN);
+        indexState = DyeRotorState.IDLE;
+        spinState = DyeRotorState.IDLE;
+        indexSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kIndexSpinUpDelaySecs);
+        spinSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kSpinSpinUpDelaySecs);
+    }
+
+    private void cancelPendingSpinUp() {
+        indexSpinUpTicksRemaining = 0;
+        spinSpinUpTicksRemaining = 0;
+    }
+
+    private static int ticksFor(double seconds) {
+        return (int) Math.ceil(seconds / kLoopPeriodSecs);
     }
 
     public DyeRotorState getSpinState() {
@@ -99,11 +125,23 @@ public class DyeRotor extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (indexSpinUpTicksRemaining > 0 && --indexSpinUpTicksRemaining <= 0) {
+            indexState = DyeRotorState.SPIN;
+        }
+        if (spinSpinUpTicksRemaining > 0 && --spinSpinUpTicksRemaining <= 0) {
+            spinState = DyeRotorState.SPIN;
+        }
+
         io.updateInputs(inputs);
 
         io.setSpinVelocity(resolveSpinTargetRPM(spinState));
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
     }
+
+  @Override
+  public void simulationPeriodic() {
+    RobotVisualizer.updateHook(inputs.spinVelocityRPM * 2 * Math.PI / 60.0 * 0.02);
+  }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {
         return switch (state) {
