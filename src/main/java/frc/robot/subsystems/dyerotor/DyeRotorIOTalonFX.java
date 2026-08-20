@@ -29,9 +29,9 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   protected final TalonFX m_indexerFollow = new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID,
       Constants.CANBuses.UpperBus);
 
-  private final VelocityVoltage m_spinRequest = new VelocityVoltage(0);
+  private final VelocityVoltage m_spinRequest = new VelocityVoltage(0).withEnableFOC(true);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);
-  private final VelocityVoltage m_indexerVelocityRequest = new VelocityVoltage(0);
+  private final VelocityVoltage m_indexerVelocityRequest = new VelocityVoltage(0).withEnableFOC(true);
 
   final StatusSignal<AngularVelocity> m_spinVelocity = m_spinMotor.getVelocity();
   final StatusSignal<Voltage> m_spinVoltage = m_spinMotor.getMotorVoltage();
