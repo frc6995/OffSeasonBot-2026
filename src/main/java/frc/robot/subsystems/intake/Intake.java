@@ -43,7 +43,7 @@ public class Intake extends SubsystemBase {
         public static final double kRollerSupplyCurrentLimit = 40;
         public static final double kRollerStatorCurrentLimit = 80;
         public static final double kRollerMaxVoltage = 10;
-        public static final double kRollerMinVoltage = 10;
+        public static final double kRollerMinVoltage = -10;
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
