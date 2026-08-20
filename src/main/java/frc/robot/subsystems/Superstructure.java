@@ -78,14 +78,6 @@ public class Superstructure extends SubsystemBase {
     @Override
     public void periodic() {
        m_shotController.calculate(robotState == RobotState.PASSING);
-
-       System.out.println("RobotState: " + robotState
-                + " | Intake: " + m_intake.getState()
-                + " | Hood: " + m_hood.getState()
-                + " | Flywheel: " + m_flywheel.getState()
-                + " | Turret: " + m_turret.getState()
-                + " | DyeRotor(spin): " + m_dyeRotor.getSpinState()
-                + " | DyeRotor(index): " + m_dyeRotor.getIndexState());
     }
 
     public Command requestIntakeActive() {

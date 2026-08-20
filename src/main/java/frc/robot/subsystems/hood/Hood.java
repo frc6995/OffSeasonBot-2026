@@ -4,7 +4,6 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -138,13 +137,6 @@ public class Hood extends SubsystemBase {
 
     public double applyLimits(double angle) {
         double clamped = MathUtil.clamp(angle, Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
-
-        // if (clamped != angle) {
-        //     DriverStation.reportWarning(
-        //             "Angle requested outside of range [0, 42.5], clamped to %f degrees"
-        //                     .formatted(clamped),
-        //             false);
-        // }
 
         return clamped;
     }
