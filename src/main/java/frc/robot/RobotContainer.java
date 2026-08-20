@@ -20,6 +20,7 @@ import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Superstructure.RobotState;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
@@ -57,7 +58,6 @@ public class RobotContainer {
         VISUALIZER = Telemetry.MECH_VISUALIZER;
         SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
-        SmartDashboard.putString("Superstructure state", m_superstructure.getRobotState().toString());
 
         configureBindings();
         SignalLogger.enableAutoLogging(false);

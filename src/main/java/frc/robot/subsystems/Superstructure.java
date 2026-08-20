@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -74,11 +75,14 @@ public class Superstructure extends SubsystemBase {
 
     }
 
+    public RobotState getRobotState() {
+        return robotState;
+    }
 
     @Override
     public void periodic() {
-       m_shotController.calculate(robotState == RobotState.PASSING);
-
+       //m_shotController.calculate(robotState == RobotState.PASSING);
+        SmartDashboard.putString("Superstructure state", getRobotState().toString());
        System.out.println("RobotState: " + robotState
                 + " | Intake: " + m_intake.getState()
                 + " | Hood: " + m_hood.getState()
@@ -168,7 +172,5 @@ public class Superstructure extends SubsystemBase {
         m_hood.requestActive();
     }
 
-    public RobotState getRobotState() {
-        return robotState;
-    }
+
 }
