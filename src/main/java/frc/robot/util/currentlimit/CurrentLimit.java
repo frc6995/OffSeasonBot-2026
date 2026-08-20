@@ -5,7 +5,7 @@ package frc.robot.util.currentlimit;
  *
  * <p>A value {@code <= 0} for either axis means "leave that axis alone," so targets that
  * only manage one of the two limits (e.g. a drivetrain that only caps supply current) can
- * ignore the other without it accidentally winning a {@link #mostRestrictive} comparison.
+ * ignore the other without it accidentally recieving a {@link #mostRestrictive} comparison.
  */
 public record CurrentLimit(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
 

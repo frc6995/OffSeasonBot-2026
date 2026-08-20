@@ -53,7 +53,7 @@ public class CurrentLimitManager extends SubsystemBase {
     private final double minReapplyIntervalSeconds;
     private final Map<String, Target> targets = new LinkedHashMap<>();
     private final List<Rule> rules = new ArrayList<>();
-    // Scratch space for periodic(), reused every call instead of being reallocated at 50Hz.
+    // reused every call instead of being reallocated at 50Hz.
     // Must be cleared at the start of periodic() before use.
     private final Map<String, CurrentLimit> desiredScratch = new LinkedHashMap<>();
     private boolean enabled = true;
@@ -125,17 +125,7 @@ public class CurrentLimitManager extends SubsystemBase {
             }
         }
 
-        // Sim-only debug output for verifying rule behavior; gated so it never runs (and never
-        // costs any loop time) on a real robot.
-        //
-        // NOTE: this only reflects what THIS manager is tracking/has sent for a target, not
-        // necessarily the true hardware register value. A target registered with a one-sided
-        // CurrentLimit (e.g. CurrentLimit.supplyOnly, as Drivetrain/Drive is) always shows "n/a"
-        // for the axis it doesn't manage - that's the "leave this axis alone" sentinel working as
-        // intended, not a sign that axis is actually unset (or zero) on the motor. If a target's
-        // apply() consumer independently pins that axis to something else (e.g.
-        // CommandSwerveDrivetrain re-asserting the slip-current stator limit on every call), this
-        // print can't see that either, since it never queries the motor itself.
+        // Sim-only for debug
         if (RobotBase.isSimulation()) {
             for (Map.Entry<String, Target> entry : targets.entrySet()) {
                 CurrentLimit applied = entry.getValue().lastApplied;
