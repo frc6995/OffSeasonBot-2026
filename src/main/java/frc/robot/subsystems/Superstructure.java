@@ -74,6 +74,7 @@ public class Superstructure extends SubsystemBase {
 
     }
 
+
     @Override
     public void periodic() {
        m_shotController.calculate(robotState == RobotState.PASSING);
@@ -165,5 +166,9 @@ public class Superstructure extends SubsystemBase {
         m_turret.requestAimClosest();
         m_flywheel.requestActive();
         m_hood.requestActive();
+    }
+
+    public RobotState getRobotState() {
+        return robotState;
     }
 }
