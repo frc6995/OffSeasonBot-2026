@@ -125,12 +125,12 @@ public class Hood extends SubsystemBase {
     public double applyLimits(double angle) {
         double clamped = MathUtil.clamp(targetData.get().hoodAngle(), Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
 
-        if (clamped != angle) {
-            DriverStation.reportWarning(
-                    "Angle requested outside of range [0, 42.5], clamped to %f degrees"
-                            .formatted(clamped),
-                    false);
-        }
+        // if (clamped != angle) {
+        //     DriverStation.reportWarning(
+        //             "Angle requested outside of range [0, 42.5], clamped to %f degrees"
+        //                     .formatted(clamped),
+        //             false);
+        // }
 
         return clamped;
     }

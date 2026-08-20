@@ -77,13 +77,15 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   private void configureIndexMotors() {
     TalonFXConfiguration indexConfig = new TalonFXConfiguration();
     indexConfig.MotorOutput = new MotorOutputConfigs()
-        .withNeutralMode(NeutralModeValue.Brake)
+        .withNeutralMode(NeutralModeValue.Coast)
         .withInverted(InvertedValue.CounterClockwise_Positive);
+        
     indexConfig.CurrentLimits = new CurrentLimitsConfigs()
         .withStatorCurrentLimit(DyeRotorConstants.kIndexStatorCurrentLimit)
         .withStatorCurrentLimitEnable(true)
         .withSupplyCurrentLimit(DyeRotorConstants.kIndexSupplyCurrentLimit)
         .withSupplyCurrentLimitEnable(true);
+        
     indexConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(DyeRotorConstants.kIndexReduction);
 
     indexConfig.Slot0 = new Slot0Configs()
