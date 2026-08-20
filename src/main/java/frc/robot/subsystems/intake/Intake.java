@@ -26,7 +26,7 @@ public class Intake extends SubsystemBase {
         public static final double kKickerSupplyCurrentLimit = 40;
         public static final double kKickerStatorCurrentLimit = 80;
         public static final double kKickerMaxVoltage = 10;
-        public static final double kKickerMinVoltage = 10;
+        public static final double kKickerMinVoltage = -10;
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
