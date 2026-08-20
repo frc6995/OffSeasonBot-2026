@@ -24,9 +24,9 @@ public class DyeRotor extends SubsystemBase {
         public static final double kSpinKS = 0.5;
         public static final double kSpinKV = 2.0;
 
-        public static final double kIndexKP = 3.0;
-        public static final double kIndexKS = 1.0;
-        public static final double kIndexKV = 0.4;
+        public static final double kIndexKP = 0.5;
+        public static final double kIndexKS = 0.3;
+        public static final double kIndexKV = 0.31;
 
         public static final double kSpinForwardRPM = 120.0;
         public static final double kSpinBackwardRPM = 30.0;
