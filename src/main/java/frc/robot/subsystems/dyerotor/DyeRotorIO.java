@@ -7,9 +7,6 @@ public interface DyeRotorIO {
   default void setSpinVelocity(double velocityRPM) {
   }
 
-  default void setSpinVoltageLimits(double peakForwardVolts, double peakReverseVolts) {
-  }
-
   default void setIndexVoltage(double volts) {
   }
 

@@ -67,7 +67,7 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         .withKP(DyeRotorConstants.kSpinKP)
         .withKS(DyeRotorConstants.kSpinKS)
         .withKV(DyeRotorConstants.kSpinKV);
-    // Matches the IDLE state's voltage limits; DyeRotor re-applies the SPIN-state clamp on transition.
+    // Fixed +-10V limits for all states; avoids reconfiguring over CAN (which blocks the main loop) on transitions.
     spinConfig.Voltage = new VoltageConfigs()
         .withPeakForwardVoltage(DyeRotorConstants.kMaxAppliedVolts)
         .withPeakReverseVoltage(DyeRotorConstants.kSpinIdleReverseVolts);
@@ -127,12 +127,6 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   public void setSpinVelocity(double velocityRPM) {
     // Phoenix velocity setpoints are in rotations per second
     m_spinMotor.setControl(m_spinRequest.withVelocity(velocityRPM / 60.0));
-  }
-
-  @Override
-  public void setSpinVoltageLimits(double peakForwardVolts, double peakReverseVolts) {
-    m_spinMotor.getConfigurator().apply(
-        new VoltageConfigs().withPeakForwardVoltage(peakForwardVolts).withPeakReverseVoltage(peakReverseVolts));
   }
 
   @Override

@@ -1,6 +1,5 @@
 package frc.robot.subsystems.dyerotor;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DyeRotor extends SubsystemBase {
@@ -20,9 +19,9 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexStatorCurrentLimit = 60.0;
         public static final double kIndexSupplyCurrentLimit = 40.0;
 
-        public static final double kSpinKP = 18.0;
-        public static final double kSpinKS = 0.5;
-        public static final double kSpinKV = 2.0;
+        public static final double kSpinKP = 5.0;
+        public static final double kSpinKS = 0.31;
+        public static final double kSpinKV = 4.0;
 
         public static final double kIndexKP = 0.5;
         public static final double kIndexKS = 0.3;
@@ -54,7 +53,6 @@ public class DyeRotor extends SubsystemBase {
 
     private DyeRotorState spinState = DyeRotorState.IDLE;
     private DyeRotorState indexState = DyeRotorState.IDLE;
-    private DyeRotorState appliedSpinVoltageLimitState = null;
 
     public DyeRotor() {
         this(new DyeRotorIO() {
@@ -103,23 +101,8 @@ public class DyeRotor extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
 
-        if (spinState != appliedSpinVoltageLimitState) {
-            applySpinVoltageLimits(spinState);
-            appliedSpinVoltageLimitState = spinState;
-        }
-
         io.setSpinVelocity(resolveSpinTargetRPM(spinState));
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
-    }
-
-    private void applySpinVoltageLimits(DyeRotorState state) {
-        double hookPeakForwardVolts = DyeRotorConstants.kMaxAppliedVolts;
-        double hookPeakReverseVolts = switch (state) {
-            case SPIN -> DyeRotorConstants.kMinAppliedVolts;
-            case IDLE -> DyeRotorConstants.kSpinIdleReverseVolts;
-        };
-
-        io.setSpinVoltageLimits(hookPeakForwardVolts, hookPeakReverseVolts);
     }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {
