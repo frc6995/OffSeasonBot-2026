@@ -43,19 +43,17 @@ public class Autos {
         this.m_drivetrain = drivetrain;
         this.m_superstructure = superstructure;
 
-                FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
+        FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
+        FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
 
 
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
                 m_superstructure.requestRobotScoring()));
 
-                                FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeAgitating());
-
+        FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeAgitating());
 
         FollowPath.registerEventTrigger("stopScoring",
                 Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
-
-
 
         // Bline Configurations
         pathBuilder = new FollowPath.Builder(
@@ -111,7 +109,7 @@ public class Autos {
 
                     c.addCommands(Depot3);
 
-                }).alongWith(m_superstructure.requestFlywheelActiveAfterDelay(1.0)));
+                }));
 
         autos.put("Bline_Workshop_test1",
                 () -> auto(c -> {

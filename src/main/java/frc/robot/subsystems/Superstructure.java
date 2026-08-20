@@ -132,7 +132,7 @@ public class Superstructure extends SubsystemBase {
             robotState = RobotState.IDLE;
             m_dyeRotor.requestIdle();
             m_turret.requestAimCentral();
-            m_flywheel.requestActive();
+            m_flywheel.requestDisable();
             m_hood.requestDisable();
         });
     }

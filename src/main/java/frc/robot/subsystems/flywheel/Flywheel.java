@@ -132,8 +132,13 @@ public class Flywheel extends SubsystemBase {
     }
 
     io.updateInputs(inputs);
-    io.setVelocityRPM(resolveTargetRPM(flywheelState));
 
+    // DISABLED coasts the flywheel down instead of holding 0 RPM with closed-loop control.
+    if (flywheelState == FlywheelState.DISABLED) {
+      io.stop();
+    } else {
+      io.setVelocityRPM(resolveTargetRPM(flywheelState));
+    }
   }
 
   // shoot is NOT 10000 rpm

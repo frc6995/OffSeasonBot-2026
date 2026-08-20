@@ -26,6 +26,11 @@
     },
     {
       "type": "event_trigger",
+      "t_ratio": 0.61044,
+      "lib_key": "startShooter"
+    },
+    {
+      "type": "event_trigger",
       "t_ratio": 0.5527,
       "lib_key": "intakeIdle"
     },
