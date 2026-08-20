@@ -23,6 +23,7 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
+//import frc.robot.subsystems.Superstructure;
 
 import java.util.Set;
 
@@ -39,6 +40,7 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
+    private final Superstructure m_superstructur;
 
     public final CommandSwerveDrivetrain m_drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
@@ -49,11 +51,13 @@ public class RobotContainer {
     public Superstructure m_superstructure = new Superstructure(m_drivetrain::getState);
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
+    
 
     public RobotContainer() {
         VISUALIZER = Telemetry.MECH_VISUALIZER;
         SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
+        SmartDashboard.putString("Superstructure state", m_superstructur.getRobotState().toString());
 
         configureBindings();
         SignalLogger.enableAutoLogging(false);
