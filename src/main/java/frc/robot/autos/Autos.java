@@ -48,42 +48,25 @@ public class Autos {
 
         FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
         FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
-
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
                 m_superstructure.requestRobotScoring()));
-
         FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeAgitating());
-
         FollowPath.registerEventTrigger("stopScoring",
                 Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
 
         // Left Bump Path 1 Event Triggers
-        
-
         FollowPath.registerEventTrigger("leftBumpStopIntake", m_superstructure.requestIntakeIdle());
-
         FollowPath.registerEventTrigger("leftBumpStartShooter", m_superstructure.requestFlywheelActive());
-
         FollowPath.registerEventTrigger("leftBumpStartShooting", m_superstructure.requestRobotScoring());
-
         FollowPath.registerEventTrigger("leftBumpStartAgitating", m_superstructure.requestIntakeAgitating());
-
         FollowPath.registerEventTrigger("leftBumpStopAgitating", m_superstructure.requestIntakeIdle());
-
-        FollowPath.registerEventTrigger("leftBumpStopShooting", Commands.parallel(
-                m_superstructure.requestRobotIdle(), m_superstructure.requestIntakeActive()));
+        FollowPath.registerEventTrigger("leftBumpStopShooting", m_superstructure.requestRobotIdle());
 
         // Left Bump Path 2 Event Triggers
-        FollowPath.registerEventTrigger("leftBumpStartIntakeAgain", m_superstructure.requestIntakeActive());
-
         FollowPath.registerEventTrigger("leftBumpStopIntakeAgain", m_superstructure.requestIntakeIdle());
-
         FollowPath.registerEventTrigger("leftBumpStartShooterAgain", m_superstructure.requestFlywheelActive());
-
         FollowPath.registerEventTrigger("leftBumpStartShootingAgain", m_superstructure.requestRobotScoring());
-
-        FollowPath.registerEventTrigger("LeftBumpStartAgitatingAgain", m_superstructure.requestIntakeAgitating());
-
+        FollowPath.registerEventTrigger("leftBumpStartAgitatingAgain", m_superstructure.requestIntakeAgitating());
 
         // Bline Configurations
         pathBuilder = new FollowPath.Builder(
@@ -148,8 +131,9 @@ public class Autos {
                     Command LeftBump1Cmd = pathBuilder.build(LeftBump1Path);
                     Command LeftBump2Cmd = pathBuilder.build(LeftBump2Path);
 
-                    c.addCommands(LeftBump1Cmd.alongWith(m_superstructure.requestIntakeActive()));
-                    c.addCommands(LeftBump2Cmd);
+                    c.addCommands(LeftBump1Cmd.alongWith(m_superstructure.requestIntakeActive(),
+                            m_superstructure.requestRobotIdle()));
+                    c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
 
                 }));
 
