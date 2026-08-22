@@ -49,6 +49,8 @@ public class Turret extends SubsystemBase {
 
     private TurretState turretState = TurretState.AIM_CLOSEST;
     private double requestedAngle = 0;
+    // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
+    private double commandedAngle = 0;
 
     private TurretIO io;
     private Supplier<ShooterTargetData> shotData;
@@ -81,9 +83,9 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         switch (turretState) {
             case DISABLED -> io.disable();
-            case AIM_CENTRAL -> selectCentralAngle(shotData.get().turretAngleDeg());
-            case AIM_CLOSEST -> selectClosestAngle(shotData.get().turretAngleDeg());
-            case MANUAL -> selectClosestAngle(requestedAngle);
+            case AIM_CENTRAL -> commandedAngle = selectCentralAngle(shotData.get().turretAngleDeg());
+            case AIM_CLOSEST -> commandedAngle = selectClosestAngle(shotData.get().turretAngleDeg());
+            case MANUAL -> commandedAngle = selectClosestAngle(requestedAngle);
         }
 
         io.updateInputs(inputs);
@@ -106,7 +108,7 @@ public class Turret extends SubsystemBase {
         this.turretState = TurretState.MANUAL;
     }
 
-    private void selectClosestAngle(double angle) {
+    private double selectClosestAngle(double angle) {
         double currentAngle = this.getAngle();
 
         angle = MathUtil.inputModulus(angle, -180, 180);
@@ -133,12 +135,14 @@ public class Turret extends SubsystemBase {
         }
 
         io.setAngle(smallestAngle);
+        return smallestAngle;
     }
 
-    private void selectCentralAngle(double angle) {
+    private double selectCentralAngle(double angle) {
         angle = MathUtil.inputModulus(angle, -180, 180);
 
         io.setAngle(angle);
+        return angle;
     }
 
     @Logged(name = "State", importance = Importance.CRITICAL)
@@ -158,7 +162,7 @@ public class Turret extends SubsystemBase {
 
     @Logged(name = "Setpoint", importance = Importance.INFO)
     public double getRequestedAngle() {
-        return requestedAngle;
+        return commandedAngle;
     }
 
     @Logged(name = "Stator Current", importance = Importance.DEBUG)

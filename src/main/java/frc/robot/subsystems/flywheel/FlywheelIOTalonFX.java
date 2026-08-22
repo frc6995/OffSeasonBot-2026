@@ -65,6 +65,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // CtreUtil.reportIfNotOk("configure example",
     // m_exMotor.getConfigurator().apply(config));
     m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig);
+    m_flywheelFollowMotor1.getConfigurator().apply(flywheelConfig);
+    m_flywheelFollowMotor2.getConfigurator().apply(flywheelConfig);
+    m_flywheelFollowMotor3.getConfigurator().apply(flywheelConfig);
   }
 
   @Override
