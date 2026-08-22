@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 
-public class RealATVision extends AprilTagVision {
+public class RealATLimelightVision extends AprilTagVision {
     public static class ATVisionConstants {
         public static final String[] LL_IDS = {
             // "limelight-turret"
@@ -61,7 +61,7 @@ public class RealATVision extends AprilTagVision {
     private final BooleanPublisher headingSeededPublisher;
     private final StructPublisher<Pose3d> seededPosePublisher;
 
-    public RealATVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose) {
+    public RealATLimelightVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose) {
         this.gyroRotation = gyroRotation;
         this.resetPose = resetPose;
 

@@ -34,8 +34,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
-import frc.robot.subsystems.vision.apriltag.NoneATVision;
-import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.subsystems.vision.apriltag.NoneATLimelightVision;
+import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -68,8 +68,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* Cached once per periodic() tick so both m_vision and the vision-measurement check below reuse a single Pigeon2 read */
     private Rotation3d m_cachedGyroRotation = Rotation3d.kZero;
 
-    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
-            : new RealATVision(() -> m_cachedGyroRotation, this::resetPose);
+    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATLimelightVision()
+            : new RealATLimelightVision(() -> m_cachedGyroRotation, this::resetPose);
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains

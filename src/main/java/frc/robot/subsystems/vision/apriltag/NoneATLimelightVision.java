@@ -8,9 +8,9 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 
-public class NoneATVision extends AprilTagVision {
-    public NoneATVision() {}
-    public NoneATVision(Supplier<Rotation3d> gyroRotation, Consumer<Rotation3d> resetRotation) {}
+public class NoneATLimelightVision extends AprilTagVision {
+    public NoneATLimelightVision() {}
+    public NoneATLimelightVision(Supplier<Rotation3d> gyroRotation, Consumer<Rotation3d> resetRotation) {}
 
     protected void captureRewinds(double seconds) {}
     
