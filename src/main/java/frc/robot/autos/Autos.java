@@ -71,9 +71,10 @@ public class Autos {
         FollowPath.registerEventTrigger("leftBumpStopAgitating", m_superstructure.requestIntakeIdle());
 
         FollowPath.registerEventTrigger("leftBumpStopShooting", Commands.parallel(
-                m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
+                m_superstructure.requestRobotIdle(), m_superstructure.requestIntakeActive()));
 
         // Left Bump Path 2 Event Triggers
+        FollowPath.registerEventTrigger("leftBumpStartIntakeAgain", m_superstructure.requestIntakeActive());
 
         FollowPath.registerEventTrigger("leftBumpStopIntakeAgain", m_superstructure.requestIntakeIdle());
 
