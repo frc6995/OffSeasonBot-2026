@@ -3,15 +3,24 @@ package frc.robot.subsystems.vision.apriltag;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
+import java.lang.Thread.State;
+import java.util.GregorianCalendar;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import edu.wpi.first.math.MathUtil;
 
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.SwerveDriveBrake;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -19,6 +28,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 import frc.robot.subsystems.turret.Turret.*;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule;
@@ -54,8 +64,10 @@ public class RealATVision extends AprilTagVision {
 
     private AprilTagModule[] limelights;
 
+    private final Supplier<SwerveDriveState> swerveState;
     private final Supplier<Rotation3d> gyroRotation;
     private final Consumer<Pose2d> resetPose;
+    private final BiConsumer<AprilTagEstimate, Matrix<N3,N1>> addVisionMeasurement;
     private final Supplier<Double> turretSupplier;
 
     private final NetworkTable visionTable;
@@ -65,9 +77,11 @@ public class RealATVision extends AprilTagVision {
     private final BooleanPublisher headingSeededPublisher;
     private final StructPublisher<Pose3d> seededPosePublisher;
 
-    public RealATVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose, Supplier<Double> turretSupplier) {
+    public RealATVision(Supplier<SwerveDriveState> swerveState, Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose, BiConsumer<AprilTagEstimate, Matrix<N3,N1>> addVisionMeasurement, Supplier<Double> turretSupplier) {
+        this.swerveState = swerveState;
         this.gyroRotation = gyroRotation;
         this.resetPose = resetPose;
+        this.addVisionMeasurement = addVisionMeasurement;
         this.turretSupplier = turretSupplier;
         limelights = new AprilTagModule[ATVisionConstants.LL_IDS.length];
 
@@ -80,11 +94,7 @@ public class RealATVision extends AprilTagVision {
         }
     }
 
-    protected double angleToRad() {
-        return Math.toRadians(turretSupplier.get());
-    }
-
-        public Pose3d solveCameraTurretPose3d() {
+    public Pose3d solveCameraTurretPose3d() {
         Pose3d turretPoseOnRobot = TurretConstants.turretCenterPose;
 
         Rotation3d turretRotation = new Rotation3d(0,0,0);
@@ -92,14 +102,16 @@ public class RealATVision extends AprilTagVision {
         Pose3d rotatedCameraOffset = TurretConstants.CAMERA_POSE3D.rotateAround(turretPoseOnRobot.getTranslation(), turretRotation);
 
         return rotatedCameraOffset;
-    
-    
     }
 
+    @Override
     public void periodic() {
         estimates.clear();
 
         limelights[0].updateOffset(solveCameraTurretPose3d());
+
+        SwerveDriveState state = swerveState.get();
+        Rotation3d rotation = gyroRotation.get();
 
         if(DriverStation.isDisabled() || !headingSeeded) {
             for(AprilTagModule limelight : limelights) {
@@ -111,7 +123,7 @@ public class RealATVision extends AprilTagVision {
         
                 }
             }
-            seededPosePublisher.accept(new Pose3d(Translation3d.kZero, gyroRotation.get()));
+            seededPosePublisher.accept(new Pose3d(Translation3d.kZero, rotation));
         } else {
             if(!headingSeeded) headingSeeded = true;
                         
@@ -119,7 +131,7 @@ public class RealATVision extends AprilTagVision {
                 limelight.periodic();
                 
                 limelight.seedOrientation(
-                    gyroRotation.get()
+                    rotation
                 );
                 var estSupp = limelight.getPose();
 
@@ -128,7 +140,21 @@ public class RealATVision extends AprilTagVision {
                 }
             }
         }
+
         headingSeededPublisher.accept(headingSeeded);
+
+        if (Math.abs(state.Speeds.omegaRadiansPerSecond) < (Math.PI / 2)) {
+            for (var estimate : estimates) {
+                if (estimate.avgAmbiguity() < 0.65 && !(Math.abs(rotation.getX()) > Math.toRadians(20)
+                        || Math.abs(rotation.getY()) > Math.toRadians(20))) {
+                    if (DriverStation.isEnabled()) {
+                        addVisionMeasurement.accept(estimate, AprilTagVision.getStdDevs(estimate));
+                    } else {
+                        addVisionMeasurement.accept(estimate, AprilTagVision.getDisabledStdDevs(estimate));
+                    }
+                }
+            }
+        }
     }
 
     @Override

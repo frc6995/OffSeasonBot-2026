@@ -10,13 +10,12 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.RealATVision.ATVisionConstants;
 
-public abstract class AprilTagVision {
+public abstract class AprilTagVision extends SubsystemBase {
     protected ArrayList<AprilTagEstimate> estimates = new ArrayList<AprilTagEstimate>(0);
-
-    public abstract void periodic();
 
     public abstract void updateOffsets(Pose3d[] offsets);
 

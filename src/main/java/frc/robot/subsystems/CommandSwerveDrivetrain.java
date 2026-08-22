@@ -62,8 +62,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.RobotCentric m_robotCentricDriveRequest = new SwerveRequest.RobotCentric()
             .withDriveRequestType(DriveRequestType.Velocity);
 
-    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
-            : new RealATVision(getPigeon2()::getRotation3d, this::resetPose);
+    
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -292,26 +291,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 : kBlueAlliancePerspectiveRotation);
                 m_hasAppliedOperatorPerspective = true;
             });
-        }
-
-        m_vision.periodic();
-
-        if (Math.abs(state().Speeds.omegaRadiansPerSecond) < (Math.PI / 2)) {
-
-            var estimates = m_vision.getAllEstimates();
-            var gyroRotation = getPigeon2().getRotation3d();
-            for (var estimate : estimates) {
-                if (estimate.avgAmbiguity() < 0.65 && !(Math.abs(gyroRotation.getX()) > Math.toRadians(20)
-                        || Math.abs(gyroRotation.getY()) > Math.toRadians(20))) {
-                    if (DriverStation.isEnabled()) {
-                        addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(),
-                                AprilTagVision.getStdDevs(estimate));
-                    } else {
-                        addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(),
-                                AprilTagVision.getDisabledStdDevs(estimate));
-                    }
-                }
-            }
         }
     }
 

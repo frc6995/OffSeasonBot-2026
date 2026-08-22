@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -21,6 +22,9 @@ import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.vision.apriltag.AprilTagVision;
+import frc.robot.subsystems.vision.apriltag.NoneATVision;
+import frc.robot.subsystems.vision.apriltag.RealATVision;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
@@ -43,7 +47,6 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
 
-
     public final CommandSwerveDrivetrain m_drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
             TunerConstants.FrontLeft,
@@ -52,6 +55,16 @@ public class RobotContainer {
             TunerConstants.BackRight);
 
     public Superstructure m_superstructure = new Superstructure(m_drivetrain::getState);
+
+    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
+            : new RealATVision(
+                m_drivetrain::state,
+                m_drivetrain.getPigeon2()::getRotation3d,
+                m_drivetrain::resetPose,
+                (estimate, stdDevs) -> {
+                    m_drivetrain.addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(), stdDevs);
+                },
+                m_superstructure.m_turret::getAngle);
 
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
