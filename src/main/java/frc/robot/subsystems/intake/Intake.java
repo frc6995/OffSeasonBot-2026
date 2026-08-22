@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
@@ -145,6 +146,14 @@ public class Intake extends SubsystemBase {
         io.resetEncoder();
     }
 
+    public void setRollerCurrentLimit(CurrentLimit limit) {
+        io.setRollerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
+    public void setKickerCurrentLimit(CurrentLimit limit) {
+        io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
     @Logged(name = "State", importance = Importance.CRITICAL)
     public IntakeState getState() {
         return intakeState;
@@ -171,14 +180,6 @@ public class Intake extends SubsystemBase {
     }
 
     @Logged(name = "Roller/Voltage", importance = Importance.INFO)
-    public void setRollerCurrentLimit(CurrentLimit limit) {
-        io.setRollerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
-    }
-
-    public void setKickerCurrentLimit(CurrentLimit limit) {
-        io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
-    }
-
     public double getRollerAppliedVolts() {
         return inputs.rollerAppliedVolts;
     }
