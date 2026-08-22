@@ -80,8 +80,8 @@ public class RealATVision extends AprilTagVision {
         estimates.clear();
         if(DriverStation.isDisabled() || !headingSeeded) {
             for(AprilTagModule limelight : limelights) {
-                limelight.periodic();
-                var result = limelight.getPose(false);
+                limelight.periodic(false);
+                var result = limelight.getCachedPose();
                 if(result.isPresent() && result.get().estimatedPose().getTranslation().getDistance(Translation2d.kZero) > 0.05) {
                     estimates.add(result.get());
                     headingSeeded = true;
@@ -90,14 +90,14 @@ public class RealATVision extends AprilTagVision {
             seededPosePublisher.accept(new Pose3d(Translation3d.kZero, gyroRotation.get()));
         } else {
             if(!headingSeeded) headingSeeded = true;
-                        
+
             for(AprilTagModule limelight : limelights) {
-                limelight.periodic();
-                
                 limelight.seedOrientation(
                     gyroRotation.get()
                 );
-                var estSupp = limelight.getPose();
+                limelight.periodic();
+
+                var estSupp = limelight.getCachedPose();
 
                 if(estSupp.isPresent()) {
                     estimates.add(estSupp.get());
