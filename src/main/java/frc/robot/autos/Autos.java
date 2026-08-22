@@ -37,6 +37,9 @@ public class Autos {
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
 
+    private final Path LeftBump1Path = new Path("path-1".toLowerCase());
+    private final Path LeftBump2Path = new Path("path-2".toLowerCase());
+
     private final CANRange m_canRange = new CANRange();
 
     public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
@@ -45,7 +48,6 @@ public class Autos {
 
         FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
         FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
-
 
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
                 m_superstructure.requestRobotScoring()));
@@ -108,6 +110,18 @@ public class Autos {
                     // Now make the intake idle until we are near the depot
 
                     c.addCommands(Depot3);
+
+                }));
+
+        autos.put("Left Double Swipe Bump",
+                () -> auto(POI.TRENCH_START.get(), c -> {
+
+                    // BLine Path Commands
+                    Command LeftBump1Cmd = pathBuilder.build(LeftBump1Path);
+                    Command LeftBump2Cmd = pathBuilder.build(LeftBump2Path);
+
+                    c.addCommands(LeftBump1Cmd);
+                    c.addCommands(LeftBump2Cmd);
 
                 }));
 

@@ -24,7 +24,7 @@ public class SwerveDriveStateLogger extends ClassSpecificLogger<SwerveDriveState
       dataLogger.log("cha/Pose", object.Pose, Pose2d.struct);
       dataLogger.log("cha/speed", object.Speeds, ChassisSpeeds.struct);
     }
-    if(Epilogue.shouldLog(Importance.DEBUG)) {
+    if(Epilogue.shouldLog(Importance.INFO)) {
       dataLogger.log("mod/targets", object.ModuleTargets, SwerveModuleState.struct);
       dataLogger.log("mod/states", object.ModuleStates, SwerveModuleState.struct);
       dataLogger.log("mod/positions", object.ModulePositions, SwerveModulePosition.struct);

@@ -151,27 +151,27 @@ public class Turret extends SubsystemBase {
         return inputs.turretMotorConnected;
     }
 
-    @Logged(name = "Angle", importance = Importance.DEBUG)
+    @Logged(name = "Angle", importance = Importance.INFO)
     public double getAngle() {
         return inputs.angle;
     }
 
-    @Logged(name = "Setpoint", importance = Importance.DEBUG)
+    @Logged(name = "Setpoint", importance = Importance.INFO)
     public double getRequestedAngle() {
         return requestedAngle;
     }
 
-    @Logged(name = "Stator Current", importance = Importance.INFO)
+    @Logged(name = "Stator Current", importance = Importance.DEBUG)
     public double getStatorCurrent() {
         return inputs.statorCurrent;
     }
 
-    @Logged(name = "Supply Current", importance = Importance.INFO)
+    @Logged(name = "Supply Current", importance = Importance.DEBUG)
     public double getSupplyCurrent() {
         return inputs.supplyCurrent;
     }
 
-    @Logged(name = "Voltage", importance = Importance.INFO)
+    @Logged(name = "Voltage", importance = Importance.DEBUG)
     public double getVoltage() {
         return inputs.appliedVolts;
     }
