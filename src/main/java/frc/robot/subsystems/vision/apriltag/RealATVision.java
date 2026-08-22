@@ -1,4 +1,4 @@
-package frc.robot.subsystems.vision.apriltag.limelight;
+package frc.robot.subsystems.vision.apriltag;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
@@ -18,10 +18,10 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.vision.apriltag.limelight.LimelightATModule.LimelightMode;
+import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 
-public class RealLimelightATVision extends LimelightATVision {
-    public static class LimelightATVisionConstants {
+public class RealATVision extends AprilTagVision {
+    public static class ATVisionConstants {
         public static final String[] LL_IDS = {
             // "limelight-turret"
         };
@@ -41,7 +41,7 @@ public class RealLimelightATVision extends LimelightATVision {
             //     new Rotation3d(Degrees.zero(), Degrees.of(30), Degrees.zero())
             // )
         };
-        public static final LimelightMode kDefaultMode = LimelightMode.MEGATAG1;
+        public static final EstimationMode kDefaultMode = EstimationMode.MEGATAG1;
 
         public static final double[] kMT2StdDevCoefficients = {0.085, 0.0}; // deviation order is [xy, theta]
         public static final double[] kMT1StdDevCoefficients = {0.1, 0.075};
@@ -49,7 +49,7 @@ public class RealLimelightATVision extends LimelightATVision {
 
     }
 
-    private LimelightATModule[] limelights;
+    private AprilTagModule[] limelights;
 
     private final Supplier<Rotation3d> gyroRotation;
     private final Consumer<Pose2d> resetPose;
@@ -61,25 +61,25 @@ public class RealLimelightATVision extends LimelightATVision {
     private final BooleanPublisher headingSeededPublisher;
     private final StructPublisher<Pose3d> seededPosePublisher;
 
-    public RealLimelightATVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose) {
+    public RealATVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose) {
         this.gyroRotation = gyroRotation;
         this.resetPose = resetPose;
 
-        limelights = new LimelightATModule[LimelightATVisionConstants.LL_IDS.length];
+        limelights = new AprilTagModule[ATVisionConstants.LL_IDS.length];
 
         visionTable = NetworkTableInstance.getDefault().getTable("Vision");
         headingSeededPublisher = visionTable.getBooleanTopic("HeadingSeeded").publish();
         seededPosePublisher = visionTable.getStructTopic("SeededPose", Pose3d.struct).publish();
 
         for(int i = 0; i < limelights.length; i++) {
-            limelights[i] = new LimelightATModule(LimelightATVisionConstants.LL_IDS[i], LimelightATVisionConstants.LL_OFFSETS[i], visionTable);
+            limelights[i] = new AprilTagModule(ATVisionConstants.LL_IDS[i], ATVisionConstants.LL_OFFSETS[i], visionTable);
         }
     }
 
     public void periodic() {
         estimates.clear();
         if(DriverStation.isDisabled() || !headingSeeded) {
-            for(LimelightATModule limelight : limelights) {
+            for(AprilTagModule limelight : limelights) {
                 limelight.periodic(false);
                 var result = limelight.getCachedPose();
                 if(result.isPresent() && result.get().estimatedPose().getTranslation().getDistance(Translation2d.kZero) > 0.05) {
@@ -91,7 +91,7 @@ public class RealLimelightATVision extends LimelightATVision {
         } else {
             if(!headingSeeded) headingSeeded = true;
 
-            for(LimelightATModule limelight : limelights) {
+            for(AprilTagModule limelight : limelights) {
                 limelight.seedOrientation(
                     gyroRotation.get()
                 );
@@ -111,7 +111,7 @@ public class RealLimelightATVision extends LimelightATVision {
     public void updateOffsets(Pose3d[] offsets) {
         if(offsets.length != limelights.length) return;
         for(int i = 0; i < limelights.length; i++) {
-            if(offsets[i] == null || LimelightATVisionConstants.LL_OFFSETS[i].equals(limelights[i].getOffset())) continue;
+            if(offsets[i] == null || ATVisionConstants.LL_OFFSETS[i].equals(limelights[i].getOffset())) continue;
             limelights[i].updateOffset(offsets[i]);
         }
     }
@@ -121,7 +121,7 @@ public class RealLimelightATVision extends LimelightATVision {
     }
 
     protected void captureRewinds(double seconds) {
-        for(LimelightATModule cam : limelights) {
+        for(AprilTagModule cam : limelights) {
             cam.captureRewind(seconds);
         }
     }

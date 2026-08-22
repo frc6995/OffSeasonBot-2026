@@ -33,9 +33,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.subsystems.vision.apriltag.limelight.LimelightATVision;
-import frc.robot.subsystems.vision.apriltag.limelight.NoneLimelightATVision;
-import frc.robot.subsystems.vision.apriltag.limelight.RealLimelightATVision;
+import frc.robot.subsystems.vision.apriltag.AprilTagVision;
+import frc.robot.subsystems.vision.apriltag.NoneATVision;
+import frc.robot.subsystems.vision.apriltag.RealATVision;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -68,8 +68,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* Cached once per periodic() tick so both m_vision and the vision-measurement check below reuse a single Pigeon2 read */
     private Rotation3d m_cachedGyroRotation = Rotation3d.kZero;
 
-    public final LimelightATVision m_vision = (Utils.isSimulation()) ? new NoneLimelightATVision()
-            : new RealLimelightATVision(() -> m_cachedGyroRotation, this::resetPose);
+    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
+            : new RealATVision(() -> m_cachedGyroRotation, this::resetPose);
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -334,10 +334,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         || Math.abs(m_cachedGyroRotation.getY()) > Math.toRadians(20))) {
                     if (DriverStation.isEnabled()) {
                         addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(),
-                                LimelightATVision.getStdDevs(estimate));
+                                AprilTagVision.getStdDevs(estimate));
                     } else {
                         addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(),
-                                LimelightATVision.getDisabledStdDevs(estimate));
+                                AprilTagVision.getDisabledStdDevs(estimate));
                     }
                 }
             }

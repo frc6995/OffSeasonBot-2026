@@ -28,6 +28,10 @@ public class RealPhotonATVision extends PhotonATVision {
         for(int i = 1; i < m_cameras.length; i++) {
             results.addAll(m_cameras[i].getAllUnreadResults());
         }
+
+        for(var result : results) {
+            
+        }
         
     }
 
