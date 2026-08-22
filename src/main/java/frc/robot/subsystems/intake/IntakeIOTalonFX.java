@@ -22,11 +22,15 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
+import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
-    // A timeout of 0 tells the configurator to send the config and return immediately instead
-    // of blocking for a CAN response, so calling this from periodic() can't cause loop overruns.
-    private static final double kDynamicConfigTimeoutSeconds = 0.0;
+    // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
+    // they always block waiting for a CAN response, up to this timeout, so this must be a real
+    // positive value. That's fine here: CurrentLimitManager dispatches setRollerCurrentLimits/
+    // setKickerCurrentLimits off the main thread specifically so this blocking can't cause a
+    // loop overrun even if the roller/kicker motors aren't present on the current robot.
+    private static final double kDynamicConfigTimeoutSeconds = 0.05;
 
     protected final TalonFX m_rollerLeadMotor
     = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
@@ -210,8 +214,10 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withStatorCurrentLimitEnable(true)
             .withSupplyCurrentLimit(supplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
-        m_rollerLeadMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds);
-        m_rollerFollowerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds);
+        CtreUtil.reportIfNotOk("Intake/Roller current limit",
+                m_rollerLeadMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+        CtreUtil.reportIfNotOk("Intake/Roller (follower) current limit",
+                m_rollerFollowerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
     }
 
     @Override
@@ -221,7 +227,8 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withStatorCurrentLimitEnable(true)
             .withSupplyCurrentLimit(supplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
-        m_kickerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds);
+        CtreUtil.reportIfNotOk("Intake/Kicker current limit",
+                m_kickerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
     }
 
     @Override

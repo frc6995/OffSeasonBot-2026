@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,10 +21,21 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  *
  * <p>Register the motors this manager is allowed to throttle with {@link #registerTarget},
  * then describe when they should be throttled with {@link #addRule}. Every loop the rule
- * conditions are re-checked (cheap, no CAN traffic), but a target's current limit is only
+ * conditions are re-checked (cheap, no CAN traffic), and a target's current limit is only
  * re-sent to its motor(s) when the resolved limit actually changes, and never more often
  * than {@code minReapplyIntervalSeconds}. That keeps a flickering condition from flooding
- * the CAN bus or blocking the main loop.
+ * the CAN bus.
+ *
+ * <p>The actual hardware push (a blocking CTRE config-apply call, see each target's
+ * {@code applyLimit} consumer) is dispatched onto a single dedicated background thread rather
+ * than run inline from {@link #periodic()}. Config-apply calls block waiting on a CAN response
+ * for up to their configured timeout, and a target motor that isn't actually present on the
+ * currently deployed robot will never respond - running that call from periodic() would stall
+ * the whole command scheduler loop for the timeout duration every time the rule fires. Applying
+ * asynchronously means a slow or missing target can never cause a loop overrun, at the cost of
+ * the new limit taking effect slightly later (at most a couple hundred milliseconds) than the
+ * rule that requested it - an acceptable tradeoff for something as non-time-critical as a
+ * current limit.
  */
 public class CurrentLimitManager extends SubsystemBase {
 
@@ -57,6 +71,15 @@ public class CurrentLimitManager extends SubsystemBase {
     // Must be cleared at the start of periodic() before use.
     private final Map<String, CurrentLimit> desiredScratch = new LinkedHashMap<>();
     private boolean enabled = true;
+
+    // Runs target.apply.accept(...) off the main thread; see the class javadoc for why. A single
+    // thread is enough - applies are already throttled to one per target per
+    // minReapplyIntervalSeconds, and there's no reason to reorder applies relative to each other.
+    private final ExecutorService applyExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "CurrentLimitManager-apply");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     public CurrentLimitManager() {
         this(kDefaultMinReapplyIntervalSeconds);
@@ -115,13 +138,17 @@ public class CurrentLimitManager extends SubsystemBase {
 
         double now = Timer.getFPGATimestamp();
         for (Map.Entry<String, Target> entry : targets.entrySet()) {
+            String name = entry.getKey();
             Target target = entry.getValue();
-            CurrentLimit want = desired.getOrDefault(entry.getKey(), target.nominal);
+            CurrentLimit want = desired.getOrDefault(name, target.nominal);
             boolean dueForReapply = (now - target.lastAppliedTimestamp) >= minReapplyIntervalSeconds;
             if (!want.equals(target.lastApplied) && dueForReapply) {
-                target.apply.accept(want);
+                // Bookkeeping updates immediately so reapply throttling/change-detection stays
+                // correct even though the hardware push below completes moments later; see
+                // dispatchApply().
                 target.lastApplied = want;
                 target.lastAppliedTimestamp = now;
+                dispatchApply(name, target.apply, want);
             }
         }
 
@@ -140,5 +167,20 @@ public class CurrentLimitManager extends SubsystemBase {
 
     private static String formatAxis(double amps) {
         return amps <= 0 ? "n/a (unmanaged)" : String.format("%.1fA", amps);
+    }
+
+    // Runs applyLimit off the main thread (see class javadoc). Exceptions are caught rather than
+    // left to the executor's default handler: an uncaught exception would otherwise only surface
+    // as a silent thread death, and the next dispatchApply() call would just spin up a new worker
+    // thread with no indication anything had gone wrong.
+    private void dispatchApply(String name, Consumer<CurrentLimit> applyLimit, CurrentLimit want) {
+        applyExecutor.execute(() -> {
+            try {
+                applyLimit.accept(want);
+            } catch (RuntimeException e) {
+                DriverStation.reportError(
+                        "CurrentLimitManager: failed to apply " + want + " to " + name + ": " + e, e.getStackTrace());
+            }
+        });
     }
 }

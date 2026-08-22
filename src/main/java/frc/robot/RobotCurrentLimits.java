@@ -26,7 +26,7 @@ public final class RobotCurrentLimits {
     // Tune these to taste.
     private static final CurrentLimit kShootingRollerLimit = new CurrentLimit(40, 20);
     private static final CurrentLimit kShootingKickerLimit = new CurrentLimit(40, 20);
-    private static final CurrentLimit kShootingDriveLimit = CurrentLimit.supplyOnly(35);
+    private static final CurrentLimit kShootingDriveLimit = CurrentLimit.supplyOnly(1);
 
     public static void configure(
             CurrentLimitManager manager,

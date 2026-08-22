@@ -36,6 +36,7 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.util.CtreUtil;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -270,10 +271,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return getState();
     }
 
+    // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
+    // they always block waiting for a CAN response, up to this timeout, so this must be a real
+    // positive value. That's fine here: CurrentLimitManager dispatches this method off the main
+    // thread specifically so this blocking can't cause a loop overrun.
+    private static final double kDynamicConfigTimeoutSeconds = 0.05;
+
     /**
-     * Sets the supply current limit on every drive motor. Uses a 0-second config timeout so the
-     * call returns immediately instead of blocking on a CAN response, making it safe to call from
-     * periodic() when the limit changes (e.g. from a {@link frc.robot.RobotCurrentLimits} rule).
+     * Sets the supply current limit on every drive motor. Only ever called from
+     * {@link frc.robot.util.currentlimit.CurrentLimitManager}'s background apply thread (see
+     * {@link frc.robot.RobotCurrentLimits}), never from periodic() directly - a config-apply call
+     * blocks waiting on a CAN response, which would stall the main loop if run there.
      *
      * <p>{@code CurrentLimitsConfigs} is a config *group*: applying one overwrites every field in
      * the group on the motor, including ones this call doesn't set, resetting them to their class
@@ -289,7 +297,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .withSupplyCurrentLimit(supplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
         for (var module : getModules()) {
-            module.getDriveMotor().getConfigurator().apply(limits, 0.0);
+            CtreUtil.reportIfNotOk("Drivetrain/Drive current limit",
+                    module.getDriveMotor().getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
         }
     }
 
