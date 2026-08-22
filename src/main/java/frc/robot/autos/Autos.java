@@ -174,6 +174,12 @@ public class Autos {
 
     // ============= AUTO BUILDER =============
 
+  /** This constructs an auto using a start pose and a command sequence builder, c.
+   * 
+   * @param startPose This is the pose that the odometry will be reset to at the start of the auto.
+   * @param builder This is a consumer that takes in commands to run as a sequence.
+   * @return A command that will reset the odometry and then run the commands in the builder.
+   */
     private Command auto(Pose2d startPose, Consumer<SequentialCommandGroup> builder) {
         SequentialCommandGroup group = new SequentialCommandGroup();
 
@@ -183,6 +189,11 @@ public class Autos {
         return group;
     }
 
+      /** This constructs an auto using a command sequence builder, c.
+   * 
+   * @param builder This is a consumer that takes in commands to run as a sequence.
+   * @return A command that will run the commands in the builder.
+   */
     private Command auto(Consumer<SequentialCommandGroup> builder) {
         SequentialCommandGroup group = new SequentialCommandGroup();
 
