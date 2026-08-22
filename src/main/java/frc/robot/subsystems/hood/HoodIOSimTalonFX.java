@@ -49,5 +49,6 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX {
         inputs.appliedVolts = appliedVolts;
         inputs.statorCurrent = simState.getTorqueCurrent();
         inputs.supplyCurrent = simState.getSupplyCurrent();
+        inputs.hoodMotorConnected = true;
     }
 }

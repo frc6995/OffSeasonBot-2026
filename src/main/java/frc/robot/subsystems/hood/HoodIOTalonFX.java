@@ -85,7 +85,7 @@ public class HoodIOTalonFX implements HoodIO {
     public void updateInputs(HoodIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        inputs.angle = motorRotationsToAngle(angleSignal.getValueAsDouble());
+        inputs.angle = mechanismRotationsToAngle(angleSignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
