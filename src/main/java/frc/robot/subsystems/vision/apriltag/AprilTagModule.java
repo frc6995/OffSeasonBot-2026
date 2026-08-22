@@ -4,6 +4,7 @@ import java.util.Optional;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleArrayEntry;
 import edu.wpi.first.networktables.NetworkTable;
@@ -13,6 +14,9 @@ import edu.wpi.first.networktables.TimestampedDoubleArray;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.TurretConstants;
+import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.vision.apriltag.RealATVision.ATVisionConstants;
 import frc.robot.util.LimelightHelpers;
 
@@ -21,6 +25,9 @@ import frc.robot.util.LimelightHelpers;
  * Records vision data to NetworkTables for debugging. 
  */
 public class AprilTagModule {
+
+    public Turret m_turret;
+
     public static record AprilTagEstimate(Pose2d estimatedPose, double timestampSeconds, boolean isMegaTag2, double avgTagDistMeters, double tagCount, double avgAmbiguity, double tagArea) {}
     
     public enum EstimationMode {
@@ -65,7 +72,6 @@ public class AprilTagModule {
         robotToCameraPublisher.accept(offset);
         defaultModePublisher.setDefault(defaultMode.name());
     }
-
     /**
      * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}
      */

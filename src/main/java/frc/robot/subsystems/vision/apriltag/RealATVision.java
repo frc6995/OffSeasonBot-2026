@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import edu.wpi.first.math.MathUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -19,6 +20,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
+import frc.robot.subsystems.turret.Turret.*;
+import frc.robot.subsystems.vision.apriltag.AprilTagModule;
 
 public class RealATVision extends AprilTagVision {
     public static class ATVisionConstants {
@@ -53,6 +56,7 @@ public class RealATVision extends AprilTagVision {
 
     private final Supplier<Rotation3d> gyroRotation;
     private final Consumer<Pose2d> resetPose;
+    private final Supplier<Double> turretSupplier;
 
     private final NetworkTable visionTable;
 
@@ -61,10 +65,10 @@ public class RealATVision extends AprilTagVision {
     private final BooleanPublisher headingSeededPublisher;
     private final StructPublisher<Pose3d> seededPosePublisher;
 
-    public RealATVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose) {
+    public RealATVision(Supplier<Rotation3d> gyroRotation, Consumer<Pose2d> resetPose, Supplier<Double> turretSupplier) {
         this.gyroRotation = gyroRotation;
         this.resetPose = resetPose;
-
+        this.turretSupplier = turretSupplier;
         limelights = new AprilTagModule[ATVisionConstants.LL_IDS.length];
 
         visionTable = NetworkTableInstance.getDefault().getTable("Vision");
@@ -76,8 +80,27 @@ public class RealATVision extends AprilTagVision {
         }
     }
 
+    protected double angleToRad() {
+        return Math.toRadians(turretSupplier.get());
+    }
+
+        public Pose3d solveCameraTurretPose3d() {
+        Pose3d turretPoseOnRobot = TurretConstants.turretCenterPose;
+
+        Rotation3d turretRotation = new Rotation3d(0,0,0);
+
+        Pose3d rotatedCameraOffset = TurretConstants.CAMERA_POSE3D.rotateAround(turretPoseOnRobot.getTranslation(), turretRotation);
+
+        return rotatedCameraOffset;
+    
+    
+    }
+
     public void periodic() {
         estimates.clear();
+
+        limelights[0].updateOffset(solveCameraTurretPose3d());
+
         if(DriverStation.isDisabled() || !headingSeeded) {
             for(AprilTagModule limelight : limelights) {
                 limelight.periodic();
@@ -85,6 +108,7 @@ public class RealATVision extends AprilTagVision {
                 if(result.isPresent() && result.get().estimatedPose().getTranslation().getDistance(Translation2d.kZero) > 0.05) {
                     estimates.add(result.get());
                     headingSeeded = true;
+        
                 }
             }
             seededPosePublisher.accept(new Pose3d(Translation3d.kZero, gyroRotation.get()));

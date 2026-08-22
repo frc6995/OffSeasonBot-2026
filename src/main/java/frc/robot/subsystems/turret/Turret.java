@@ -8,6 +8,9 @@ import java.util.function.Supplier;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
@@ -15,7 +18,7 @@ import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
-    static class TurretConstants {
+    public static class TurretConstants {
         public static int kCANID = 45;
 
         // Tune PID/FF constants
@@ -38,6 +41,8 @@ public class Turret extends SubsystemBase {
 
         // 6.5 in
         public static final double kLength = 0.1651;
+        public static final Pose3d turretCenterPose =  new Pose3d( new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(0),Units.inchesToMeters(21.67)), new Rotation3d(0,0,0));
+        public static final Pose3d CAMERA_POSE3D = new Pose3d( new Translation3d(Units.inchesToMeters(5.49), Units.inchesToMeters(0),Units.inchesToMeters(0)), new Rotation3d(0,0.366519,0));
     }
 
     public enum TurretState {
