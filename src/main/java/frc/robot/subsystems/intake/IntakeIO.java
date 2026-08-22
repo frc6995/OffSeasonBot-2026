@@ -7,6 +7,11 @@ public interface IntakeIO {
     default void setRollerVelocity(double velocityRPM) {}
     default void setKickerVelocity(double velocityRPM) {}
     default void setExtensionPosition(double positionMeters) {}
+
+    default void setRollerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {}
+
+    default void setKickerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {}
+
     default void resetEncoder() {}
 
     default void stop() {

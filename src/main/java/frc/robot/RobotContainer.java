@@ -24,6 +24,8 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
+import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
+import frc.robot.util.currentlimit.CurrentLimitManager;
 
 
 import java.util.Set;
@@ -57,11 +59,15 @@ public class RobotContainer {
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
     
 
+    public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
+
     public RobotContainer() {
         VISUALIZER = Telemetry.MECH_VISUALIZER;
         SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
         SmartDashboard.putString("Superstructure state", m_superstructure.getRobotState().toString());
+
+        RobotCurrentLimits.configure(currentLimitManager, m_superstructure, m_drivetrain);
 
         configureBindings();
         SignalLogger.enableAutoLogging(false);

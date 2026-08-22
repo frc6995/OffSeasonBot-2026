@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
+import frc.robot.util.currentlimit.CurrentLimit;
 
 public class Intake extends SubsystemBase {
 
@@ -170,6 +171,14 @@ public class Intake extends SubsystemBase {
     }
 
     @Logged(name = "Roller/Voltage", importance = Importance.INFO)
+    public void setRollerCurrentLimit(CurrentLimit limit) {
+        io.setRollerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
+    public void setKickerCurrentLimit(CurrentLimit limit) {
+        io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
     public double getRollerAppliedVolts() {
         return inputs.rollerAppliedVolts;
     }
