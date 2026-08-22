@@ -1,4 +1,4 @@
-package frc.robot.subsystems.vision.apriltag;
+package frc.robot.subsystems.vision.apriltag.limelight;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -6,11 +6,11 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
+import frc.robot.subsystems.vision.apriltag.limelight.LimelightATModule.AprilTagEstimate;
 
-public class NoneATVision extends AprilTagVision {
-    public NoneATVision() {}
-    public NoneATVision(Supplier<Rotation3d> gyroRotation, Consumer<Rotation3d> resetRotation) {}
+public class NoneLimelightATVision extends LimelightATVision {
+    public NoneLimelightATVision() {}
+    public NoneLimelightATVision(Supplier<Rotation3d> gyroRotation, Consumer<Rotation3d> resetRotation) {}
 
     protected void captureRewinds(double seconds) {}
     
