@@ -164,57 +164,57 @@ public class Intake extends SubsystemBase {
         return areRollerMotorsConnected() && areExtensionMotorsConnected() && isKickMotorConnected();
     }
 
-    @Logged(name = "Roller/Velocity", importance = Importance.DEBUG)
+    @Logged(name = "Roller/Velocity", importance = Importance.INFO)
     public double getRollerVelocityRPM() {
         return inputs.rollerVelocityRPM;
     }
 
-    @Logged(name = "Kicker/Velocity", importance = Importance.DEBUG)
+    @Logged(name = "Kicker/Velocity", importance = Importance.INFO)
     public double getKickVelocityRPM() {
         return inputs.kickerVelocityRPM;
     }
 
-    @Logged(name = "Extension/Position", importance =  Importance.DEBUG)
+    @Logged(name = "Extension/Position", importance =  Importance.INFO)
     public double getExtensionPositionMeters() {
         return inputs.extensionPositionMeters;
     }
 
-    @Logged(name = "Roller/Voltage", importance = Importance.INFO)
+    @Logged(name = "Roller/Voltage", importance = Importance.DEBUG)
     public double getRollerAppliedVolts() {
         return inputs.rollerAppliedVolts;
     }
 
-    @Logged(name = "Kicker/Voltage", importance =  Importance.INFO)
+    @Logged(name = "Kicker/Voltage", importance =  Importance.DEBUG)
     public double getKickAppliedVolts() {
         return inputs.kickerAppliedVolts;
     }
 
-    @Logged(name = "Roller/Stator Current", importance =  Importance.INFO)
+    @Logged(name = "Roller/Stator Current", importance =  Importance.DEBUG)
     public double getRollerStatorCurrentAmps() {
         return inputs.rollerStatorCurrentAmps;
     }
 
-    @Logged(name = "Roller/Supply Current", importance =  Importance.INFO)
+    @Logged(name = "Roller/Supply Current", importance =  Importance.DEBUG)
     public double getRollerSupplyCurrentAmps() {
         return inputs.rollerSupplyCurrentAmps;
     }
 
-    @Logged(name = "Kicker/Stator Current", importance =  Importance.INFO)
+    @Logged(name = "Kicker/Stator Current", importance =  Importance.DEBUG)
     public double getKickStatorCurrentAmps() {
         return inputs.kickerStatorCurrentAmps;
     }
 
-    @Logged(name = "Kicker/Supply Current", importance =  Importance.INFO)
+    @Logged(name = "Kicker/Supply Current", importance =  Importance.DEBUG)
     public double getKickSupplyCurrentAmps() {
         return inputs.kickerSupplyCurrentAmps;
     }
 
-    @Logged(name = "Extension/Stator Current", importance =  Importance.INFO)
+    @Logged(name = "Extension/Stator Current", importance =  Importance.DEBUG)
     public double getExtensionStatorCurrentAmps() {
         return inputs.extensionStatorCurrentAmps;
     }
 
-    @Logged(name = "Extension/Supply Current", importance =  Importance.INFO)
+    @Logged(name = "Extension/Supply Current", importance =  Importance.DEBUG)
     public double getExtensionSupplyCurrentAmps() {
         return inputs.extensionSupplyCurrentAmps;
     }
