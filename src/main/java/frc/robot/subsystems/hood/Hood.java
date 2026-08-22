@@ -2,6 +2,8 @@ package frc.robot.subsystems.hood;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -12,17 +14,6 @@ import frc.robot.subsystems.hood.HoodIO.HoodIOInputs;
 import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Hood extends SubsystemBase {
-
-    private HoodIO io;
-    private HoodIOInputs hoodIOInputs = new HoodIOInputs();
-
-    private final MechanismLigament2d hoodLigament = new MechanismLigament2d("hood", Units.inchesToMeters(4), 0, 6,
-            new Color8Bit(52, 137, 235));
-
-    private double requestedAngle;
-
-    private HoodState hoodState = HoodState.DISABLED;
-
     public static class HoodConstants {
         public static int kCANID = 44; // Should be right with doc
 
@@ -72,6 +63,17 @@ public class Hood extends SubsystemBase {
         DISABLED,
         ACTIVE
     }
+
+    private HoodIO io;
+    private HoodIOInputs inputs = new HoodIOInputs();
+
+    private final MechanismLigament2d hoodLigament = new MechanismLigament2d("hood", Units.inchesToMeters(4), 0, 6,
+            new Color8Bit(52, 137, 235));
+
+    private double requestedAngle;
+
+    private HoodState hoodState = HoodState.DISABLED;
+
     private final Supplier<ShooterTargetData> targetData;
 
 
@@ -84,7 +86,7 @@ public class Hood extends SubsystemBase {
 
     @Override
     public void periodic() {
-        io.updateInputs(hoodIOInputs);
+        io.updateInputs(inputs);
 
         switch (hoodState) {
             case DISABLED:
@@ -117,18 +119,6 @@ public class Hood extends SubsystemBase {
         setState(HoodState.DISABLED);
     }
 
-    public double getRequestedAngle() {
-        return requestedAngle;
-    }
-
-    public HoodState getState() {
-        return hoodState;
-    }    
-
-    public double getAngle() {
-        return hoodIOInputs.angle;
-    }
-
     public void setAngle(double angle) {
         hoodState = HoodState.ACTIVE;
 
@@ -139,5 +129,40 @@ public class Hood extends SubsystemBase {
         double clamped = MathUtil.clamp(angle, Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
 
         return clamped;
+    }
+
+    @Logged(name = "State", importance = Importance.CRITICAL)
+    public HoodState getState() {
+        return hoodState;
+    }
+    
+    @Logged(name = "Connected", importance = Importance.CRITICAL)
+    public boolean isConnected() {
+        return inputs.hoodMotorConnected;
+    }
+
+    @Logged(name = "Angle", importance = Importance.DEBUG)
+    public double getAngle() {
+        return inputs.angle;
+    }
+
+    @Logged(name = "Setpoint", importance = Importance.DEBUG)
+    public double getRequestedAngle() {
+        return requestedAngle;
+    }
+
+    @Logged(name = "Stator Current", importance = Importance.INFO)
+    public double getStatorCurrent() {
+        return inputs.statorCurrent;
+    }
+
+    @Logged(name = "Supply Current", importance = Importance.INFO)
+    public double getSupplyCurrent() {
+        return inputs.supplyCurrent;
+    }
+
+    @Logged(name = "Voltage", importance = Importance.INFO)
+    public double getVoltage() {
+        return inputs.appliedVolts;
     }
 }

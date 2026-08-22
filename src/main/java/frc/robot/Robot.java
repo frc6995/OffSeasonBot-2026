@@ -6,6 +6,15 @@ package frc.robot;
 
 import com.ctre.phoenix6.HootAutoReplay;
 
+import edu.wpi.first.epilogue.CustomLoggerFor;
+import edu.wpi.first.epilogue.Epilogue;
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
+import edu.wpi.first.epilogue.logging.errors.ErrorHandler;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -13,26 +22,42 @@ import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.hood.Hood;
 
+@Logged(name="Robot", importance = Importance.CRITICAL)
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
+    @NotLogged
     private double autoSimTime = 20.0; // seconds to wait before disabling autonomous in simulation
 
     private final RobotContainer m_robotContainer;
 
     /* log and replay timestamp and joystick data */
-    private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
-            .withTimestampReplay()
-            .withJoystickReplay();
+    // private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
+    //         .withTimestampReplay()
+    //         .withJoystickReplay();
 
     public Robot() {
         m_robotContainer = new RobotContainer();
+
+        Epilogue.configure(config -> {
+
+            if (isSimulation()) {
+                // If running in simulation, then we'd want to re-throw any errors that
+                // occur so we can debug and fix them!
+                config.errorHandler = ErrorHandler.crashOnError();
+            }
+
+            config.minimumImportance = Logged.Importance.CRITICAL;
+        });
+        DriverStation.startDataLog(DataLogManager.getLog());
+        Epilogue.bind(this);
     }
 
     @Override
     public void robotPeriodic() {
-        m_timeAndJoystickReplay.update();
+        // m_timeAndJoystickReplay.update();
         CommandScheduler.getInstance().run();
     }
 

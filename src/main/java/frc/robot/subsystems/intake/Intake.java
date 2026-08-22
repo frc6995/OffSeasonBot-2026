@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -118,14 +120,6 @@ public class Intake extends SubsystemBase {
         intakeState = state;
     }
 
-    public IntakeState getState() {
-        return intakeState;
-    }
-
-    public boolean isDeployed() {
-        return getState().compareTo(IntakeState.RETRACTED) > 0;
-    }
-
     public void requestRetract() {
         setState(IntakeState.RETRACTED);
     }
@@ -150,52 +144,73 @@ public class Intake extends SubsystemBase {
         io.resetEncoder();
     }
 
+    @Logged(name = "State", importance = Importance.CRITICAL)
+    public IntakeState getState() {
+        return intakeState;
+    }
+
+    @Logged(name = "Connected", importance = Importance.CRITICAL)
+    public boolean areMotorsConnected() {
+        return areRollerMotorsConnected() && areExtensionMotorsConnected() && isKickMotorConnected();
+    }
+
+    @Logged(name = "Roller/Velocity", importance = Importance.DEBUG)
     public double getRollerVelocityRPM() {
         return inputs.rollerVelocityRPM;
     }
 
-    public double getRollerAppliedVolts() {
-        return inputs.rollerAppliedVolts;
-    }
-
-    public double getRollerStatorCurrentAmps() {
-        return inputs.rollerStatorCurrentAmps;
-    }
-
-    public double getRollerSupplyCurrentAmps() {
-        return inputs.rollerSupplyCurrentAmps;
-    }
-
+    @Logged(name = "Kicker/Velocity", importance = Importance.DEBUG)
     public double getKickVelocityRPM() {
         return inputs.kickerVelocityRPM;
     }
 
+    @Logged(name = "Extension/Position", importance =  Importance.DEBUG)
+    public double getExtensionPositionMeters() {
+        return inputs.extensionPositionMeters;
+    }
+
+    @Logged(name = "Roller/Voltage", importance = Importance.INFO)
+    public double getRollerAppliedVolts() {
+        return inputs.rollerAppliedVolts;
+    }
+
+    @Logged(name = "Kicker/Voltage", importance =  Importance.INFO)
     public double getKickAppliedVolts() {
         return inputs.kickerAppliedVolts;
     }
 
+    @Logged(name = "Roller/Stator Current", importance =  Importance.INFO)
+    public double getRollerStatorCurrentAmps() {
+        return inputs.rollerStatorCurrentAmps;
+    }
+
+    @Logged(name = "Roller/Supply Current", importance =  Importance.INFO)
+    public double getRollerSupplyCurrentAmps() {
+        return inputs.rollerSupplyCurrentAmps;
+    }
+
+    @Logged(name = "Kicker/Stator Current", importance =  Importance.INFO)
     public double getKickStatorCurrentAmps() {
         return inputs.kickerStatorCurrentAmps;
     }
 
+    @Logged(name = "Kicker/Supply Current", importance =  Importance.INFO)
     public double getKickSupplyCurrentAmps() {
         return inputs.kickerSupplyCurrentAmps;
     }
 
-    public double getExtensionAppliedVolts() {
-        return inputs.extensionAppliedVolts;
-    }
-
+    @Logged(name = "Extension/Stator Current", importance =  Importance.INFO)
     public double getExtensionStatorCurrentAmps() {
         return inputs.extensionStatorCurrentAmps;
     }
 
+    @Logged(name = "Extension/Supply Current", importance =  Importance.INFO)
     public double getExtensionSupplyCurrentAmps() {
         return inputs.extensionSupplyCurrentAmps;
     }
 
-    public boolean areMotorsConnected() {
-        return areRollerMotorsConnected() && areExtensionMotorsConnected();
+    public boolean isDeployed() {
+        return getState().compareTo(IntakeState.RETRACTED) > 0;
     }
 
     public boolean areRollerMotorsConnected() {

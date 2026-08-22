@@ -1,5 +1,7 @@
 package frc.robot.subsystems.dyerotor;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 
@@ -107,20 +109,29 @@ public class DyeRotor extends SubsystemBase {
         return (int) Math.ceil(seconds / kLoopPeriodSecs);
     }
 
+    @Logged(name = "Spin State", importance = Importance.CRITICAL)
     public DyeRotorState getSpinState() {
         return spinState;
     }
 
+    @Logged(name = "Index State", importance = Importance.CRITICAL)
     public DyeRotorState getIndexState() {
         return indexState;
     }
 
+    @Logged(name = "Connected", importance = Importance.CRITICAL)
+    public boolean isConnected() {
+        return inputs.indexFollowerMotorConnected && inputs.spinMotorConnected;
+    }
+
+    @Logged(name = "Spin Velocity", importance = Importance.DEBUG)
     public double getSpinVelocityRPM() {
         return inputs.spinVelocityRPM;
     }
 
-    public double getIndexVoltage() {
-        return inputs.indexAppliedVolts;
+    @Logged(name = "Index Velocity", importance = Importance.DEBUG)
+    public double getIndexVelocityRPM() {
+        return inputs.indexVelocityRPM;
     }
 
     @Override

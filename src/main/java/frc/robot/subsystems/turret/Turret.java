@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import java.util.function.Supplier;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
@@ -51,6 +53,7 @@ public class Turret extends SubsystemBase {
     private TurretIO io;
     private Supplier<ShooterTargetData> shotData;
 
+    
     private TurretIOInputs inputs = new TurretIOInputs();
 
     private final MechanismLigament2d turretLigament = new MechanismLigament2d("turret", Units.inchesToMeters(12), 0, 6,
@@ -92,16 +95,8 @@ public class Turret extends SubsystemBase {
         RobotVisualizer.updateTurret(Units.degreesToRadians(inputs.angle));
     }
 
-    public TurretState getState() {
-        return turretState;
-    }
-
     public void setState(TurretState state) {
         turretState = state;
-    }
-
-    public double getAngle() {
-        return inputs.angle;
     }
 
     // just for testing in sim
@@ -109,10 +104,6 @@ public class Turret extends SubsystemBase {
         requestedAngle = angle;
 
         this.turretState = TurretState.MANUAL;
-    }
-
-    public double getRequestedAngle() {
-        return requestedAngle;
     }
 
     private void selectClosestAngle(double angle) {
@@ -148,5 +139,40 @@ public class Turret extends SubsystemBase {
         angle = MathUtil.inputModulus(angle, -180, 180);
 
         io.setAngle(angle);
+    }
+
+    @Logged(name = "State", importance = Importance.CRITICAL)
+    public TurretState getState() {
+        return turretState;
+    }
+
+    @Logged(name = "Connected", importance = Importance.CRITICAL)
+    public boolean isConnected() {
+        return inputs.turretMotorConnected;
+    }
+
+    @Logged(name = "Angle", importance = Importance.DEBUG)
+    public double getAngle() {
+        return inputs.angle;
+    }
+
+    @Logged(name = "Setpoint", importance = Importance.DEBUG)
+    public double getRequestedAngle() {
+        return requestedAngle;
+    }
+
+    @Logged(name = "Stator Current", importance = Importance.INFO)
+    public double getStatorCurrent() {
+        return inputs.statorCurrent;
+    }
+
+    @Logged(name = "Supply Current", importance = Importance.INFO)
+    public double getSupplyCurrent() {
+        return inputs.supplyCurrent;
+    }
+
+    @Logged(name = "Voltage", importance = Importance.INFO)
+    public double getVoltage() {
+        return inputs.appliedVolts;
     }
 }

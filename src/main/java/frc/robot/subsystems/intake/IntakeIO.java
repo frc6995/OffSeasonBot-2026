@@ -1,15 +1,12 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.epilogue.Logged;
+
 public interface IntakeIO {
-
     default void updateInputs(IntakeInputs inputs) {}
-
     default void setRollerVelocity(double velocityRPM) {}
-
     default void setKickerVelocity(double velocityRPM) {}
-
     default void setExtensionPosition(double positionMeters) {}
-
     default void resetEncoder() {}
 
     default void stop() {
@@ -18,7 +15,6 @@ public interface IntakeIO {
     }
 
     class IntakeInputs {
-
         public double rollerAppliedVolts;
         public double rollerVelocityRPM;
         public double rollerStatorCurrentAmps;

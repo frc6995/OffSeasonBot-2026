@@ -1,17 +1,13 @@
 package frc.robot.subsystems.flywheel;
 
+import edu.wpi.first.epilogue.Logged;
+
 public interface FlywheelIO {
+    default void updateInputs(FlywheelInputs inputs) {}
+    default void setVelocityRPM(double velocityRPM) {}
+    default void stop() {}
 
-    default void updateInputs(FlywheelInputs inputs) {
-    }
-
-    default void setVelocityRPM(double velocityRPM) {
-    }
-
-    default void stop() {
-    }
-
-    class FlywheelInputs {
+    public class FlywheelInputs {
         public double velocityRPM;
         public double appliedVolts;
         public double statorCurrentAmps;

@@ -2,6 +2,9 @@ package frc.robot.subsystems.flywheel;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.util.ShotController;
@@ -99,28 +102,37 @@ public class Flywheel extends SubsystemBase {
     setState(FlywheelState.DISABLED);
   }
 
-  public FlywheelState getState() {
-    return flywheelState;
-  }
-
   public void stop() {
     flywheelState = FlywheelState.DISABLED;
 
   }
 
-  public double getVelocityRPM() {
-    return inputs.velocityRPM;
+  @Logged(name = "State", importance = Importance.CRITICAL)
+  public FlywheelState getState() {
+    return flywheelState;
   }
 
-  public double getAppliedVolts() {
-    return inputs.appliedVolts;
-  }
-
+  @Logged(name = "Connected", importance = Importance.CRITICAL)
   public boolean areMotorsConnected() {
     return inputs.leadMotorConnected
         && inputs.followerMotor1Connected
         && inputs.followerMotor2Connected
         && inputs.followerMotor3Connected;
+  }
+
+  @Logged(name = "Velocity", importance = Importance.DEBUG)
+  public double getVelocityRPM() {
+    return inputs.velocityRPM;
+  }
+
+  @Logged(name = "Setpoint", importance = Importance.DEBUG)
+  public double getSetpointRPM() {
+    return targetData.get().flywheelRpm();
+  }
+
+  @Logged(name = "Voltage", importance = Importance.INFO)
+  public double getAppliedVolts() {
+    return inputs.appliedVolts;
   }
 
   @Override

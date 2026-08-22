@@ -12,6 +12,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -257,6 +259,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return state().Speeds;
     }
 
+    // @Logged(name = "State", importance = Importance.CRITICAL)
     public SwerveDriveState state() {
         return getState();
     }
