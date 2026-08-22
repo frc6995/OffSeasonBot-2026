@@ -112,7 +112,7 @@
     {
       "type": "event_trigger",
       "t_ratio": 1.0,
-      "lib_key": "leftBumpStopShooter"
+      "lib_key": "leftBumpStopShooting"
     },
     {
       "type": "waypoint",

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.vision.apriltag;
+package frc.robot.subsystems.vision.apriltag.limelight;
 
 import java.util.Optional;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,17 +13,17 @@ import edu.wpi.first.networktables.TimestampedDoubleArray;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.vision.apriltag.RealATVision.ATVisionConstants;
+import frc.robot.subsystems.vision.apriltag.limelight.RealLimelightATVision.LimelightATVisionConstants;
 import frc.robot.util.LimelightHelpers;
 
 /**
  * Wrapper class for a Yet Another Limelight Library {@link limelight.Limelight} object. 
  * Records vision data to NetworkTables for debugging. 
  */
-public class AprilTagModule {
+public class LimelightATModule {
     public static record AprilTagEstimate(Pose2d estimatedPose, double timestampSeconds, boolean isMegaTag2, double avgTagDistMeters, double tagCount, double avgAmbiguity, double tagArea) {}
     
-    public enum EstimationMode {
+    public enum LimelightMode {
         MEGATAG1, 
         MEGATAG2;
     }
@@ -39,19 +39,19 @@ public class AprilTagModule {
     private final StringPublisher modePublisher;
     private final StringPublisher defaultModePublisher;
 
-    private EstimationMode defaultMode;
-    private EstimationMode lastMode;
+    private LimelightMode defaultMode;
+    private LimelightMode lastMode;
 
     private double hb = 0;
     private double lastHb = 0;
 
     private Optional<AprilTagEstimate> cachedEstimate = Optional.empty();
 
-    public AprilTagModule(String limelightID, Pose3d offset, NetworkTable visionTable) {
+    public LimelightATModule(String limelightID, Pose3d offset, NetworkTable visionTable) {
         this.limelightID = limelightID;
 
         LimelightHelpers.SetIMUMode(limelightID, 0);
-        defaultMode = ATVisionConstants.kDefaultMode;
+        defaultMode = LimelightATVisionConstants.kDefaultMode;
 
             // Publishers for Limelight data
         moduleSubTable = visionTable.getSubTable(limelightID);
@@ -69,15 +69,15 @@ public class AprilTagModule {
     }
 
     /**
-     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}.
+     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.limelight.RealLimelightATVision#periodic()}.
      * Fetches the pose using {@link #defaultMode}.
      */
     public void periodic() {
-        periodic(defaultMode == EstimationMode.MEGATAG2);
+        periodic(defaultMode == LimelightMode.MEGATAG2);
     }
 
     /**
-     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}.
+     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.limelight.RealLimelightATVision#periodic()}.
      * Fetches the pose once per call and caches it for both telemetry and {@link #getCachedPose()},
      * instead of re-fetching from NetworkTables for each consumer.
      */
@@ -96,8 +96,8 @@ public class AprilTagModule {
     /**
      * Updates the {@link edu.wpi.first.networktables.NetworkTable NetworkTable} subtable for the Limelight.
      * Records the latest pose estimate, whether or not the Limelight has estimate data, the current
-     * {@link limelight.networktables.LimelightPoseEstimator.EstimationMode EstimationMode} for the robot, and the default
-     * {@link limelight.networktables.LimelightPoseEstimator.EstimationMode EstimationMode}.
+     * {@link LimelightMode.networktables.LimelightPoseEstimator.EstimationMode EstimationMode} for the robot, and the default
+     * {@link LimelightMode.networktables.LimelightPoseEstimator.EstimationMode EstimationMode}.
      */
     private void updateTelemetry() {
         if(true) {
@@ -150,13 +150,13 @@ public class AprilTagModule {
 
     /**
      * Retrieves the pose of the robot. Automatically swaps between MegaTag1 and MegaTag2 depending on the  
-     * {@link AprilTagModule#defaultMode}. Returns {@link java.util.Optional#empty()}
+     * {@link LimelightATModule#defaultMode}. Returns {@link java.util.Optional#empty()}
      * if there are no results.
      * 
      * @return The estimated pose if the Limelight has targets
      */
     public Optional<AprilTagEstimate> getPose() {
-        return getPose(defaultMode == EstimationMode.MEGATAG2);
+        return getPose(defaultMode == LimelightMode.MEGATAG2);
     }
 
     // modified version of LL Helpers getPose method
@@ -198,7 +198,7 @@ public class AprilTagModule {
 
         avgAmbiguity /= tagCount;
 
-        lastMode = isMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
+        lastMode = isMegaTag2 ? LimelightMode.MEGATAG2 : LimelightMode.MEGATAG1;
         return Optional.of(new AprilTagEstimate(pose, adjustedTimestamp, isMegaTag2, tagDist, tagCount, avgAmbiguity, tagArea));
     }
 
