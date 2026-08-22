@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
@@ -9,6 +10,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
+import frc.robot.util.currentlimit.CurrentLimit;
 
 public class Intake extends SubsystemBase {
 
@@ -142,6 +144,14 @@ public class Intake extends SubsystemBase {
 
     public void resetEncoder() {
         io.resetEncoder();
+    }
+
+    public void setRollerCurrentLimit(CurrentLimit limit) {
+        io.setRollerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
+    public void setKickerCurrentLimit(CurrentLimit limit) {
+        io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
     }
 
     @Logged(name = "State", importance = Importance.CRITICAL)

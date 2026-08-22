@@ -51,16 +51,22 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(120);
+    // Public so that RobotCurrentLimits/
+    // CommandSwerveDrivetrain can set the drive motors' stator limit to this 
+    // whenever they reapply current limits.
+    public static final Current kSlipCurrent = Amps.of(120);
+
+    // Default supply current limit for the drive motors; can be lowered at runtime (e.g. by
+    // RobotCurrentLimits) to free up current budget for other subsystems. Supply current
+    // limits can be larger than the breaker current rating.
+    public static final double kDriveNominalSupplyCurrentLimitAmps = 70;
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
             new CurrentLimitsConfigs()
-                // Default supply current limit is 70 A, but it can be lowered to avoid brownouts.
-                // Supply current limits can be larger than the breaker current rating.
-                .withSupplyCurrentLimit(Amps.of(70))
+                .withSupplyCurrentLimit(Amps.of(kDriveNominalSupplyCurrentLimitAmps))
                 .withSupplyCurrentLimitEnable(true)
         )
         .withTorqueCurrent(new TorqueCurrentConfigs()
