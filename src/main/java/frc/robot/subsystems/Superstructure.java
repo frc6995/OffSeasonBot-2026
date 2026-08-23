@@ -9,25 +9,31 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.Hardware;
 import frc.robot.Robot;
 import frc.robot.util.POI;
 import frc.robot.subsystems.dyerotor.DyeRotor;
 import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
+import frc.robot.subsystems.dyerotor.DyeRotorIONone;
 import frc.robot.subsystems.dyerotor.DyeRotorIOTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
+import frc.robot.subsystems.flywheel.FlywheelIONone;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
 import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.HoodIONone;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOSimTalonFX;
+import frc.robot.subsystems.intake.IntakeIONone;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
+import frc.robot.subsystems.turret.TurretIONone;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.subsystems.intake.Intake.IntakeState;
@@ -67,11 +73,22 @@ public class Superstructure extends SubsystemBase {
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            this.m_intake = new Intake(new IntakeIOTalonFX());
-            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotController::getCachedData);
-            this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
+            // Mechanisms that aren't on the robot yet get a no-op IO rather than a TalonFX IO, so
+            // no CAN device is ever constructed for them. See Constants.Hardware - declaring motors
+            // that aren't on the bus costs a Phoenix error report per motor per loop.
+            this.m_intake = new Intake(
+                Hardware.kIntakeInstalled ? new IntakeIOTalonFX() : new IntakeIONone());
+            this.m_hood = new Hood(
+                Hardware.kHoodInstalled ? new HoodIOTalonFX() : new HoodIONone(),
+                m_shotController::getCachedData);
+            this.m_flywheel = new Flywheel(
+                Hardware.kFlywheelInstalled ? new FlywheelIOTalonFX() : new FlywheelIONone(),
+                m_shotController::getCachedData);
+            this.m_turret = new Turret(
+                Hardware.kTurretInstalled ? new TurretIOTalonFX() : new TurretIONone(),
+                m_shotController::getCachedData);
+            this.m_dyeRotor = new DyeRotor(
+                Hardware.kDyeRotorInstalled ? new DyeRotorIOTalonFX() : new DyeRotorIONone());
         }
 
     }

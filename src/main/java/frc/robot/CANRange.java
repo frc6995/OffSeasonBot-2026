@@ -17,7 +17,13 @@ public class CANRange {
         public static final double kProximityThreshold = Units.inchesToMeters(3.0);
     }
 
-    CANrange m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.UpperBus);
+    // Null when the sensor isn't on the robot (see Constants.Hardware.kCANRangeInstalled).
+    // Constructing a CANrange that isn't on the bus would make every isCloseToWall() call
+    // refresh a signal that can never arrive, and Phoenix reports an error for each one.
+    private final CANrange m_frontCANrange =
+            Constants.Hardware.kCANRangeInstalled
+                    ? new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.UpperBus)
+                    : null;
 
     CANrangeConfiguration m_frontCANrangeConfigurator = new CANrangeConfiguration();
 
@@ -37,6 +43,11 @@ public class CANRange {
     public Boolean isCloseToWall() {
         if (RobotBase.isSimulation()) {
             return m_simProximitySupplier.getAsBoolean();
+        }
+        if (m_frontCANrange == null) {
+            // Sensor not installed: report "never detected" so BLine Depot auto's wall-proximity
+            // transition simply never fires, rather than reading a device that isn't there.
+            return false;
         }
         return m_frontCANrange.getIsDetected().getValue();
     }

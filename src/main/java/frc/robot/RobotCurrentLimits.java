@@ -1,7 +1,9 @@
 package frc.robot;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import frc.robot.Constants.Hardware;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
@@ -17,6 +19,13 @@ import frc.robot.util.currentlimit.CurrentLimitManager;
  * <p>To add a new rule (new subsystem interaction, new condition, etc.), register any new
  * targets with {@link CurrentLimitManager#registerTarget} and add a
  * {@link CurrentLimitManager#addRule} call below - no changes to the manager itself are needed.
+ *
+ * <p>Targets are only registered for mechanisms that are actually installed (see
+ * {@link Constants.Hardware}). A config apply to a motor that isn't on the CAN bus blocks for its
+ * full timeout and then reports the failure twice - once from inside Phoenix's
+ * {@code ParentConfigurator}, once from our own {@code CtreUtil.reportIfNotOk} - and that whole
+ * burst repeats on every entry to and exit from SCORING/PASSING. Skipping registration keeps the
+ * rule down to the motors that can actually answer.
  */
 public final class RobotCurrentLimits {
     private RobotCurrentLimits() {}
@@ -33,29 +42,37 @@ public final class RobotCurrentLimits {
             Superstructure superstructure,
             CommandSwerveDrivetrain drivetrain) {
 
-        manager.registerTarget(
-                "Intake/Roller",
-                new CurrentLimit(IntakeConstants.kRollerStatorCurrentLimit, IntakeConstants.kRollerSupplyCurrentLimit),
-                superstructure.m_intake::setRollerCurrentLimit);
+        Map<String, CurrentLimit> shootingLimits = new HashMap<>();
 
-        manager.registerTarget(
-                "Intake/Kicker",
-                new CurrentLimit(IntakeConstants.kKickerStatorCurrentLimit, IntakeConstants.kKickerSupplyCurrentLimit),
-                superstructure.m_intake::setKickerCurrentLimit);
+        if (Hardware.kIntakeInstalled) {
+            manager.registerTarget(
+                    "Intake/Roller",
+                    new CurrentLimit(
+                            IntakeConstants.kRollerStatorCurrentLimit,
+                            IntakeConstants.kRollerSupplyCurrentLimit),
+                    superstructure.m_intake::setRollerCurrentLimit);
+            shootingLimits.put("Intake/Roller", kShootingRollerLimit);
+
+            manager.registerTarget(
+                    "Intake/Kicker",
+                    new CurrentLimit(
+                            IntakeConstants.kKickerStatorCurrentLimit,
+                            IntakeConstants.kKickerSupplyCurrentLimit),
+                    superstructure.m_intake::setKickerCurrentLimit);
+            shootingLimits.put("Intake/Kicker", kShootingKickerLimit);
+        }
 
         manager.registerTarget(
                 "Drivetrain/Drive",
                 CurrentLimit.supplyOnly(TunerConstants.kDriveNominalSupplyCurrentLimitAmps),
                 limit -> drivetrain.setDriveSupplyCurrentLimit(limit.supplyCurrentLimitAmps()));
+        shootingLimits.put("Drivetrain/Drive", kShootingDriveLimit);
 
         manager.addRule(
                 () -> {
                     RobotState state = superstructure.getRobotState();
                     return state == RobotState.SCORING || state == RobotState.PASSING;
                 },
-                Map.of(
-                        "Intake/Roller", kShootingRollerLimit,
-                        "Intake/Kicker", kShootingKickerLimit,
-                        "Drivetrain/Drive", kShootingDriveLimit));
+                shootingLimits);
     }
 }
