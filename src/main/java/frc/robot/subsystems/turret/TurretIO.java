@@ -7,6 +7,8 @@ public interface TurretIO {
 
     public class TurretIOInputs {
         public double angle;
+        /** Turret angular velocity in degrees per second. */
+        public double velocity;
         public double appliedVolts;
         public double statorCurrent;
         public double supplyCurrent;

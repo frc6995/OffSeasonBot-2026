@@ -41,7 +41,21 @@ public class Turret extends SubsystemBase {
 
         // 6.5 in
         public static final double kLength = 0.1651;
+        /**
+         * Pose of the turret's rotation axis in the ROBOT frame, with the turret at 0 deg.
+         * WPILib convention: +X forward, +Y left, +Z up.
+         */
         public static final Pose3d turretCenterPose =  new Pose3d( new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(0),Units.inchesToMeters(21.67)), new Rotation3d(0,0,0));
+        /**
+         * Pose of the Limelight in the TURRET frame -- i.e. relative to {@link #turretCenterPose},
+         * with the turret at 0 deg. Composed with the live turret angle by
+         * {@link frc.robot.subsystems.vision.apriltag.RealATVision#solveRobotToCamera(double)}.
+         * <p>
+         * WPILib convention, so +pitch tilts the camera DOWN. The Limelight's own
+         * camerapose_robotspace convention is +pitch UP and +Y right; the conversion lives in
+         * {@link frc.robot.subsystems.vision.apriltag.AprilTagModule#updateOffset(Pose3d)}.
+         * Verify this pitch sign against the physical camera tilt before trusting range.
+         */
         public static final Pose3d CAMERA_POSE3D = new Pose3d( new Translation3d(Units.inchesToMeters(5.49), Units.inchesToMeters(0),Units.inchesToMeters(0)), new Rotation3d(0,0.366519,0));
     }
 
@@ -159,6 +173,12 @@ public class Turret extends SubsystemBase {
     @Logged(name = "Angle", importance = Importance.DEBUG)
     public double getAngle() {
         return inputs.angle;
+    }
+
+    /** @return Turret angular velocity in degrees per second. */
+    @Logged(name = "Velocity", importance = Importance.DEBUG)
+    public double getVelocity() {
+        return inputs.velocity;
     }
 
     @Logged(name = "Setpoint", importance = Importance.DEBUG)

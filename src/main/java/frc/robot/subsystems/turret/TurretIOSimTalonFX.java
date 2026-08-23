@@ -42,10 +42,13 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
     m_TurretSim.setInputVoltage(appliedVolts);
 
     double turretPosition = Math.toDegrees(m_TurretSim.getAngleRads());
+    double turretVelocity = Math.toDegrees(m_TurretSim.getVelocityRadPerSec());
 
     simState.setRawRotorPosition(angleToMotorRotations(turretPosition));
+    simState.setRotorVelocity(angleToMotorRotations(turretVelocity));
 
     inputs.angle = turretPosition;
+    inputs.velocity = turretVelocity;
     inputs.appliedVolts = appliedVolts;
     inputs.supplyCurrent = simState.getSupplyCurrent();
     inputs.statorCurrent = simState.getTorqueCurrent();

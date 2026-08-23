@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.wpi.first.math.Matrix;
@@ -22,7 +23,7 @@ public abstract class AprilTagVision extends SubsystemBase {
     protected abstract void captureRewinds(double seconds);
 
     public List<AprilTagEstimate> getAllEstimates() {
-        return estimates;
+        return Collections.unmodifiableList(estimates);
     }
 
     public Command captureRewindsCommand(double seconds) {
@@ -34,14 +35,19 @@ public abstract class AprilTagVision extends SubsystemBase {
     }
 
     public static Matrix<N3, N1> getDisabledStdDevs(AprilTagEstimate estimate) {
+        // While disabled we trust vision almost completely so the estimator can converge before
+        // the match starts. MegaTag2's yaw is just the yaw we fed it, so never trust its theta --
+        // doing so would feed the estimator's own heading back to itself.
         return VecBuilder.fill(
                 0.01,
                 0.01,
-                0.01);
+                estimate.isMegaTag2() ? Double.POSITIVE_INFINITY : 0.01);
     }
 
     private static Matrix<N3, N1> getStdDevsMT2(AprilTagEstimate estimate) {
-        double xydevs = ATVisionConstants.kMT2StdDevCoefficients[0] / estimate.tagArea() / ATVisionConstants.kOptimalTagCount;
+        // MegaTag2 derives its yaw from the orientation we supply, so it carries no independent
+        // heading information.
+        double xydevs = ATVisionConstants.kMT2StdDevCoefficients[0] * stdDevScale(estimate);
         return VecBuilder.fill(
                 xydevs,
                 xydevs,
@@ -49,11 +55,27 @@ public abstract class AprilTagVision extends SubsystemBase {
     }
 
     private static Matrix<N3, N1> getStdDevsMT1(AprilTagEstimate estimate) {
-        double xydevs = ATVisionConstants.kMT1StdDevCoefficients[0] / estimate.tagArea() / ATVisionConstants.kOptimalTagCount;
-        double thetadevs = ATVisionConstants.kMT1StdDevCoefficients[1] / estimate.tagArea() / ATVisionConstants.kOptimalTagCount;
+        double scale = stdDevScale(estimate);
         return VecBuilder.fill(
-                xydevs,
-                xydevs,
-                thetadevs);
+                ATVisionConstants.kMT1StdDevCoefficients[0] * scale,
+                ATVisionConstants.kMT1StdDevCoefficients[0] * scale,
+                ATVisionConstants.kMT1StdDevCoefficients[1] * scale);
+    }
+
+    /**
+     * Scales the tuned coefficients by how good the observation actually was: error grows roughly
+     * with the square of tag distance and shrinks with more tags in the solve. Normalised so that
+     * {@link ATVisionConstants#kOptimalTagCount} tags at 1 m gives a scale of 1, which keeps the
+     * coefficients meaning what they meant when they were tuned.
+     * <p>
+     * Returns POSITIVE_INFINITY for a degenerate estimate; WPILib's pose estimator drives the
+     * vision gain to zero for an infinite std dev, so such a measurement is ignored rather than
+     * producing NaN.
+     */
+    private static double stdDevScale(AprilTagEstimate estimate) {
+        if (estimate.tagCount() <= 0) return Double.POSITIVE_INFINITY;
+        // Below a metre the distance term shouldn't start *increasing* trust past the tuning point.
+        double dist = Math.max(estimate.avgTagDistMeters(), 1.0);
+        return (dist * dist) * ATVisionConstants.kOptimalTagCount / estimate.tagCount();
     }
 }

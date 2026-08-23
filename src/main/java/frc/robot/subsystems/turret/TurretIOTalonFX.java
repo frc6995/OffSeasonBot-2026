@@ -18,6 +18,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
@@ -31,6 +32,7 @@ public class TurretIOTalonFX implements TurretIO {
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
     
     protected StatusSignal<Angle> angleSignal;
+    protected StatusSignal<AngularVelocity> velocitySignal;
     protected StatusSignal<Voltage> voltSignal;
     protected StatusSignal<Current> statorCurrentSignal;
     protected StatusSignal<Current> supplyCurrentSignal;
@@ -39,6 +41,7 @@ public class TurretIOTalonFX implements TurretIO {
         configMotor();
 
         angleSignal = m_turretMotor.getPosition();
+        velocitySignal = m_turretMotor.getVelocity();
         voltSignal = m_turretMotor.getMotorVoltage();
 
         statorCurrentSignal = m_turretMotor.getStatorCurrent();
@@ -92,9 +95,11 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
+        BaseStatusSignal.refreshAll(angleSignal, velocitySignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
         inputs.angle = mechanismToAngleRotations(angleSignal.getValueAsDouble());
+        // SensorToMechanismRatio is configured, so this is mechanism rotations/sec.
+        inputs.velocity = mechanismToAngleRotations(velocitySignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();

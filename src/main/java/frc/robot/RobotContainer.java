@@ -60,7 +60,6 @@ public class RobotContainer {
             : new RealATVision(
                 m_drivetrain::state,
                 m_drivetrain.getPigeon2()::getRotation3d,
-                m_drivetrain::resetPose,
                 (estimate, stdDevs) -> {
                     m_drivetrain.addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(), stdDevs);
                 },
