@@ -115,8 +115,6 @@ public class Robot extends TimedRobot {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
 
-        CommandScheduler.getInstance().schedule(
-                m_robotContainer.m_superstructure.requestFlywheelActiveAfterDelay(1.0));
         //Tab switches to "Teleoperated"
         Elastic.selectTab("Teleoperated");
     }

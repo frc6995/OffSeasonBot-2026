@@ -442,7 +442,7 @@ public class AutoAlign extends Command {
 
     @Override
     public void initialize() {
-        swerveState = m_drivetrain.getState();
+        swerveState = m_drivetrain.state();
         // Reset the rotation profile to the current heading and angular velocity.
         m_rotationProfile.reset(
                 swerveState.Pose.getRotation().getRadians(),
@@ -452,7 +452,7 @@ public class AutoAlign extends Command {
 
     @Override
     public void execute() {
-        swerveState = m_drivetrain.getState();
+        swerveState = m_drivetrain.state();
         // Compute translational setpoints from Autopilot.
         APResult out = kAutopilot.calculate(swerveState.Pose, swerveState.Speeds, m_target);
 
@@ -499,6 +499,6 @@ public class AutoAlign extends Command {
     @Override
     public boolean isFinished() {
         // Check if the Autopilot considers the robot within tolerance of the target.
-        return kAutopilot.atTarget(m_drivetrain.getState().Pose, m_target);
+        return kAutopilot.atTarget(m_drivetrain.state().Pose, m_target);
     }
 }

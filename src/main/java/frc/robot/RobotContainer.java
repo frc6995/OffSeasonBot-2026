@@ -53,7 +53,7 @@ public class RobotContainer {
             TunerConstants.BackLeft,
             TunerConstants.BackRight);
 
-    public Superstructure m_superstructure = new Superstructure(m_drivetrain::getState);
+    public Superstructure m_superstructure = new Superstructure(m_drivetrain::state);
 
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);

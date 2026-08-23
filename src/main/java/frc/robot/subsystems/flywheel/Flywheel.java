@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.util.ShotController;
@@ -67,11 +68,6 @@ public class Flywheel extends SubsystemBase {
 
   private FlywheelState flywheelState = FlywheelState.DISABLED;
 
-  private static final double kLoopPeriodSecs = 0.02;
-
-  private boolean activeLockedOut = false;
-  private int lockoutTicksRemaining = 0;
-
   public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> shotData) {
     this.io = io;
     this.targetData = shotData;
@@ -82,24 +78,11 @@ public class Flywheel extends SubsystemBase {
   }
 
   public void requestDisable() {
-    activeLockedOut = false;
     setState(FlywheelState.DISABLED);
   }
 
   public void requestActive() {
-    if (activeLockedOut) {
-      return;
-    }
     setState(FlywheelState.ACTIVE);
-  }
-
-  /**
-   * Forces the flywheel disabled for {@code seconds}
-   */
-  public void requestActiveAfterDelay(double seconds) {
-    activeLockedOut = true;
-    lockoutTicksRemaining = (int) Math.ceil(seconds / kLoopPeriodSecs);
-    setState(FlywheelState.DISABLED);
   }
 
   public void stop() {
@@ -138,9 +121,15 @@ public class Flywheel extends SubsystemBase {
   @Override
   public void periodic() {
 
-    if (activeLockedOut && --lockoutTicksRemaining <= 0) {
-      activeLockedOut = false;
-      setState(FlywheelState.ACTIVE);
+    if (DriverStation.isDisabled()) {
+      // An ACTIVE request must never survive a disable. The request itself is legitimate, but the
+      // thing that would normally clear it can't run: requestRobotIdle() is bound to the shoot
+      // button's onFalse edge, and CommandScheduler refuses to schedule a non-runsWhenDisabled
+      // command while the robot is disabled - so releasing the button after a disable does
+      // nothing. Auto has the same hole: the scheduler cancels the running auto command at the end
+      // of the period, so a later "stop shooting" event trigger never fires. Either way the wheel
+      // would spin up the instant the robot is re-enabled, with nobody touching the controller.
+      setState(FlywheelState.DISABLED);
     }
 
     io.updateInputs(inputs);

@@ -233,7 +233,7 @@ public class AutoAlignFixedHeading extends AutoAlign {
      */
     @Override
     public void execute() {
-        swerveState = m_drivetrain.getState();
+        swerveState = m_drivetrain.state();
         APResult out = kAutopilot.calculate(swerveState.Pose, swerveState.Speeds, m_realTarget);
 
         applyDriveRequest(out);
@@ -241,6 +241,6 @@ public class AutoAlignFixedHeading extends AutoAlign {
 
     @Override
     public boolean isFinished() {
-        return kAutopilot.atTarget(m_drivetrain.getState().Pose, m_realTarget);
+        return kAutopilot.atTarget(m_drivetrain.state().Pose, m_realTarget);
     }
 }

@@ -266,9 +266,61 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return state().Speeds;
     }
 
+    /**
+     * The drivetrain state. Prefer this over Phoenix's {@link #getState()} everywhere in robot code.
+     *
+     * <p>{@code getState()} is not a cheap accessor: every call is a JNI round trip, a lock
+     * acquisition, and a rebuild of the state struct that allocates a fresh {@code Pose2d},
+     * {@code Rotation2d}, {@code ChassisSpeeds}, and up to twelve {@code SwerveModuleState}/
+     * {@code SwerveModulePosition} objects, since on a moving robot essentially every field differs
+     * from the last call. Shot control, Epilogue logging, auto-align, and this class's own
+     * periodic() all read the state every loop, so calling through meant ~60 short-lived objects
+     * per loop purely as GC fodder. This holds the reference and re-reads it once, in periodic().
+     *
+     * <p><b>This is a live reference, not a snapshot.</b> Phoenix returns its own internal
+     * {@code m_cachedState} instance, and the telemetry callback installed by
+     * {@code registerTelemetry} rewrites that same instance from the odometry thread at up to
+     * 250Hz. Two consequences:
+     *
+     * <ul>
+     *   <li>Readers are <i>not</i> mutually consistent, and never were - the object changes
+     *       underneath them. In practice this is benign: {@code Pose}, {@code Speeds},
+     *       {@code RawHeading} and each module state are <i>replaced</i> with new immutable objects
+     *       rather than mutated in place, so no individual value can be read torn. The worst case
+     *       is reading {@code Pose} from one odometry tick and {@code Speeds} from the next, i.e.
+     *       up to 4ms of skew. Don't add a reader that needs those two to be same-tick coherent;
+     *       use {@link #getStateCopy()} if you ever do.
+     *   <li>Data is fresher than a true snapshot would be - the odometry thread keeps updating it -
+     *       so the once-per-loop refresh costs nothing in latency.
+     * </ul>
+     *
+     * <p>Reads here do not hold {@code m_stateLock}, which the odometry thread holds while it
+     * writes. That race predates this method (getState() locks only its own update, then hands the
+     * caller the shared object to dereference unlocked), and is safe for the reference-typed fields
+     * above. It is not safe for the primitive ones - {@code Timestamp}, {@code SuccessfulDaqs},
+     * {@code FailedDaqs} - which are written unsynchronized and could tear. Nothing reads them.
+     *
+     * <p>The refresh happens at the <i>end</i> of {@link #periodic()}, after
+     * {@code addVisionMeasurement} has fused this loop's AprilTag measurements into the pose
+     * estimator. That ordering is belt-and-braces rather than load-bearing, given the odometry
+     * thread would surface the correction within a tick anyway.
+     */
     // @Logged(name = "State", importance = Importance.CRITICAL)
     public SwerveDriveState state() {
-        return getState();
+        if (m_state == null) {
+            refreshState();
+        }
+        return m_state;
+    }
+
+    private SwerveDriveState m_state = null;
+
+    /**
+     * Re-reads the drivetrain state from Phoenix. Called once per loop from periodic(); see
+     * {@link #state()} for why once is enough.
+     */
+    private void refreshState() {
+        m_state = getState();
     }
 
     // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
@@ -335,7 +387,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_cachedGyroRotation = getPigeon2().getRotation3d();
         m_vision.periodic();
 
-        if (Math.abs(state().Speeds.omegaRadiansPerSecond) < (Math.PI / 2)) {
+        // Deliberately a direct getState(): on the very first loop state() hasn't been populated
+        // yet, and this gate runs before the refresh at the end of this method.
+        if (Math.abs(getState().Speeds.omegaRadiansPerSecond) < (Math.PI / 2)) {
 
             var estimates = m_vision.getAllEstimates();
             for (var estimate : estimates) {
@@ -351,6 +405,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 }
             }
         }
+
+        // Re-read last, after the vision measurements above have been fused into the pose
+        // estimator. See state() - this is a live reference to Phoenix's own state object, not a
+        // point-in-time snapshot.
+        refreshState();
     }
 
     private void startSimThread() {
