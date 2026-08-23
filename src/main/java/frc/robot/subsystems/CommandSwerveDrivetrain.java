@@ -295,10 +295,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * </ul>
      *
      * <p>Reads here do not hold {@code m_stateLock}, which the odometry thread holds while it
-     * writes. That race predates this method (getState() locks only its own update, then hands the
-     * caller the shared object to dereference unlocked), and is safe for the reference-typed fields
-     * above. It is not safe for the primitive ones - {@code Timestamp}, {@code SuccessfulDaqs},
-     * {@code FailedDaqs} - which are written unsynchronized and could tear. Nothing reads them.
+     * writes. That race predates this method - getState() locks only its own update, then hands the
+     * caller the shared object to dereference unlocked - and is harmless for the reference-typed
+     * fields above. {@code SuccessfulDaqs}/{@code FailedDaqs} are {@code int}, so they read
+     * atomically too.
+     *
+     * <p>{@code Timestamp} and {@code OdometryPeriod} are the exception: they are {@code double},
+     * and 64-bit reads are not atomic on the roboRIO's 32-bit JVM, so a concurrent odometry write
+     * can in principle be read torn. {@link AutoAlign#initialize()} and
+     * {@link AutoAlign#applyDriveRequest} read {@code Timestamp} to seed and step their rotation
+     * profile, and they need {@code Pose}, {@code Speeds} and {@code Timestamp} to agree on a
+     * single tick - which this method cannot promise. Those three call sites (the ones that assign
+     * the {@code swerveState} field) therefore use {@link #getStateCopy()} instead, which clones
+     * under the lock. Single-field reads such as {@code state().Pose} are fine here: a lone
+     * reference read is atomic and needs no cross-field coherence.
      *
      * <p>The refresh happens at the <i>end</i> of {@link #periodic()}, after
      * {@code addVisionMeasurement} has fused this loop's AprilTag measurements into the pose

@@ -233,7 +233,9 @@ public class AutoAlignFixedHeading extends AutoAlign {
      */
     @Override
     public void execute() {
-        swerveState = m_drivetrain.state();
+        // Coherent snapshot required - see AutoAlign.initialize(). The inherited
+        // applyDriveRequest() reads swerveState.Timestamp alongside the Pose/Speeds used here.
+        swerveState = m_drivetrain.getStateCopy();
         APResult out = kAutopilot.calculate(swerveState.Pose, swerveState.Speeds, m_realTarget);
 
         applyDriveRequest(out);
