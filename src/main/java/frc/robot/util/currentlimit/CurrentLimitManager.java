@@ -46,6 +46,11 @@ public class CurrentLimitManager extends SubsystemBase {
         final Consumer<CurrentLimit> apply;
         CurrentLimit lastApplied;
         double lastAppliedTimestamp = -Double.MAX_VALUE;
+        // False until this manager has pushed a limit to hardware at least once. Without this,
+        // lastApplied starting at nominal made the first periodic() a no-op (want == lastApplied),
+        // so a target whose subsystem never configured it - e.g. a lead/follower pair where only
+        // the lead was configured - stayed unlimited until the first rule fired and released.
+        boolean everApplied = false;
 
         Target(CurrentLimit nominal, Consumer<CurrentLimit> apply) {
             this.nominal = nominal;
@@ -140,14 +145,20 @@ public class CurrentLimitManager extends SubsystemBase {
         for (Map.Entry<String, Target> entry : targets.entrySet()) {
             String name = entry.getKey();
             Target target = entry.getValue();
-            CurrentLimit want = desired.getOrDefault(name, target.nominal);
+            // A rule's limit is resolved against the nominal so a rule that only caps one axis
+            // doesn't hand the consumer a sentinel for the other - a config-group apply would
+            // otherwise write it to hardware. See CurrentLimit's class docs. With no rule active
+            // the nominal is already fully resolved, so that path allocates nothing.
+            CurrentLimit ruled = desired.get(name);
+            CurrentLimit want = (ruled == null) ? target.nominal : ruled.resolvedAgainst(target.nominal);
             boolean dueForReapply = (now - target.lastAppliedTimestamp) >= minReapplyIntervalSeconds;
-            if (!want.equals(target.lastApplied) && dueForReapply) {
+            if ((!target.everApplied || !want.equals(target.lastApplied)) && dueForReapply) {
                 // Bookkeeping updates immediately so reapply throttling/change-detection stays
                 // correct even though the hardware push below completes moments later; see
                 // dispatchApply().
                 target.lastApplied = want;
                 target.lastAppliedTimestamp = now;
+                target.everApplied = true;
                 dispatchApply(name, target.apply, want);
             }
         }

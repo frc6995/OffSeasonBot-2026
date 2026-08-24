@@ -31,7 +31,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.Elastic;
 
 
-@Logged(name="Robot", importance = Importance.INFO)
+//Don't edit this one, edit the one at line 60
+@Logged(name="Robot", importance = Importance.CRITICAL)
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 

@@ -19,6 +19,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.Constants.CANBuses;
+import frc.robot.util.CtreUtil;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
 
@@ -62,12 +63,14 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     flywheelConfig.Voltage = new VoltageConfigs()
         .withPeakForwardVoltage(FlywheelConstants.kNewMaxVoltage)
         .withPeakReverseVoltage(FlywheelConstants.kNewMinVoltage);
-    // CtreUtil.reportIfNotOk("configure example",
-    // m_exMotor.getConfigurator().apply(config));
-    m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig);
-    m_flywheelFollowMotor1.getConfigurator().apply(flywheelConfig);
-    m_flywheelFollowMotor2.getConfigurator().apply(flywheelConfig);
-    m_flywheelFollowMotor3.getConfigurator().apply(flywheelConfig);
+    CtreUtil.reportIfNotOk("Config flywheel (lead)",
+        m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig));
+    CtreUtil.reportIfNotOk("Config flywheel (follower 1)",
+        m_flywheelFollowMotor1.getConfigurator().apply(flywheelConfig));
+    CtreUtil.reportIfNotOk("Config flywheel (follower 2)",
+        m_flywheelFollowMotor2.getConfigurator().apply(flywheelConfig));
+    CtreUtil.reportIfNotOk("Config flywheel (follower 3)",
+        m_flywheelFollowMotor3.getConfigurator().apply(flywheelConfig));
   }
 
   @Override
