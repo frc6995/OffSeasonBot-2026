@@ -79,6 +79,10 @@ public class Turret extends SubsystemBase {
         turretState = TurretState.DISABLED;
     }
 
+    public void resetEncoder() {
+        io.resetEncoder();
+    }
+
     @Override
     public void periodic() {
         switch (turretState) {

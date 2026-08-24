@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -62,7 +63,7 @@ public class RobotContainer {
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
     public RobotContainer() {
-        VISUALIZER = Telemetry.MECH_VISUALIZER;
+        VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
         SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
         SmartDashboard.putString("Superstructure state", m_superstructure.getRobotState().toString());
@@ -101,6 +102,8 @@ public class RobotContainer {
 
         joystick.leftBumper().onTrue(m_superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_superstructure.requestIntakeActive());
+
+        joystick.y().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
         /* For Cadsim testing */
         // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));

@@ -119,6 +119,10 @@ public class Hood extends SubsystemBase {
         setState(HoodState.DISABLED);
     }
 
+    public void resetEncoder() {
+        io.resetEncoder();
+    }
+
     public void setAngle(double angle) {
         hoodState = HoodState.ACTIVE;
 

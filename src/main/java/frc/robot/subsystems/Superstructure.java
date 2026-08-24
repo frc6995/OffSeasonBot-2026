@@ -165,4 +165,12 @@ public class Superstructure extends SubsystemBase {
     public RobotState getRobotState() {
         return robotState;
     }
+
+    public Command requestHomeMechanisms() {
+        return Commands.runOnce(() -> {
+            m_intake.resetEncoder();
+            m_hood.resetEncoder();
+            m_turret.resetEncoder();
+        }).ignoringDisable(true);
+    }
 }

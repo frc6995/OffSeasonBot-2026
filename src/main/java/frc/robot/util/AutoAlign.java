@@ -15,6 +15,7 @@ import com.therekrab.autopilot.Autopilot.APResult;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -78,7 +79,21 @@ public class AutoAlign extends Command {
         public static APConstraints SLOW_CRAWL_CONSTRAINTS = new APConstraints(0.5, DEFAULT_ACCELERATION, 20);
         public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
         public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
-        public static APConstraints DEFAULT_CONSTRAINTS = new APConstraints(DEFAULT_ACCELERATION, DEFAULT_JERK);
+        public static APConstraints DEFAULT_CONSTRAINTS =
+                new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
+
+        /**
+         * Tolerances used to build a full {@link APProfile} out of a bare {@link APConstraints},
+         * for constructors that only take constraints (see {@link AutoAlign#AutoAlign(APTarget,
+         * CommandSwerveDrivetrain, APConstraints, RotationControlMode, double)}). Matches the
+         * tolerances used by {@link AutoAlign#kSlowDriveProfile} and friends - an
+         * {@link APProfile} built with only constraints and no tolerances defaults both error
+         * axes to zero, which {@link com.therekrab.autopilot.Autopilot#atTarget} can never
+         * actually satisfy.
+         */
+        public static Distance DEFAULT_ERROR_XY = Centimeters.of(8);
+        public static Angle DEFAULT_ERROR_THETA = Degrees.of(2.5);
+        public static Distance DEFAULT_BEELINE_RADIUS = Centimeters.of(8);
 
         /** Default rotation profile constraints (acceleration only, velocity is limited separately). */
         public static PrimitiveRotationProfile.Constraints DEFAULT_ROTATION_CONSTRAINTS =
@@ -218,7 +233,18 @@ public class AutoAlign extends Command {
             APConstraints constraints,
             RotationControlMode rotationControlMode,
             double profiledRotationMaxVelocity) {
-        this(target, drivetrain, new APProfile(constraints), rotationControlMode, profiledRotationMaxVelocity);
+        // A bare `new APProfile(constraints)` defaults both error tolerances to zero, which
+        // Autopilot#atTarget can never actually satisfy (see AutoAlignConstants.DEFAULT_ERROR_XY
+        // javadoc) - so give it the same real tolerances every named profile in this class uses.
+        this(
+                target,
+                drivetrain,
+                new APProfile(constraints)
+                        .withErrorXY(AutoAlignConstants.DEFAULT_ERROR_XY)
+                        .withErrorTheta(AutoAlignConstants.DEFAULT_ERROR_THETA)
+                        .withBeelineRadius(AutoAlignConstants.DEFAULT_BEELINE_RADIUS),
+                rotationControlMode,
+                profiledRotationMaxVelocity);
     }
 
     /**

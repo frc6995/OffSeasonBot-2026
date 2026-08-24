@@ -65,6 +65,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Current> m_extensionSupplyCurrent = m_extensionLeadMotor.getSupplyCurrent();
     private final StatusSignal<Voltage> m_extensionFollowerAppliedVoltage = m_extensionFollowerMotor.getMotorVoltage();
 
+    private final StatusSignal<AngularVelocity> m_kickerVelocity = m_kickerMotor.getVelocity();
     private final StatusSignal<Voltage> m_kickerAppliedVoltage = m_kickerMotor.getMotorVoltage();
     private final StatusSignal<Current> m_kickerStatorCurrent = m_kickerMotor.getStatorCurrent();
     private final StatusSignal<Current> m_kickerSupplyCurrent = m_kickerMotor.getSupplyCurrent();
@@ -169,7 +170,7 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_rollerFollowerAppliedVoltage,
             m_extensionPosition, m_extensionAppliedVoltage, m_extensionStatorCurrent, m_extensionSupplyCurrent,
             m_extensionFollowerAppliedVoltage,
-            m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
+            m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
 
         inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
         inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
@@ -187,6 +188,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         inputs.extensionStatorCurrentAmps = m_extensionStatorCurrent.getValueAsDouble();
         inputs.extensionSupplyCurrentAmps = m_extensionSupplyCurrent.getValueAsDouble();
 
+        inputs.kickerVelocityRPM = m_kickerVelocity.getValueAsDouble() * 60;
         inputs.kickerAppliedVolts = m_kickerAppliedVoltage.getValueAsDouble();
         inputs.kickerStatorCurrentAmps = m_kickerStatorCurrent.getValueAsDouble();
         inputs.kickerSupplyCurrentAmps = m_kickerSupplyCurrent.getValueAsDouble();
