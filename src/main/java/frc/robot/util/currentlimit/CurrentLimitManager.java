@@ -162,18 +162,7 @@ public class CurrentLimitManager extends SubsystemBase {
                 dispatchApply(name, target.apply, want);
             }
         }
-
-        // Sim-only for debug
-        if (RobotBase.isSimulation()) {
-            for (Map.Entry<String, Target> entry : targets.entrySet()) {
-                CurrentLimit applied = entry.getValue().lastApplied;
-                System.out.printf(
-                        "[CurrentLimitManager] %s: stator=%s supply=%s%n",
-                        entry.getKey(),
-                        formatAxis(applied.statorCurrentLimitAmps()),
-                        formatAxis(applied.supplyCurrentLimitAmps()));
-            }
-        }
+       
     }
 
     private static String formatAxis(double amps) {
