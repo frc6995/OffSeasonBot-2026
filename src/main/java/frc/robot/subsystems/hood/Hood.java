@@ -15,7 +15,7 @@ import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Hood extends SubsystemBase {
     public static class HoodConstants {
-        public static int kCANID = 44; // Should be right with doc
+        public static final int kCANID = 44; // Should be right with doc
 
         public static final double[][] kAngleData = {
                 // Distance (Meters), Angle(Degrees)

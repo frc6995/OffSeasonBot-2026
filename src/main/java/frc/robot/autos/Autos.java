@@ -92,17 +92,17 @@ public class Autos {
         autos.put("AP Depot Auto",
                 () -> auto(POI.TRENCH_START.get(), c -> {
 
-                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kHighJerkProfile,
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.highJerkProfile(),
                             POI.M_1.get(), m_drivetrain, Meters.of(1.0)));
 
-                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kHighJerkProfile,
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.highJerkProfile(),
                             POI.M_2.get(), m_drivetrain, Meters.of(1.0)));
 
-                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.kSlowDriveProfile,
+                    c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.slowDriveProfile(),
                             POI.M_3.get(), m_drivetrain, Meters.of(1.0)));
 
                     c.addCommands(new AutoAlign(
-                            POI.HUB_BEHIND_INTAKE.get(), m_drivetrain, AutoAlign.kSlowDriveProfile,
+                            POI.HUB_BEHIND_INTAKE.get(), m_drivetrain, AutoAlign.slowDriveProfile(),
                             AutoAlign.AutoAlignConstants.PROFILED_ROTATION_DEFAULT_VELOCITY).withTimeout(2.0));
                 }));
 

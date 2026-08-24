@@ -16,7 +16,7 @@ import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
     static class TurretConstants {
-        public static int kCANID = 45;
+        public static final int kCANID = 45;
 
         // Tune PID/FF constants
         public static final double kP = 30;

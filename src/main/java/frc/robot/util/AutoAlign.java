@@ -62,73 +62,111 @@ public class AutoAlign extends Command {
      * These values can be tuned for different robot behaviours.
      */
     public static class AutoAlignConstants {
-        public static double DEFAULT_MAX_VELOCITY = 5.5;
-        public static double DEFAULT_ACCELERATION = 23;
-        public static double DEFAULT_JERK = 6.0;
+        public static final double DEFAULT_MAX_VELOCITY = 5.5;
+        public static final double DEFAULT_ACCELERATION = 23;
+        public static final double DEFAULT_JERK = 6.0;
 
-        public static double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI;
-        public static double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 0.3;
+        public static final double PROFILED_ROTATION_DEFAULT_VELOCITY = Math.PI;
+        public static final double PROFILED_ROTATION_SLOW_VELOCITY = Math.PI * 0.3;
 
-        public static double PROFILED_ROTATION_DEFAULT_ACCELERATION = 6 * Math.PI;
+        public static final double PROFILED_ROTATION_DEFAULT_ACCELERATION = 6 * Math.PI;
         /** Update period of the rotation profile (seconds). */
-        public static double ROTATION_PROFILE_PERIOD = 0.020;
+        public static final double ROTATION_PROFILE_PERIOD = 0.020;
         /** Maximum allowable period between loop updates (seconds). */
-        public static double ROTATION_PROFILE_MAX_PERIOD = 0.060;
+        public static final double ROTATION_PROFILE_MAX_PERIOD = 0.060;
 
-        public static APConstraints SLOW_DRIVE_CONSTRAINTS = new APConstraints(1.6, DEFAULT_ACCELERATION, 60);
-        public static APConstraints SLOW_CRAWL_CONSTRAINTS = new APConstraints(0.5, DEFAULT_ACCELERATION, 20);
-        public static APConstraints VELOCITY_LIMITED_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
-        public static APConstraints HIGH_JERK_CONSTRAINTS = new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
-        public static APConstraints DEFAULT_CONSTRAINTS =
-                new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
+        /*
+         * Constraints and profiles are handed out by factory methods rather than held as static
+         * fields. APConstraints and APProfile are both mutable - their with* methods assign to
+         * their own fields and return this, they do not copy - and Autopilot keeps the profile
+         * reference for the lifetime of the command. A shared static would therefore let one
+         * caller's withErrorXY(...) silently retune every command on the robot, and marking the
+         * field final would not prevent it: final stops reassignment, not mutation. A fresh
+         * instance per call makes that impossible instead of merely discouraged.
+         */
+
+        public static APConstraints slowDriveConstraints() {
+            return new APConstraints(1.6, DEFAULT_ACCELERATION, 60);
+        }
+
+        public static APConstraints slowCrawlConstraints() {
+            return new APConstraints(0.5, DEFAULT_ACCELERATION, 20);
+        }
+
+        public static APConstraints velocityLimitedConstraints() {
+            return new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
+        }
+
+        public static APConstraints highJerkConstraints() {
+            return new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, 60);
+        }
+
+        public static APConstraints defaultConstraints() {
+            return new APConstraints(DEFAULT_MAX_VELOCITY, DEFAULT_ACCELERATION, DEFAULT_JERK);
+        }
 
         /**
          * Tolerances used to build a full {@link APProfile} out of a bare {@link APConstraints},
          * for constructors that only take constraints (see {@link AutoAlign#AutoAlign(APTarget,
          * CommandSwerveDrivetrain, APConstraints, RotationControlMode, double)}). Matches the
-         * tolerances used by {@link AutoAlign#kSlowDriveProfile} and friends - an
+         * tolerances used by {@link AutoAlign#slowDriveProfile()} and friends - an
          * {@link APProfile} built with only constraints and no tolerances defaults both error
          * axes to zero, which {@link com.therekrab.autopilot.Autopilot#atTarget} can never
          * actually satisfy.
+         *
+         * <p>Safe as constants: {@link Distance} and {@link Angle} are immutable.
          */
-        public static Distance DEFAULT_ERROR_XY = Centimeters.of(8);
-        public static Angle DEFAULT_ERROR_THETA = Degrees.of(2.5);
-        public static Distance DEFAULT_BEELINE_RADIUS = Centimeters.of(8);
+        public static final Distance DEFAULT_ERROR_XY = Centimeters.of(8);
+        public static final Angle DEFAULT_ERROR_THETA = Degrees.of(2.5);
+        public static final Distance DEFAULT_BEELINE_RADIUS = Centimeters.of(8);
 
-        /** Default rotation profile constraints (acceleration only, velocity is limited separately). */
-        public static PrimitiveRotationProfile.Constraints DEFAULT_ROTATION_CONSTRAINTS =
+        /**
+         * Default rotation profile constraints (acceleration only, velocity is limited separately).
+         * Safe as a constant: {@link PrimitiveRotationProfile.Constraints} is immutable.
+         */
+        public static final PrimitiveRotationProfile.Constraints DEFAULT_ROTATION_CONSTRAINTS =
                 new PrimitiveRotationProfile.Constraints(PROFILED_ROTATION_DEFAULT_ACCELERATION);
     }
 
-    public static APProfile kDefaultProfile = new APProfile(AutoAlignConstants.DEFAULT_CONSTRAINTS)
-            .withErrorXY(Centimeters.of(6))
-            .withErrorTheta(Degrees.of(1.5))
-            .withBeelineRadius(Centimeters.of(8));
+    /** A fresh tight-tolerance profile with no velocity cap beyond the default constraints. */
+    public static APProfile defaultProfile() {
+        return new APProfile(AutoAlignConstants.defaultConstraints())
+                .withErrorXY(Centimeters.of(6))
+                .withErrorTheta(Degrees.of(1.5))
+                .withBeelineRadius(Centimeters.of(8));
+    }
 
-    public static APProfile kDefaultVelocityLimitedProfile = new APProfile(
-            AutoAlignConstants.VELOCITY_LIMITED_CONSTRAINTS)
-            .withErrorXY(Centimeters.of(12))
-            .withErrorTheta(Degrees.of(1.5))
-            .withBeelineRadius(Centimeters.of(8));
+    /** A fresh velocity-limited profile with loose translational tolerance. */
+    public static APProfile defaultVelocityLimitedProfile() {
+        return new APProfile(AutoAlignConstants.velocityLimitedConstraints())
+                .withErrorXY(Centimeters.of(12))
+                .withErrorTheta(Degrees.of(1.5))
+                .withBeelineRadius(Centimeters.of(8));
+    }
 
-    public static APProfile kSlowDriveProfile = new APProfile(
-            AutoAlignConstants.SLOW_DRIVE_CONSTRAINTS)
-            .withErrorXY(Centimeters.of(8))
-            .withErrorTheta(Degrees.of(2.5))
-            .withBeelineRadius(Centimeters.of(8));
+    /** A fresh slow-approach profile, for the last leg of an alignment. */
+    public static APProfile slowDriveProfile() {
+        return new APProfile(AutoAlignConstants.slowDriveConstraints())
+                .withErrorXY(Centimeters.of(8))
+                .withErrorTheta(Degrees.of(2.5))
+                .withBeelineRadius(Centimeters.of(8));
+    }
 
-    public static APProfile kSlowCrawlProfile = new APProfile(
-            AutoAlignConstants.SLOW_CRAWL_CONSTRAINTS)
-            .withErrorXY(Centimeters.of(8))
-            .withErrorTheta(Degrees.of(2.5))
-            .withBeelineRadius(Centimeters.of(8));
+    /** A fresh crawl profile, slower still than {@link #slowDriveProfile()}. */
+    public static APProfile slowCrawlProfile() {
+        return new APProfile(AutoAlignConstants.slowCrawlConstraints())
+                .withErrorXY(Centimeters.of(8))
+                .withErrorTheta(Degrees.of(2.5))
+                .withBeelineRadius(Centimeters.of(8));
+    }
 
-                public static APProfile kHighJerkProfile = new APProfile(
-            AutoAlignConstants.HIGH_JERK_CONSTRAINTS)
-            .withErrorXY(Centimeters.of(8))
-            .withErrorTheta(Degrees.of(2.5))
-            .withBeelineRadius(Centimeters.of(8));
-
+    /** A fresh high-jerk profile, for fast drive-through waypoints. */
+    public static APProfile highJerkProfile() {
+        return new APProfile(AutoAlignConstants.highJerkConstraints())
+                .withErrorXY(Centimeters.of(8))
+                .withErrorTheta(Degrees.of(2.5))
+                .withBeelineRadius(Centimeters.of(8));
+    }
 
     protected final Autopilot kAutopilot;
     protected final APTarget m_target;

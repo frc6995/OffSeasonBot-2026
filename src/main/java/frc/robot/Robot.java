@@ -151,5 +151,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void simulationPeriodic() {
+        // Runs after robotPeriodic(), so every subsystem's simulationPeriodic() has already pushed
+        // this loop's component poses. One publish per loop instead of one per subsystem.
+        RobotVisualizer.publish();
     }
 }

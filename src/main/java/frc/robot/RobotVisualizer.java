@@ -74,6 +74,10 @@ public final class RobotVisualizer {
     private static double hoodAngleRadians;
     private static double hookAngleRadians;
 
+    // Set by the update* methods, cleared by publish(). Lets four independent subsystems each
+    // push their own component every loop while the array goes over NetworkTables exactly once.
+    private static boolean componentsDirty;
+
     /**
      * Returns a snapshot so callers cannot accidentally modify the published array.
      */
@@ -98,7 +102,7 @@ public final class RobotVisualizer {
                                         * Math.sin(Math.toRadians(IntakeConstants.kIntakeAngleDegrees)))),
                         new Rotation3d(0.0, 0.0, 0.0)));
 
-        publishComponents();
+        componentsDirty = true;
     }
 
     /** Updates the turret yaw. The input is radians. No-op on a real robot. */
@@ -128,7 +132,7 @@ public final class RobotVisualizer {
                 .transformBy(new Transform3d(
                         Translation3d.kZero,
                         new Rotation3d(0.0, hoodAngleRadians, 0.0)));
-        publishComponents();
+        componentsDirty = true;
     }
 
     /** Updates the hook pitch. The input is radians. No-op on a real robot. */
@@ -136,15 +140,31 @@ public final class RobotVisualizer {
         if (!IS_SIM) {
             return;
         }
-        hookAngleRadians += angleRadians % (2.0 * Math.PI);
+        // Wrap the accumulator, not the increment. The increment is a per-tick delta, so a modulo
+        // on it never fires; applying it here is what keeps hookAngleRadians bounded instead of
+        // growing without limit for as long as the rotor spins.
+        hookAngleRadians = Math.IEEEremainder(hookAngleRadians + angleRadians, 2.0 * Math.PI);
         COMPONENTS[HOOK_COMPONENT] = HOOK_LOCATION.transformBy(
                 new Transform3d(
                         Translation3d.kZero,
                         new Rotation3d(0.0, 0.0, -hookAngleRadians)));
-        publishComponents();
+        componentsDirty = true;
     }
 
-    private static void publishComponents() {
+    /**
+     * Sends the articulated 3D component poses over NetworkTables, if any of them moved since the
+     * last call. Call once per loop from {@link Robot#simulationPeriodic()}, which runs after
+     * {@code robotPeriodic()} and therefore after every subsystem's {@code simulationPeriodic()}
+     * has pushed this loop's values - so this publishes the current loop, not the previous one.
+     *
+     * <p>Four subsystems each update their own component every loop; publishing from each of them
+     * meant four sends of the whole array per tick. No-op on a real robot.
+     */
+    public static void publish() {
+        if (!IS_SIM || !componentsDirty) {
+            return;
+        }
+        componentsDirty = false;
         COMPONENTS_PUBLISHER.set(COMPONENTS);
     }
 
@@ -183,7 +203,7 @@ public final class RobotVisualizer {
         DRIVETRAIN_ROOT.append(BACK_DRIVETRAIN_HALF);
         DRIVETRAIN_ROOT.append(FRONT_DRIVETRAIN_HALF);
         SmartDashboard.putData("Visualizer/Mechanism", MECH_VISUALIZER);
-        publishComponents();
+        componentsDirty = true;
     }
 
     /** No-op on a real robot. */
