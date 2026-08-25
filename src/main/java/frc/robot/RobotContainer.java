@@ -28,7 +28,6 @@ import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
-
 import java.util.Set;
 
 // @Logged
@@ -44,8 +43,8 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     private final Telemetry logger = new Telemetry();
-    private final CommandXboxController joystick = new CommandXboxController(0);
 
+    private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain m_drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
@@ -55,10 +54,10 @@ public class RobotContainer {
             TunerConstants.BackRight);
 
     public Superstructure m_superstructure = new Superstructure(m_drivetrain::getState);
-
-    private Mechanism2d VISUALIZER;
-    public final Autos autos = new Autos(m_drivetrain, m_superstructure);
     
+    private Mechanism2d VISUALIZER;
+
+    public final Autos autos = new Autos(m_drivetrain, m_superstructure);
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
@@ -77,21 +76,13 @@ public class RobotContainer {
 
     private void configureBindings() {
         m_drivetrain.setDefaultCommand(
-            m_drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
-                .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-                .withRotationalRate(-joystick.getRightX() * MaxAngularRate)
-        ));
-        
+                m_drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
+                        .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate)));
+
         m_drivetrain.registerTelemetry(logger::telemeterize);
 
-        /* 
-        *
-        *
-        *   ACTUAL BINDINGS BELOW 
-        *
-        *
-        */
-
+        // ACTUAL BINDINGS BELOW
         joystick.a().onTrue(m_superstructure.requestIntakeToggle());
 
         joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
@@ -105,10 +96,6 @@ public class RobotContainer {
 
         joystick.y().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
-        /* For Cadsim testing */
-        // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));
-        // joystick.y().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(0)));
-    
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
                 () -> new AutoAlignFixedHeading(
@@ -117,26 +104,8 @@ public class RobotContainer {
                         true,
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(m_drivetrain)));
-
-
-        /* 
-        *
-        *
-        *   TEST BINDINGS BELOW 
-        *
-        *
-        */
-
-        // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
-
-        // joystick.a().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestSpin()));
-        // joystick.b().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestIdle()));
-
-        // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
-        // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
-        autos.getCanRange().setSimProximitySupplier(joystick.x());
     }
-  
+
     public Command getAutonomousCommand() {
         return autos.selectedCommand();
     }
