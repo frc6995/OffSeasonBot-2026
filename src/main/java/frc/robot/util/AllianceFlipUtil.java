@@ -17,8 +17,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class AllianceFlipUtil {
-    public static double FIELD_WIDTH = FieldSize.FIELD_WIDTH_M;
-    public static double FIELD_LENGTH = FieldSize.FIELD_LENGTH_M;
+    public static final double FIELD_WIDTH = FieldSize.FIELD_WIDTH_M;
+    public static final double FIELD_LENGTH = FieldSize.FIELD_LENGTH_M;
 
     public static boolean isRedAlliance() {
         var alliance = DriverStation.getAlliance();

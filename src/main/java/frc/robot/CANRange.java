@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.CANrange;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.CtreUtil;
 
 @Logged
 public class CANRange {
@@ -28,6 +29,9 @@ public class CANRange {
 
     public CANRange() {
         m_frontCANrangeConfigurator.ProximityParams.ProximityThreshold = CANRangeConstants.kProximityThreshold;
+
+        CtreUtil.reportIfNotOk("Config front CANrange",
+                m_frontCANrange.getConfigurator().apply(m_frontCANrangeConfigurator));
     }
 
     public void setSimProximitySupplier(BooleanSupplier simProximitySupplier) {

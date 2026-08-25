@@ -19,7 +19,7 @@ import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
     public static class TurretConstants {
-        public static int kCANID = 45;
+        public static final int kCANID = 45;
 
         // Tune PID/FF constants
         public static final double kP = 30;
@@ -68,6 +68,8 @@ public class Turret extends SubsystemBase {
 
     private TurretState turretState = TurretState.AIM_CLOSEST;
     private double requestedAngle = 0;
+    // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
+    private double commandedAngle = 0;
 
     private TurretIO io;
     private Supplier<ShooterTargetData> shotData;
@@ -96,13 +98,17 @@ public class Turret extends SubsystemBase {
         turretState = TurretState.DISABLED;
     }
 
+    public void resetEncoder() {
+        io.resetEncoder();
+    }
+
     @Override
     public void periodic() {
         switch (turretState) {
             case DISABLED -> io.disable();
-            case AIM_CENTRAL -> selectCentralAngle(shotData.get().turretAngleDeg());
-            case AIM_CLOSEST -> selectClosestAngle(shotData.get().turretAngleDeg());
-            case MANUAL -> selectClosestAngle(requestedAngle);
+            case AIM_CENTRAL -> commandedAngle = selectCentralAngle(shotData.get().turretAngleDeg());
+            case AIM_CLOSEST -> commandedAngle = selectClosestAngle(shotData.get().turretAngleDeg());
+            case MANUAL -> commandedAngle = selectClosestAngle(requestedAngle);
         }
 
         io.updateInputs(inputs);
@@ -125,7 +131,7 @@ public class Turret extends SubsystemBase {
         this.turretState = TurretState.MANUAL;
     }
 
-    private void selectClosestAngle(double angle) {
+    private double selectClosestAngle(double angle) {
         double currentAngle = this.getAngle();
 
         angle = MathUtil.inputModulus(angle, -180, 180);
@@ -152,12 +158,14 @@ public class Turret extends SubsystemBase {
         }
 
         io.setAngle(smallestAngle);
+        return smallestAngle;
     }
 
-    private void selectCentralAngle(double angle) {
+    private double selectCentralAngle(double angle) {
         angle = MathUtil.inputModulus(angle, -180, 180);
 
         io.setAngle(angle);
+        return angle;
     }
 
     @Logged(name = "State", importance = Importance.CRITICAL)
@@ -170,7 +178,7 @@ public class Turret extends SubsystemBase {
         return inputs.turretMotorConnected;
     }
 
-    @Logged(name = "Angle", importance = Importance.DEBUG)
+    @Logged(name = "Angle", importance = Importance.INFO)
     public double getAngle() {
         return inputs.angle;
     }
@@ -181,22 +189,22 @@ public class Turret extends SubsystemBase {
         return inputs.velocity;
     }
 
-    @Logged(name = "Setpoint", importance = Importance.DEBUG)
+    @Logged(name = "Setpoint", importance = Importance.INFO)
     public double getRequestedAngle() {
-        return requestedAngle;
+        return commandedAngle;
     }
 
-    @Logged(name = "Stator Current", importance = Importance.INFO)
+    @Logged(name = "Stator Current", importance = Importance.DEBUG)
     public double getStatorCurrent() {
         return inputs.statorCurrent;
     }
 
-    @Logged(name = "Supply Current", importance = Importance.INFO)
+    @Logged(name = "Supply Current", importance = Importance.DEBUG)
     public double getSupplyCurrent() {
         return inputs.supplyCurrent;
     }
 
-    @Logged(name = "Voltage", importance = Importance.INFO)
+    @Logged(name = "Voltage", importance = Importance.DEBUG)
     public double getVoltage() {
         return inputs.appliedVolts;
     }

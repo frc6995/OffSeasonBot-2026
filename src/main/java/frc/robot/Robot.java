@@ -23,7 +23,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.hood.Hood;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.Elastic;
 
+
+//Don't edit this one, edit the one at line 60
 @Logged(name="Robot", importance = Importance.CRITICAL)
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -57,8 +65,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        // m_timeAndJoystickReplay.update();
-        CommandScheduler.getInstance().run();
+        CommandScheduler.getInstance().run(); 
+       // SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
     }
 
     @Override
@@ -75,6 +83,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        // Dynamic current limiting disabled for auto
+        m_robotContainer.currentLimitManager.setEnabled(false);
+
         if (RobotBase.isSimulation()) {
             CommandScheduler.getInstance().schedule(
                     Commands.waitSeconds(autoSimTime)
@@ -90,6 +101,8 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+        //Tab switching so when we start, tab switches to "Autonomous".
+        Elastic.selectTab("Autonomous");
     }
 
     @Override
@@ -106,8 +119,13 @@ public class Robot extends TimedRobot {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
 
+        // enable dynamic current limiting but only for teleop
+        m_robotContainer.currentLimitManager.setEnabled(true);
+
         CommandScheduler.getInstance().schedule(
                 m_robotContainer.m_superstructure.requestFlywheelActiveAfterDelay(1.0));
+        //Tab switches to "Teleoperated"
+        Elastic.selectTab("Teleoperated");
     }
 
     @Override
@@ -133,5 +151,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void simulationPeriodic() {
+        // Runs after robotPeriodic(), so every subsystem's simulationPeriodic() has already pushed
+        // this loop's component poses. One publish per loop instead of one per subsystem.
+        RobotVisualizer.publish();
     }
 }

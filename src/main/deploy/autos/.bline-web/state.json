@@ -53,6 +53,14 @@
         "depot-2.json",
         "depot-3.json"
       ]
+    },
+    {
+      "group_id": "group-49956fb5-6115-4ba8-b5e1-7b0a0e92a4c8",
+      "display_name": "Left Double Swipe Bump",
+      "path_file_names": [
+        "path-1.json",
+        "path-2.json"
+      ]
     }
   ],
   "linked_targets": [
@@ -74,6 +82,14 @@
     }
   ],
   "paths": {
+    "path-2.json": {
+      "display_name": "Path 2",
+      "editor_metadata": null
+    },
+    "path-1.json": {
+      "display_name": "Path 1",
+      "editor_metadata": null
+    },
     "workshop-test-1.json": {
       "display_name": "Workshop_test_1",
       "editor_metadata": {
@@ -90,17 +106,6 @@
               "merge_tolerance_meters_per_sec": 0.3,
               "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":3.08364,\"yMeters\":3.92531,\"handoffRadiusMeters\":0.45,\"rotationRadians\":0,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":2.002991527471924,\"yMeters\":3.8886238142112957,\"handoffRadiusMeters\":0.45,\"rotationRadians\":1.58715,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":7020,\"maxAccelerationDegPerSec\":2000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
             }
-          }
-        ]
-      }
-    },
-    "left-center-line-depot.json": {
-      "display_name": "(Left) Center Line+Depot",
-      "editor_metadata": {
-        "linked_targets": [
-          {
-            "element_index": 6.0,
-            "target_id": "target-418b4784"
           }
         ]
       }
@@ -134,16 +139,23 @@
     "depot-3.json": {
       "display_name": "Depot 3",
       "editor_metadata": null
+    },
+    "left-center-line-depot.json": {
+      "display_name": "(Left) Center Line+Depot",
+      "editor_metadata": {
+        "linked_targets": [
+          {
+            "element_index": 6.0,
+            "target_id": "target-418b4784"
+          }
+        ]
+      }
     }
   },
   "field_assets": {
     "field-bd99cee4-7c44-4fb4-99ed-927e571ea999.png": {
       "file_name": "model_0.glb",
       "mime_type": "model/gltf-binary"
-    },
-    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
-      "file_name": "DSCN8698.JPG",
-      "mime_type": "image/jpeg"
     },
     "field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png": {
       "file_name": "Choreo-v2026.0.3-macOS-aarch64.dmg",
@@ -152,6 +164,10 @@
     "field-02720075-4c8c-427c-8759-646c835cd666.png": {
       "file_name": "tempImageF3Xr1W.png",
       "mime_type": "image/png"
+    },
+    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
+      "file_name": "DSCN8698.JPG",
+      "mime_type": "image/jpeg"
     }
   }
 }

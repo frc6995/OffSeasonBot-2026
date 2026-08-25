@@ -49,7 +49,7 @@ public class AutoAlignFixedHeading extends AutoAlign {
                 targetPose,
                 entryAngle,
                 drivetrain,
-                kDefaultProfile,
+                defaultProfile(),
                 rotationControlMode,
                 AutoAlignConstants.PROFILED_ROTATION_DEFAULT_VELOCITY);
         m_heading = heading;
@@ -70,7 +70,7 @@ public class AutoAlignFixedHeading extends AutoAlign {
             CommandSwerveDrivetrain drivetrain,
             Rotation2d heading,
             RotationControlMode rotationControlMode) {
-        this(new APTarget(targetPose), drivetrain, heading, AutoAlignConstants.DEFAULT_CONSTRAINTS, rotationControlMode);
+        this(new APTarget(targetPose), drivetrain, heading, AutoAlignConstants.defaultConstraints(), rotationControlMode);
     }
 
     /**
@@ -94,7 +94,7 @@ public class AutoAlignFixedHeading extends AutoAlign {
         this(
                 new APTarget(targetPose).withEntryAngle(entryAngle),
                 drivetrain,
-                AutoAlignConstants.DEFAULT_CONSTRAINTS,
+                AutoAlignConstants.defaultConstraints(),
                 cardinalize,
                 rotationControlMode);
     }
@@ -114,7 +114,7 @@ public class AutoAlignFixedHeading extends AutoAlign {
             CommandSwerveDrivetrain drivetrain,
             boolean cardinalize,
             RotationControlMode rotationControlMode) {
-        this(new APTarget(targetPose), drivetrain, AutoAlignConstants.DEFAULT_CONSTRAINTS, cardinalize, rotationControlMode);
+        this(new APTarget(targetPose), drivetrain, AutoAlignConstants.defaultConstraints(), cardinalize, rotationControlMode);
     }
 
     /**

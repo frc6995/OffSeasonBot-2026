@@ -22,8 +22,16 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
+import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
+    // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
+    // they always block waiting for a CAN response, up to this timeout, so this must be a real
+    // positive value. That's fine here: CurrentLimitManager dispatches setRollerCurrentLimits/
+    // setKickerCurrentLimits off the main thread specifically so this blocking can't cause a
+    // loop overrun even if the roller/kicker motors aren't present on the current robot.
+    private static final double kDynamicConfigTimeoutSeconds = 0.05;
+
     protected final TalonFX m_rollerLeadMotor
     = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
 
@@ -57,6 +65,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Current> m_extensionSupplyCurrent = m_extensionLeadMotor.getSupplyCurrent();
     private final StatusSignal<Voltage> m_extensionFollowerAppliedVoltage = m_extensionFollowerMotor.getMotorVoltage();
 
+    private final StatusSignal<AngularVelocity> m_kickerVelocity = m_kickerMotor.getVelocity();
     private final StatusSignal<Voltage> m_kickerAppliedVoltage = m_kickerMotor.getMotorVoltage();
     private final StatusSignal<Current> m_kickerStatorCurrent = m_kickerMotor.getStatorCurrent();
     private final StatusSignal<Current> m_kickerSupplyCurrent = m_kickerMotor.getSupplyCurrent();
@@ -89,9 +98,8 @@ public class IntakeIOTalonFX implements IntakeIO {
         kickConfig.Voltage = new VoltageConfigs()
             .withPeakForwardVoltage(IntakeConstants.kKickerMaxVoltage)
             .withPeakReverseVoltage(IntakeConstants.kKickerMinVoltage);
-        // CtreUtil.reportIfNotOk("configure example",
-        // m_exMotor.getConfigurator().apply(config));
-        m_kickerMotor.getConfigurator().apply(kickConfig);
+        CtreUtil.reportIfNotOk("Config intake kicker",
+                m_kickerMotor.getConfigurator().apply(kickConfig));
     }
 
     private void configureRollerMotors() {
@@ -105,7 +113,6 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withSupplyCurrentLimit(IntakeConstants.kRollerSupplyCurrentLimit)
             .withSupplyCurrentLimitEnable(true);
         rollerConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kRollerReduction);
-        m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         rollerConfig.Slot0 = new Slot0Configs()
             .withKP(IntakeConstants.kRollerP)
             .withKS(IntakeConstants.kRollerS)
@@ -113,9 +120,14 @@ public class IntakeIOTalonFX implements IntakeIO {
         rollerConfig.Voltage = new VoltageConfigs()
             .withPeakForwardVoltage(IntakeConstants.kRollerMaxVoltage)
             .withPeakReverseVoltage(IntakeConstants.kRollerMinVoltage);
-        // CtreUtil.reportIfNotOk("configure example",
-        // m_exMotor.getConfigurator().apply(config));
-        m_rollerLeadMotor.getConfigurator().apply(rollerConfig);
+
+       
+        CtreUtil.reportIfNotOk("Config intake roller (lead)",
+                m_rollerLeadMotor.getConfigurator().apply(rollerConfig));
+        CtreUtil.reportIfNotOk("Config intake roller (follower)",
+                m_rollerFollowerMotor.getConfigurator().apply(rollerConfig));
+
+        m_rollerFollowerMotor.setControl(new Follower(m_rollerLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
     private void configureExtensionMotors() {
@@ -142,8 +154,10 @@ public class IntakeIOTalonFX implements IntakeIO {
         .withKP(IntakeConstants.kExtensionP)
         .withKV(IntakeConstants.kExtensionV);
 
-        m_extensionLeadMotor.getConfigurator().apply(extensionConfig);
-        m_extensionFollowerMotor.getConfigurator().apply(extensionConfig);
+        CtreUtil.reportIfNotOk("Config intake extension (lead)",
+                m_extensionLeadMotor.getConfigurator().apply(extensionConfig));
+        CtreUtil.reportIfNotOk("Config intake extension (follower)",
+                m_extensionFollowerMotor.getConfigurator().apply(extensionConfig));
         m_extensionFollowerMotor.setControl(new Follower(m_extensionLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
@@ -156,7 +170,7 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_rollerFollowerAppliedVoltage,
             m_extensionPosition, m_extensionAppliedVoltage, m_extensionStatorCurrent, m_extensionSupplyCurrent,
             m_extensionFollowerAppliedVoltage,
-            m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
+            m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
 
         inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
         inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
@@ -174,6 +188,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         inputs.extensionStatorCurrentAmps = m_extensionStatorCurrent.getValueAsDouble();
         inputs.extensionSupplyCurrentAmps = m_extensionSupplyCurrent.getValueAsDouble();
 
+        inputs.kickerVelocityRPM = m_kickerVelocity.getValueAsDouble() * 60;
         inputs.kickerAppliedVolts = m_kickerAppliedVoltage.getValueAsDouble();
         inputs.kickerStatorCurrentAmps = m_kickerStatorCurrent.getValueAsDouble();
         inputs.kickerSupplyCurrentAmps = m_kickerSupplyCurrent.getValueAsDouble();
@@ -197,6 +212,33 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     public double getExtensionPosition() {
         return m_extensionLeadMotor.getPosition().getValueAsDouble();
+    }
+
+    // A non-positive limit means "unmanaged" (see CurrentLimit), so that axis is disabled rather
+    // than written as a negative enabled limit.
+    private static CurrentLimitsConfigs currentLimits(
+            double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
+        return new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(Math.max(statorCurrentLimitAmps, 0.0))
+            .withStatorCurrentLimitEnable(statorCurrentLimitAmps > 0)
+            .withSupplyCurrentLimit(Math.max(supplyCurrentLimitAmps, 0.0))
+            .withSupplyCurrentLimitEnable(supplyCurrentLimitAmps > 0);
+    }
+
+    @Override
+    public void setRollerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = currentLimits(statorCurrentLimitAmps, supplyCurrentLimitAmps);
+        CtreUtil.reportIfNotOk("Intake/Roller current limit",
+                m_rollerLeadMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+        CtreUtil.reportIfNotOk("Intake/Roller (follower) current limit",
+                m_rollerFollowerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+    }
+
+    @Override
+    public void setKickerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = currentLimits(statorCurrentLimitAmps, supplyCurrentLimitAmps);
+        CtreUtil.reportIfNotOk("Intake/Kicker current limit",
+                m_kickerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
     }
 
     @Override

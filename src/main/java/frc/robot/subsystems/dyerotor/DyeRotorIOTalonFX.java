@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
+import frc.robot.util.CtreUtil;
 
 public class DyeRotorIOTalonFX implements DyeRotorIO {
   protected final TalonFX m_spinMotor = new TalonFX(DyeRotorConstants.kSpinMotorCANID, Constants.CANBuses.UpperBus);
@@ -71,7 +72,8 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     spinConfig.Voltage = new VoltageConfigs()
         .withPeakForwardVoltage(DyeRotorConstants.kMaxAppliedVolts)
         .withPeakReverseVoltage(DyeRotorConstants.kSpinIdleReverseVolts);
-    m_spinMotor.getConfigurator().apply(spinConfig);
+    CtreUtil.reportIfNotOk("Config dye rotor spin",
+        m_spinMotor.getConfigurator().apply(spinConfig));
   }
 
   private void configureIndexMotors() {
@@ -96,8 +98,10 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     indexConfig.Voltage = new VoltageConfigs()
         .withPeakForwardVoltage(DyeRotorConstants.kMaxAppliedVolts)
         .withPeakReverseVoltage(DyeRotorConstants.kMinAppliedVolts);
-    m_indexerLead.getConfigurator().apply(indexConfig);
-    m_indexerFollow.getConfigurator().apply(indexConfig);
+    CtreUtil.reportIfNotOk("Config dye rotor index (lead)",
+        m_indexerLead.getConfigurator().apply(indexConfig));
+    CtreUtil.reportIfNotOk("Config dye rotor index (follower)",
+        m_indexerFollow.getConfigurator().apply(indexConfig));
 
     m_indexerFollow.setControl(
         new Follower(m_indexerLead.getDeviceID(), MotorAlignmentValue.Aligned));

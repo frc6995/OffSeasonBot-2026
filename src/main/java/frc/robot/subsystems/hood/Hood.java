@@ -15,7 +15,7 @@ import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Hood extends SubsystemBase {
     public static class HoodConstants {
-        public static int kCANID = 44; // Should be right with doc
+        public static final int kCANID = 44; // Should be right with doc
 
         public static final double[][] kAngleData = {
                 // Distance (Meters), Angle(Degrees)
@@ -119,6 +119,10 @@ public class Hood extends SubsystemBase {
         setState(HoodState.DISABLED);
     }
 
+    public void resetEncoder() {
+        io.resetEncoder();
+    }
+
     public void setAngle(double angle) {
         hoodState = HoodState.ACTIVE;
 
@@ -141,27 +145,27 @@ public class Hood extends SubsystemBase {
         return inputs.hoodMotorConnected;
     }
 
-    @Logged(name = "Angle", importance = Importance.DEBUG)
+    @Logged(name = "Angle", importance = Importance.INFO)
     public double getAngle() {
         return inputs.angle;
     }
 
-    @Logged(name = "Setpoint", importance = Importance.DEBUG)
+    @Logged(name = "Setpoint", importance = Importance.INFO)
     public double getRequestedAngle() {
         return requestedAngle;
     }
 
-    @Logged(name = "Stator Current", importance = Importance.INFO)
+    @Logged(name = "Stator Current", importance = Importance.DEBUG)
     public double getStatorCurrent() {
         return inputs.statorCurrent;
     }
 
-    @Logged(name = "Supply Current", importance = Importance.INFO)
+    @Logged(name = "Supply Current", importance = Importance.DEBUG)
     public double getSupplyCurrent() {
         return inputs.supplyCurrent;
     }
 
-    @Logged(name = "Voltage", importance = Importance.INFO)
+    @Logged(name = "Voltage", importance = Importance.DEBUG)
     public double getVoltage() {
         return inputs.appliedVolts;
     }

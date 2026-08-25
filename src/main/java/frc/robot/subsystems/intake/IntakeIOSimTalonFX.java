@@ -13,23 +13,26 @@ import frc.robot.util.CtreUtil;
 
 public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     private static final double kSimLoopPeriodSeconds = 0.02;
-    private static final double kRollerMOI = 0.001;
-    private static final double kKickerMOI = 0.001;
      public static final double kExtensionMOI = 0.07;
     private static final double kExtensionCarriageMassKg = 2.0;
-    private static final double kExtensionDrumRadiusMeters = 0.019;
+    // Derived from the real IO's directly-measured drum circumference (IntakeConstants
+    // .kDrumCircumferenceMeters) rather than a separately-estimated radius, so the ElevatorSim's
+    // physics and the sensor conversion below always agree with real hardware by construction -
+    // no more maintaining two numbers for the same physical drum.
+    private static final double kExtensionDrumRadiusMeters =
+            IntakeConstants.kDrumCircumferenceMeters / (2.0 * Math.PI);
 
     private final FlywheelSim rollerSim = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
                     DCMotor.getKrakenX60(2),
-                    kRollerMOI,
+                    IntakeConstants.kRollerMOI,
                     IntakeConstants.kRollerReduction),
             DCMotor.getKrakenX60(2));
 
     private final FlywheelSim kickerSim = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(
                     DCMotor.getKrakenX60(1),
-                    kKickerMOI,
+                    IntakeConstants.kKickerMOI,
                     IntakeConstants.kKickerReduction),
             DCMotor.getKrakenX60(1));
 
@@ -95,9 +98,10 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         rollerState.setRotorVelocity(rollerRotationsToMotorRotations(rollerVelocityRPM / 60.0));
         kickerState.setRotorVelocity(kickerRotationsToMotorRotations(kickerVelocityRPM / 60.0));
 
-        extensionState.setRawRotorPosition(simMetersToMotorRotations(extensionPositionMeters));
-        extensionState.setRotorVelocity(simMetersToMotorRotations(extensionVelocityMetersPerSecond));
+        extensionState.setRawRotorPosition(metersToMotorRotations(extensionPositionMeters));
+        extensionState.setRotorVelocity(metersToMotorRotations(extensionVelocityMetersPerSecond));
 
+        inputs.rollerVelocityRPM = rollerVelocityRPM;
         inputs.rollerAppliedVolts = rollerAppliedVolts;
         inputs.rollerStatorCurrentAmps = rollerState.getTorqueCurrent();
         inputs.rollerSupplyCurrentAmps = rollerState.getSupplyCurrent();
@@ -111,6 +115,7 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
         inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
 
+        inputs.kickerVelocityRPM = kickerVelocityRPM;
         inputs.kickerAppliedVolts = kickerAppliedVolts;
         inputs.kickerStatorCurrentAmps = kickerState.getTorqueCurrent();
         inputs.kickerSupplyCurrentAmps = kickerState.getSupplyCurrent();
@@ -121,11 +126,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     public void resetEncoder() {
         super.resetEncoder();
         extensionSim.setState(IntakeConstants.kExtensionMinMeters, 0.0);
-    }
-
-    private static double simMetersToMotorRotations(double meters) {
-        return meters / (2.0 * Math.PI * kExtensionDrumRadiusMeters)
-                * IntakeConstants.kExtensionReduction;
     }
 
     protected static double kickerRotationsToMotorRotations(double rotations) {

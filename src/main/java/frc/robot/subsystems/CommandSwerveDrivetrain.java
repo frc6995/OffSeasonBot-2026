@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -29,10 +30,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.subsystems.vision.apriltag.AprilTagVision;
-import frc.robot.subsystems.vision.apriltag.NoneATVision;
-import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.util.CtreUtil;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -261,6 +261,37 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     // @Logged(name = "State", importance = Importance.CRITICAL)
     public SwerveDriveState state() {
         return getState();
+    }
+
+    // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
+    // they always block waiting for a CAN response, up to this timeout, so this must be a real
+    // positive value. That's fine here: CurrentLimitManager dispatches this method off the main
+    // thread specifically so this blocking can't cause a loop overrun.
+    private static final double kDynamicConfigTimeoutSeconds = 0.05;
+
+    /**
+     * Sets the supply current limit on every drive motor. Only ever called from
+     * {@link frc.robot.util.currentlimit.CurrentLimitManager}'s background apply thread (see
+     * {@link frc.robot.RobotCurrentLimits}), never from periodic() directly - a config-apply call
+     * blocks waiting on a CAN response, which would stall the main loop if run there.
+     *
+     * <p>{@code CurrentLimitsConfigs} is a config *group*: applying one overwrites every field in
+     * the group on the motor, including ones this call doesn't set, resetting them to their class
+     * defaults. So the stator limit is re-asserted to {@link TunerConstants#kSlipCurrent} on every
+     * call here as well, even though this method only ever changes the supply limit. Otherwise a
+     * dynamic supply-limit change would silently wipe out the slip-current-based stator limit that
+     * TunerConstants configures.
+     */
+    public void setDriveSupplyCurrentLimit(double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(TunerConstants.kSlipCurrent)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(supplyCurrentLimitAmps)
+            .withSupplyCurrentLimitEnable(true);
+        for (var module : getModules()) {
+            CtreUtil.reportIfNotOk("Drivetrain/Drive current limit",
+                    module.getDriveMotor().getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+        }
     }
 
     public void drive(ChassisSpeeds speeds) {

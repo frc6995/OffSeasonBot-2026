@@ -10,8 +10,8 @@ import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.measure.Angle;
 
 public class UnitUtil {
-    public static Angle CW_180 = Degrees.of(-180);
-    public static Angle CCW_180 = Degrees.of(180);
+    public static final Angle CW_180 = Degrees.of(-180);
+    public static final Angle CCW_180 = Degrees.of(180);
 
     public static <U extends Unit, M extends Measure<U>> M max(M a, M b) {
         return a.gte(b) ? a : b;

@@ -121,15 +121,15 @@ public class DyeRotor extends SubsystemBase {
 
     @Logged(name = "Connected", importance = Importance.CRITICAL)
     public boolean isConnected() {
-        return inputs.indexFollowerMotorConnected && inputs.spinMotorConnected;
+        return inputs.indexLeadMotorConnected && inputs.indexFollowerMotorConnected && inputs.spinMotorConnected;
     }
 
-    @Logged(name = "Spin Velocity", importance = Importance.DEBUG)
+    @Logged(name = "Spin Velocity", importance = Importance.INFO)
     public double getSpinVelocityRPM() {
         return inputs.spinVelocityRPM;
     }
 
-    @Logged(name = "Index Velocity", importance = Importance.DEBUG)
+    @Logged(name = "Index Velocity", importance = Importance.INFO)
     public double getIndexVelocityRPM() {
         return inputs.indexVelocityRPM;
     }

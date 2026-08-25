@@ -120,17 +120,17 @@ public class Flywheel extends SubsystemBase {
         && inputs.followerMotor3Connected;
   }
 
-  @Logged(name = "Velocity", importance = Importance.DEBUG)
+  @Logged(name = "Velocity", importance = Importance.INFO)
   public double getVelocityRPM() {
     return inputs.velocityRPM;
   }
 
-  @Logged(name = "Setpoint", importance = Importance.DEBUG)
+  @Logged(name = "Setpoint", importance = Importance.INFO)
   public double getSetpointRPM() {
     return targetData.get().flywheelRpm();
   }
 
-  @Logged(name = "Voltage", importance = Importance.INFO)
+  @Logged(name = "Voltage", importance = Importance.DEBUG)
   public double getAppliedVolts() {
     return inputs.appliedVolts;
   }
