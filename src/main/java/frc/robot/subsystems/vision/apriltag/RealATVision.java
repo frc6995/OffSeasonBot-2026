@@ -56,7 +56,7 @@ public class RealATVision extends AprilTagVision {
 
         /**
          * Whether the Limelight's camerapose_robotspace frame is +Y right (making it mirrored
-         * relative to WPILib's +Y left), which also flips the sign of pitch and yaw.
+         * relative to WPILib's +Y left), which also flips the sign of roll and yaw.
          * <p>
          * VERIFY THIS ON THE FIELD BEFORE TRUSTING OFF-AXIS TURRET ANGLES. With the turret at 0 deg
          * the camera is on the centerline with zero yaw, so both settings are identical and the
@@ -82,10 +82,10 @@ public class RealATVision extends AprilTagVision {
         public static final double kMaxTiltRad = Math.toRadians(20);
 
         /**
-         * How much turret angle history to keep. Must comfortably exceed
+         * How much turret angle / chassis motion history to keep. Must comfortably exceed
          * {@link #kMaxEstimateAgeSeconds} so the history actually spans every estimate we consider.
          */
-        public static final double kTurretHistorySeconds = 1.0;
+        public static final double kEstimateHistorySeconds = 1.0;
 
         /** Reject estimates captured longer ago than this. */
         public static final double kMaxEstimateAgeSeconds = 0.4;
@@ -147,10 +147,25 @@ public class RealATVision extends AprilTagVision {
 
     /** Where the turret actually was, by FPGA timestamp. */
     private final TimeInterpolatableBuffer<Rotation2d> turretAngleBuffer =
-        TimeInterpolatableBuffer.createBuffer(ATVisionConstants.kTurretHistorySeconds);
+        TimeInterpolatableBuffer.createBuffer(ATVisionConstants.kEstimateHistorySeconds);
     /** Which turret angle we pushed to the Limelight, by the FPGA timestamp of the write. */
     private final TimeInterpolatableBuffer<Rotation2d> pushedAngleBuffer =
-        TimeInterpolatableBuffer.createBuffer(ATVisionConstants.kTurretHistorySeconds);
+        TimeInterpolatableBuffer.createBuffer(ATVisionConstants.kEstimateHistorySeconds);
+    /**
+     * Chassis yaw rate history, by FPGA timestamp. Looked up at each estimate's capture time
+     * rather than read fresh -- same reasoning as the turret mismatch check below: testing "right
+     * now" would happily accept a frame captured mid-spin just because the chassis has since
+     * settled, and would just as wrongly reject a good frame captured while stationary because the
+     * chassis happens to be spinning now.
+     */
+    private final TimeInterpolatableBuffer<Double> chassisOmegaBuffer =
+        TimeInterpolatableBuffer.createDoubleBuffer(ATVisionConstants.kEstimateHistorySeconds);
+    /** Gyro roll history, by FPGA timestamp. See {@link #chassisOmegaBuffer}. */
+    private final TimeInterpolatableBuffer<Double> rollBuffer =
+        TimeInterpolatableBuffer.createDoubleBuffer(ATVisionConstants.kEstimateHistorySeconds);
+    /** Gyro pitch history, by FPGA timestamp. See {@link #chassisOmegaBuffer}. */
+    private final TimeInterpolatableBuffer<Double> pitchBuffer =
+        TimeInterpolatableBuffer.createDoubleBuffer(ATVisionConstants.kEstimateHistorySeconds);
 
     private final NetworkTable visionTable;
 
@@ -236,6 +251,10 @@ public class RealATVision extends AprilTagVision {
         Rotation2d fieldYaw = state.Pose.getRotation();
         Rotation3d seedRotation = new Rotation3d(gyroRot.getX(), gyroRot.getY(), fieldYaw.getRadians());
 
+        chassisOmegaBuffer.addSample(now, state.Speeds.omegaRadiansPerSecond);
+        rollBuffer.addSample(now, gyroRot.getX());
+        pitchBuffer.addSample(now, gyroRot.getY());
+
         Rotation2d turretAngle = Rotation2d.fromDegrees(turretAngleSupplier.get());
         turretAngleBuffer.addSample(now, turretAngle);
 
@@ -253,10 +272,6 @@ public class RealATVision extends AprilTagVision {
         // its independent yaw solve is what pulls the estimator onto the field.
         boolean useMegaTag1 = DriverStation.isDisabled() || !headingSeeded;
         EstimationMode mode = useMegaTag1 ? EstimationMode.MEGATAG1 : EstimationMode.MEGATAG2;
-
-        boolean chassisOk = Math.abs(state.Speeds.omegaRadiansPerSecond) < ATVisionConstants.kMaxChassisOmegaRadPerSec;
-        boolean levelOk = Math.abs(gyroRot.getX()) < ATVisionConstants.kMaxTiltRad
-            && Math.abs(gyroRot.getY()) < ATVisionConstants.kMaxTiltRad;
 
         int accepted = 0;
         for (int i = 0; i < limelights.length; i++) {
@@ -286,7 +301,7 @@ public class RealATVision extends AprilTagVision {
                 }
             }
 
-            String reject = rejectReason(estimate, now, chassisOk, levelOk, isTurretCam);
+            String reject = rejectReason(estimate, now, isTurretCam);
             if (!reject.isEmpty()) {
                 lastRejectReason = reject;
                 continue;
@@ -323,20 +338,32 @@ public class RealATVision extends AprilTagVision {
      *                    skip the turret geometry checks entirely -- their offset never moves.
      * @return An empty string to accept, otherwise a short reason the estimate was rejected.
      */
-    private String rejectReason(AprilTagEstimate est, double now, boolean chassisOk, boolean levelOk, boolean isTurretCam) {
-        if (!chassisOk) return "chassis yaw rate";
-        if (!levelOk) return "robot tilted";
+    private String rejectReason(AprilTagEstimate est, double now, boolean isTurretCam) {
+        // Freshness applies to EVERY camera, not just the turret one: a disconnected Limelight
+        // leaves its last botpose sitting in NetworkTables, so without this we would re-accept the
+        // same stale pose every loop for as long as it stayed down. It must also come before any
+        // buffer lookup below -- see isFresh's docs on why an out-of-range timestamp can't be
+        // trusted to report a miss.
+        double captureTime = est.timestampSeconds();
+        if (now - captureTime < -ATVisionConstants.kClockSkewToleranceSeconds) return "timestamp in the future";
+        if (!isFresh(captureTime, now)) return "estimate too old";
+
+        // Evaluated at the moment the frame was captured, not "right now" -- the wrong instant
+        // would happily accept a frame captured mid-spin just because the chassis has since
+        // settled, and just as wrongly reject a good frame captured while stationary because the
+        // chassis happens to be moving now. Same reasoning as the turret checks below.
+        Optional<Double> chassisOmega = chassisOmegaBuffer.getSample(captureTime);
+        Optional<Double> roll = rollBuffer.getSample(captureTime);
+        Optional<Double> pitch = pitchBuffer.getSample(captureTime);
+        if (chassisOmega.isEmpty() || roll.isEmpty() || pitch.isEmpty()) return "no chassis history";
+        if (Math.abs(chassisOmega.get()) >= ATVisionConstants.kMaxChassisOmegaRadPerSec) return "chassis yaw rate";
+        if (Math.abs(roll.get()) >= ATVisionConstants.kMaxTiltRad
+            || Math.abs(pitch.get()) >= ATVisionConstants.kMaxTiltRad) return "robot tilted";
+
         if (est.tagCount() <= 0) return "no tags";
         if (est.avgAmbiguity() > ATVisionConstants.kMaxAmbiguity) return "ambiguity";
         // A pose sitting on the field origin means the solve produced nothing useful.
         if (est.estimatedPose().getTranslation().getDistance(Translation2d.kZero) < 0.05) return "pose at origin";
-
-        // Freshness applies to EVERY camera, not just the turret one: a disconnected Limelight
-        // leaves its last botpose sitting in NetworkTables, so without this we would re-accept the
-        // same stale pose every loop for as long as it stayed down.
-        double captureTime = est.timestampSeconds();
-        if (now - captureTime < -ATVisionConstants.kClockSkewToleranceSeconds) return "timestamp in the future";
-        if (!isFresh(captureTime, now)) return "estimate too old";
 
         if (!isTurretCam) return "";
 
@@ -355,11 +382,11 @@ public class RealATVision extends AprilTagVision {
      * <p>
      * Serves two purposes. It rejects stale poses generally -- a Limelight that drops off the
      * network leaves its last botpose in NetworkTables, where it would otherwise look valid
-     * forever. And because the bound is well inside {@link ATVisionConstants#kTurretHistorySeconds},
-     * a fresh estimate is also guaranteed to be spanned by the turret history: relevant because
-     * {@link TimeInterpolatableBuffer#getSample(double)} clamps to the ends of its history rather
-     * than reporting a miss, so an out-of-range timestamp silently returns the oldest or newest
-     * sample instead of nothing. Every buffer lookup must be bounded by this first.
+     * forever. And because the bound is well inside {@link ATVisionConstants#kEstimateHistorySeconds},
+     * a fresh estimate is also guaranteed to be spanned by the chassis/tilt/turret history buffers:
+     * relevant because {@link TimeInterpolatableBuffer#getSample(double)} clamps to the ends of its
+     * history rather than reporting a miss, so an out-of-range timestamp silently returns the
+     * oldest or newest sample instead of nothing. Every buffer lookup must be bounded by this first.
      */
     private boolean isFresh(double captureTime, double now) {
         double age = now - captureTime;
