@@ -122,8 +122,6 @@ public class Robot extends TimedRobot {
         // enable dynamic current limiting but only for teleop
         m_robotContainer.currentLimitManager.setEnabled(true);
 
-        CommandScheduler.getInstance().schedule(
-                m_robotContainer.m_superstructure.requestFlywheelActiveAfterDelay(1.0));
         //Tab switches to "Teleoperated"
         Elastic.selectTab("Teleoperated");
     }

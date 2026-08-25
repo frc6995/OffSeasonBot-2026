@@ -6,6 +6,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color;
@@ -47,22 +48,44 @@ public class Telemetry {
             .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
     };
 
+    /**
+     * Minimum spacing between pose publishes. telemeterize() is driven by Phoenix's odometry
+     * thread, which runs at up to 250Hz - far faster than any dashboard renders - so publishing
+     * every callback would put 5x the useful traffic on NetworkTables for no visible benefit.
+     */
+    private static final double kMinPublishIntervalSeconds = 0.02;
+
+    private double m_lastPublishTimestamp = Double.NEGATIVE_INFINITY;
+
     private final double[] m_poseArray = new double[3];
     private final double[] m_moduleStatesArray = new double[8];
     private final double[] m_moduleTargetsArray = new double[8];
 
+    public Telemetry() {
+        // The Field2d type string never changes, so publish it once here rather than on every
+        // telemeterize() callback (which runs on the odometry thread at up to 250Hz).
+        fieldTypePub.set("Field2d");
+    }
+
     /**
      * Accept the swerve drive state and telemeterize it to SmartDashboard and
      * SignalLogger.
+     *
+     * <p>Called from Phoenix's odometry thread on every state update, not from the main loop.
      */
     public void telemeterize(SwerveDriveState state) {
+        double now = Timer.getFPGATimestamp();
+        if (now - m_lastPublishTimestamp < kMinPublishIntervalSeconds) {
+            return;
+        }
+        m_lastPublishTimestamp = now;
+
         // /* Telemeterize the swerve drive state */
         m_poseArray[0] = state.Pose.getX();
         m_poseArray[1] = state.Pose.getY();
         m_poseArray[2] = state.Pose.getRotation().getDegrees();
 
         // /* Telemeterize the pose to a Field2d */
-        fieldTypePub.set("Field2d");
         fieldPub.set(m_poseArray);
     }
 }

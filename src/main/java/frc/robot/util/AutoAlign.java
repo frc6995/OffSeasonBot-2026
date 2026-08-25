@@ -506,7 +506,12 @@ public class AutoAlign extends Command {
 
     @Override
     public void initialize() {
-        swerveState = m_drivetrain.getState();
+        // getStateCopy(), not state(): the three fields read below have to describe the same
+        // odometry tick. state() hands back Phoenix's live internal state object, which the
+        // odometry thread rewrites at up to 250Hz, so Pose/Speeds/Timestamp read off it can come
+        // from different ticks - and a Timestamp that disagrees with the pose feeds a wrong dt
+        // straight into the rotation profile. getStateCopy() clones under Phoenix's state lock.
+        swerveState = m_drivetrain.getStateCopy();
         // Reset the rotation profile to the current heading and angular velocity.
         m_rotationProfile.reset(
                 swerveState.Pose.getRotation().getRadians(),
@@ -516,7 +521,9 @@ public class AutoAlign extends Command {
 
     @Override
     public void execute() {
-        swerveState = m_drivetrain.getState();
+        // Coherent snapshot required - see initialize(). applyDriveRequest() below also reads
+        // swerveState.Timestamp, so Pose, Speeds and Timestamp must all be from one tick.
+        swerveState = m_drivetrain.getStateCopy();
         // Compute translational setpoints from Autopilot.
         APResult out = kAutopilot.calculate(swerveState.Pose, swerveState.Speeds, m_target);
 
@@ -563,6 +570,6 @@ public class AutoAlign extends Command {
     @Override
     public boolean isFinished() {
         // Check if the Autopilot considers the robot within tolerance of the target.
-        return kAutopilot.atTarget(m_drivetrain.getState().Pose, m_target);
+        return kAutopilot.atTarget(m_drivetrain.state().Pose, m_target);
     }
 }
