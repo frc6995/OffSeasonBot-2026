@@ -24,8 +24,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
-import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.subsystems.vision.apriltag.SimATVision;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
@@ -59,7 +59,14 @@ public class RobotContainer {
 
     public Superstructure m_superstructure = new Superstructure(m_drivetrain::state);
 
-    public final AprilTagVision m_vision = (Utils.isSimulation()) ? new NoneATVision()
+    public final AprilTagVision m_vision = (Utils.isSimulation())
+            ? new SimATVision(
+                m_drivetrain::state,
+                m_drivetrain.getPigeon2()::getRotation3d,
+                (estimate, stdDevs) -> {
+                    m_drivetrain.addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(), stdDevs);
+                },
+                m_superstructure.m_turret::getAngle)
             : new RealATVision(
                 m_drivetrain::state,
                 m_drivetrain.getPigeon2()::getRotation3d,
