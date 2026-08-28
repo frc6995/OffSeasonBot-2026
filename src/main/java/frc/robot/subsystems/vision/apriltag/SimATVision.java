@@ -70,7 +70,11 @@ public class SimATVision extends RealATVision {
         /** MegaTag2 only solves translation -- yaw is echoed back from what we seeded it with. */
         public static final double kMT2XYNoiseMeters = 0.03;
 
-        /** Ambiguity model: base value, plus terms that grow toward the FOV edge and at range. */
+        /**
+         * Ambiguity model: a base value, plus terms that grow with how edge-on (as opposed to
+         * square-on) the tag is viewed and with range, both divided by the tag count for that
+         * frame since a multi-tag solve is far better constrained than any single tag alone.
+         */
         public static final double kBaseAmbiguity = 0.02;
         public static final double kAmbiguityAngleCoeff = 0.4;
         public static final double kAmbiguityDistCoeff = 0.3;
@@ -201,8 +205,11 @@ public class SimATVision extends RealATVision {
         return solveRobotToCamera(usedAngle.getDegrees());
     }
 
+    /** A tag that survived the FOV/range/facing gates, before ambiguity is assigned (which needs the final tag count). */
+    private record SimCandidateTag(int id, double rangeMeters, double areaPercent, double viewAngleFrac, double distFrac) {}
+
     private List<SimObservedTag> findVisibleTags(Pose3d fieldToCamera) {
-        List<SimObservedTag> visible = new ArrayList<>();
+        List<SimCandidateTag> candidates = new ArrayList<>();
         double halfHFov = Math.toRadians(SimVisionConstants.kHorizontalFOVDeg / 2.0);
         double halfVFov = Math.toRadians(SimVisionConstants.kVerticalFOVDeg / 2.0);
 
@@ -218,7 +225,10 @@ public class SimATVision extends RealATVision {
             double pitchToTag = Math.atan2(camToTag.getZ(), x);
             if (Math.abs(yawToTag) > halfHFov || Math.abs(pitchToTag) > halfVFov) continue;
 
-            // A real camera can't see through the panel the tag is printed on.
+            // A real camera can't see through the panel the tag is printed on, and the more
+            // edge-on the tag appears (as opposed to square-on), the more ambiguous a real
+            // pose solve actually is -- this is the foreshortening angle that drives it, not how
+            // close to the edge of the camera's own FOV the tag happens to sit.
             Translation3d tagToCamera = fieldToCamera.getTranslation().minus(tag.pose.getTranslation());
             Translation3d tagNormal = new Translation3d(1, 0, 0).rotateBy(tag.pose.getRotation());
             double facingDot = tagToCamera.getX() * tagNormal.getX()
@@ -226,18 +236,27 @@ public class SimATVision extends RealATVision {
                 + tagToCamera.getZ() * tagNormal.getZ();
             if (facingDot <= 0) continue;
 
-            double offAxisFrac = Math.max(Math.abs(yawToTag) / halfHFov, Math.abs(pitchToTag) / halfVFov);
+            double viewAngle = Math.acos(MathUtil.clamp(facingDot / range, -1, 1));
+            double viewAngleFrac = viewAngle / (Math.PI / 2); // 0 = square-on, 1 = edge-on
             double distFrac = MathUtil.clamp(range / SimVisionConstants.kMaxTagRangeMeters, 0, 1);
-            double ambiguity = forcedAmbiguity != null ? forcedAmbiguity : MathUtil.clamp(
-                SimVisionConstants.kBaseAmbiguity
-                    + SimVisionConstants.kAmbiguityAngleCoeff * offAxisFrac
-                    + SimVisionConstants.kAmbiguityDistCoeff * distFrac
-                    + gaussian(SimVisionConstants.kAmbiguityNoiseStdDev),
-                0, 1);
             double areaPercent = MathUtil.clamp(
                 SimVisionConstants.kTagAreaAtOneMeterPct / (range * range), 0, 100);
 
-            visible.add(new SimObservedTag(tag.ID, range, areaPercent, ambiguity));
+            candidates.add(new SimCandidateTag(tag.ID, range, areaPercent, viewAngleFrac, distFrac));
+        }
+
+        // Ambiguity drops sharply with more tags in the solve -- a real multi-tag MegaTag solve is
+        // far better constrained than any one of its tags would be alone -- so it has to be scaled
+        // after the full candidate count for this frame is known.
+        int tagCount = candidates.size();
+        List<SimObservedTag> visible = new ArrayList<>(tagCount);
+        for (SimCandidateTag c : candidates) {
+            double penalty = (SimVisionConstants.kAmbiguityAngleCoeff * c.viewAngleFrac()
+                + SimVisionConstants.kAmbiguityDistCoeff * c.distFrac()) / tagCount;
+            double ambiguity = forcedAmbiguity != null ? forcedAmbiguity : MathUtil.clamp(
+                SimVisionConstants.kBaseAmbiguity + penalty + gaussian(SimVisionConstants.kAmbiguityNoiseStdDev),
+                0, 1);
+            visible.add(new SimObservedTag(c.id(), c.rangeMeters(), c.areaPercent(), ambiguity));
         }
         return visible;
     }
