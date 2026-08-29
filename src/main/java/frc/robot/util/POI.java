@@ -6,20 +6,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.generated.ChoreoVars;
 
 import static frc.robot.util.AllianceFlipUtil.flipped;
 
 public class POI {
     // ============= POSES =============
-    // Need to flip
     public static final Supplier<Pose2d> HUB_CENTER = flipped(
             new Pose2d(4.624246120452881, 4.037848949432373, Rotation2d.kZero));
-
-    public static final Supplier<Pose2d> M_1 = flipped(ChoreoVars.Poses.M_1);
-    public static final Supplier<Pose2d> M_2 = flipped(ChoreoVars.Poses.M_2);
-    public static final Supplier<Pose2d> M_3 = flipped(ChoreoVars.Poses.M_3);
-    public static final Supplier<Pose2d> HUB_BEHIND_INTAKE = flipped(ChoreoVars.Poses.HUB_BEHIND_INTAKE);
 
     // ============= ZONES =============
     // Blue-alliance-relative corners of the zone where a shot should PASS
