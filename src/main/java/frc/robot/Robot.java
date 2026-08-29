@@ -58,6 +58,9 @@ public class Robot extends TimedRobot {
             }
 
             config.minimumImportance = Logged.Importance.CRITICAL;
+            // Only write a value to the backend when it actually changes, to save
+            // bandwidth/log file size.
+            config.backend = config.backend.lazy();
         });
         DriverStation.startDataLog(DataLogManager.getLog());
         Epilogue.bind(this);
