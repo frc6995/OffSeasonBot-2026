@@ -165,10 +165,6 @@ public class CurrentLimitManager extends SubsystemBase {
        
     }
 
-    private static String formatAxis(double amps) {
-        return amps <= 0 ? "n/a (unmanaged)" : String.format("%.1fA", amps);
-    }
-
     // Runs applyLimit off the main thread (see class javadoc). Exceptions are caught rather than
     // left to the executor's default handler: an uncaught exception would otherwise only surface
     // as a silent thread death, and the next dispatchApply() call would just spin up a new worker

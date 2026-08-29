@@ -49,12 +49,22 @@ public class TunerConstants {
     // When not Pro-licensed, Fused*/Sync* automatically fall back to Remote*
     private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.FusedCANcoder;
 
-    // The stator current at which the wheels start to slip;
-    // This needs to be tuned to your individual robot
-    // Public so that RobotCurrentLimits/
-    // CommandSwerveDrivetrain can set the drive motors' stator limit to this 
-    // whenever they reapply current limits.
-    public static final Current kSlipCurrent = Amps.of(120);
+    // The stator current at which the wheels start to slip.
+    // This needs to be tuned to your individual robot; the front wheels carry more of the
+    // robot's weight than the rear wheels, so they can support a higher slip current before
+    // breaking traction. Tune each side independently.
+    // Public so that RobotCurrentLimits/CommandSwerveDrivetrain can set the drive motors'
+    // stator limit to these whenever they reapply current limits.
+    public static final Current kFrontSlipCurrent = Amps.of(120);
+    public static final Current kBackSlipCurrent = Amps.of(120);
+
+    // Per-module slip currents, in the same order as the module constants are passed to
+    // createDrivetrain()/getModules() (FrontLeft, FrontRight, BackLeft, BackRight). Used by
+    // CommandSwerveDrivetrain to re-assert the correct per-module stator limit whenever it
+    // reapplies current limits at runtime.
+    public static final Current[] kModuleSlipCurrents = {
+        kFrontSlipCurrent, kFrontSlipCurrent, kBackSlipCurrent, kBackSlipCurrent
+    };
 
     // Default supply current limit for the drive motors; can be lowered at runtime (e.g. by
     // RobotCurrentLimits) to free up current budget for other subsystems. Supply current
@@ -126,7 +136,9 @@ public class TunerConstants {
             .withDriveMotorGains(driveGains)
             .withSteerMotorClosedLoopOutput(kSteerClosedLoopOutput)
             .withDriveMotorClosedLoopOutput(kDriveClosedLoopOutput)
-            .withSlipCurrent(kSlipCurrent)
+            // Default slip current for the factory; overridden per-module below via
+            // withSlipCurrent() on each individual SwerveModuleConstants instance.
+            .withSlipCurrent(kFrontSlipCurrent)
             .withSpeedAt12Volts(kSpeedAt12Volts)
             .withDriveMotorType(kDriveMotorType)
             .withSteerMotorType(kSteerMotorType)
@@ -189,22 +201,22 @@ public class TunerConstants {
         ConstantCreator.createModuleConstants(
             kFrontLeftSteerMotorId, kFrontLeftDriveMotorId, kFrontLeftEncoderId, kFrontLeftEncoderOffset,
             kFrontLeftXPos, kFrontLeftYPos, kInvertLeftSide, kFrontLeftSteerMotorInverted, kFrontLeftEncoderInverted
-        );
+        ).withSlipCurrent(kFrontSlipCurrent);
     public static final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> FrontRight =
         ConstantCreator.createModuleConstants(
             kFrontRightSteerMotorId, kFrontRightDriveMotorId, kFrontRightEncoderId, kFrontRightEncoderOffset,
             kFrontRightXPos, kFrontRightYPos, kInvertRightSide, kFrontRightSteerMotorInverted, kFrontRightEncoderInverted
-        );
+        ).withSlipCurrent(kFrontSlipCurrent);
     public static final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> BackLeft =
         ConstantCreator.createModuleConstants(
             kBackLeftSteerMotorId, kBackLeftDriveMotorId, kBackLeftEncoderId, kBackLeftEncoderOffset,
             kBackLeftXPos, kBackLeftYPos, kInvertLeftSide, kBackLeftSteerMotorInverted, kBackLeftEncoderInverted
-        );
+        ).withSlipCurrent(kBackSlipCurrent);
     public static final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> BackRight =
         ConstantCreator.createModuleConstants(
             kBackRightSteerMotorId, kBackRightDriveMotorId, kBackRightEncoderId, kBackRightEncoderOffset,
             kBackRightXPos, kBackRightYPos, kInvertRightSide, kBackRightSteerMotorInverted, kBackRightEncoderInverted
-        );
+        ).withSlipCurrent(kBackSlipCurrent);
 
     /**
      * Creates a CommandSwerveDrivetrain instance.

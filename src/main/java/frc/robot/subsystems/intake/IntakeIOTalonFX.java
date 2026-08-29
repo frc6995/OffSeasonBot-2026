@@ -25,13 +25,6 @@ import frc.robot.subsystems.intake.Intake.IntakeConstants;
 import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
-    // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
-    // they always block waiting for a CAN response, up to this timeout, so this must be a real
-    // positive value. That's fine here: CurrentLimitManager dispatches setRollerCurrentLimits/
-    // setKickerCurrentLimits off the main thread specifically so this blocking can't cause a
-    // loop overrun even if the roller/kicker motors aren't present on the current robot.
-    private static final double kDynamicConfigTimeoutSeconds = 0.05;
-
     protected final TalonFX m_rollerLeadMotor
     = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
 
@@ -229,16 +222,16 @@ public class IntakeIOTalonFX implements IntakeIO {
     public void setRollerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
         CurrentLimitsConfigs limits = currentLimits(statorCurrentLimitAmps, supplyCurrentLimitAmps);
         CtreUtil.reportIfNotOk("Intake/Roller current limit",
-                m_rollerLeadMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+                m_rollerLeadMotor.getConfigurator().apply(limits, Constants.kDynamicConfigTimeoutSeconds));
         CtreUtil.reportIfNotOk("Intake/Roller (follower) current limit",
-                m_rollerFollowerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+                m_rollerFollowerMotor.getConfigurator().apply(limits, Constants.kDynamicConfigTimeoutSeconds));
     }
 
     @Override
     public void setKickerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
         CurrentLimitsConfigs limits = currentLimits(statorCurrentLimitAmps, supplyCurrentLimitAmps);
         CtreUtil.reportIfNotOk("Intake/Kicker current limit",
-                m_kickerMotor.getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+                m_kickerMotor.getConfigurator().apply(limits, Constants.kDynamicConfigTimeoutSeconds));
     }
 
     @Override

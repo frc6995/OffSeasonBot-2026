@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.util.CtreUtil;
@@ -327,11 +327,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_state = getState();
     }
 
-    // CTRE config-apply calls reject a timeout of 0 outright (StatusCode.TimeoutCannotBeZero) -
-    // they always block waiting for a CAN response, up to this timeout, so this must be a real
-    // positive value. That's fine here: CurrentLimitManager dispatches this method off the main
-    // thread specifically so this blocking can't cause a loop overrun.
-    private static final double kDynamicConfigTimeoutSeconds = 0.05;
 
     /**
      * Sets the supply current limit on every drive motor. Only ever called from
@@ -341,20 +336,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      *
      * <p>{@code CurrentLimitsConfigs} is a config *group*: applying one overwrites every field in
      * the group on the motor, including ones this call doesn't set, resetting them to their class
-     * defaults. So the stator limit is re-asserted to {@link TunerConstants#kSlipCurrent} on every
-     * call here as well, even though this method only ever changes the supply limit. Otherwise a
-     * dynamic supply-limit change would silently wipe out the slip-current-based stator limit that
-     * TunerConstants configures.
+     * defaults. So the stator limit is re-asserted to {@link TunerConstants#kModuleSlipCurrents} on
+     * every call here as well, even though this method only ever changes the supply limit.
+     * Otherwise a dynamic supply-limit change would silently wipe out the slip-current-based
+     * stator limit that TunerConstants configures. {@code kModuleSlipCurrents} is indexed in the
+     * same order as {@link #getModules()} (FrontLeft, FrontRight, BackLeft, BackRight), so each
+     * module keeps its own front/back slip current rather than all four being reset to one value.
      */
     public void setDriveSupplyCurrentLimit(double supplyCurrentLimitAmps) {
-        CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(TunerConstants.kSlipCurrent)
-            .withStatorCurrentLimitEnable(true)
-            .withSupplyCurrentLimit(supplyCurrentLimitAmps)
-            .withSupplyCurrentLimitEnable(true);
-        for (var module : getModules()) {
+        var modules = getModules();
+        for (int i = 0; i < modules.length; i++) {
+            CurrentLimitsConfigs limits = new CurrentLimitsConfigs()
+                .withStatorCurrentLimit(TunerConstants.kModuleSlipCurrents[i])
+                .withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(supplyCurrentLimitAmps)
+                .withSupplyCurrentLimitEnable(true);
             CtreUtil.reportIfNotOk("Drivetrain/Drive current limit",
-                    module.getDriveMotor().getConfigurator().apply(limits, kDynamicConfigTimeoutSeconds));
+                    modules[i].getDriveMotor().getConfigurator().apply(limits, Constants.kDynamicConfigTimeoutSeconds));
         }
     }
 
