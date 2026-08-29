@@ -16,7 +16,6 @@ public class POI {
     public static final Supplier<Pose2d> HUB_CENTER = flipped(
             new Pose2d(4.624246120452881, 4.037848949432373, Rotation2d.kZero));
 
-    public static final Supplier<Pose2d> TRENCH_START = flipped(ChoreoVars.Poses.TRENCH_START);
     public static final Supplier<Pose2d> M_1 = flipped(ChoreoVars.Poses.M_1);
     public static final Supplier<Pose2d> M_2 = flipped(ChoreoVars.Poses.M_2);
     public static final Supplier<Pose2d> M_3 = flipped(ChoreoVars.Poses.M_3);

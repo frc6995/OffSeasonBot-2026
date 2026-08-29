@@ -19,6 +19,7 @@ import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.POI;
 
@@ -67,6 +68,8 @@ public class Autos {
 
     /** Depot routine - first segment from starting position to center line */
     private final Path Depot1Path = new Path("left-center-line-depot".toLowerCase());
+
+    private final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
 
     /** Depot routine - second segment for depot ball collection */
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
@@ -158,7 +161,7 @@ public class Autos {
         // Start at TRENCH_START, move through M_1, M_2, M_3, then final alignment at HUB_BEHIND_INTAKE.
         // AutoAlign uses motion profiles for smooth, predictable motion.
         autos.put("AP Depot Auto",
-                () -> auto(POI.TRENCH_START.get(), c -> {
+                () -> auto(TRENCH_START_LEFT.get(), c -> {
                     // Navigate to checkpoint M_1 with fast motion profile, stopping within 1m
                     c.addCommands(AutoAlign.toPoseUntilWithinDistance(AutoAlign.highJerkProfile(),
                             POI.M_1.get(), m_drivetrain, Meters.of(1.0)));
@@ -183,7 +186,7 @@ public class Autos {
         // Depot2: Move to depot - terminates when sensor detects wall/depot or timeout (7s)
         // Depot3: Return to hub for scoring
         autos.put("BLINE Depot Auto",
-                () -> auto(POI.TRENCH_START.get(), c -> {
+                () -> auto(TRENCH_START_LEFT.get(), c -> {
                     // Build BLine path commands from trajectory definitions
                     Command Depot1 = pathBuilder.build(Depot1Path);
                     Command Depot2 = pathBuilder.build(Depot2Path);
@@ -205,7 +208,7 @@ public class Autos {
         // Path 1: Initial swipe with intake active and robot idle state
         // Path 2: Second swipe with intake active (collects additional balls on field)
         autos.put("Left Double Swipe Bump",
-                () -> auto(POI.TRENCH_START.get(), c -> {
+                () -> auto(TRENCH_START_LEFT.get(), c -> {
                     // Build BLine path commands
                     Command LeftBump1Cmd = pathBuilder.build(LeftBump1Path);
                     Command LeftBump2Cmd = pathBuilder.build(LeftBump2Path);
