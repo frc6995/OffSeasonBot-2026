@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
@@ -22,6 +23,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
+import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
@@ -39,6 +41,9 @@ public class IntakeIOTalonFX implements IntakeIO {
 
     protected final TalonFX m_kickerMotor
     = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
+
+    /** Throttles the isConnected() polling below; see ConnectionPoll. */
+    private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
     protected VelocityVoltage m_rollerVelocityRequest = new VelocityVoltage(0);
     protected VelocityVoltage m_kickerVelocityRequest = new VelocityVoltage(0);
@@ -143,6 +148,18 @@ public class IntakeIOTalonFX implements IntakeIO {
         extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration)
              .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
 
+        // The hood and turret both carry soft limits; the extension did not, so the only thing
+        // keeping it inside its travel was that resolveExtensionTargetPosition() happens to return
+        // in-range constants. With kExtensionP = 20, MotionMagic, brake mode and an 80A stator
+        // limit, a bad zero (resetEncoder() is a zero-where-it-sits) would drive it into the hard
+        // stop and hold it there. Enforce the range on the motor as well.
+        extensionConfig.SoftwareLimitSwitch =
+            new SoftwareLimitSwitchConfigs()
+                .withForwardSoftLimitEnable(true)
+                .withForwardSoftLimitThreshold(metersToMechanismRotations(IntakeConstants.kExtensionMaxMeters))
+                .withReverseSoftLimitEnable(true)
+                .withReverseSoftLimitThreshold(metersToMechanismRotations(IntakeConstants.kExtensionMinMeters));
+
         extensionConfig.Slot0
         .withKP(IntakeConstants.kExtensionP)
         .withKV(IntakeConstants.kExtensionV);
@@ -165,11 +182,16 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_extensionFollowerAppliedVoltage,
             m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
 
-        inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
-        inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
-        inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
-        inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
-        inputs.kickerMotorConnected = m_kickerMotor.isConnected();
+        // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
+        // only updates at 4Hz -- so these five ran 50 times a second to learn the same thing twelve
+        // times over. See ConnectionPoll. The inputs keep their last value between polls.
+        if (connectionPoll.due()) {
+            inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
+            inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
+            inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
+            inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
+            inputs.kickerMotorConnected = m_kickerMotor.isConnected();
+        }
 
         inputs.rollerVelocityRPM = m_rollerVelocity.getValueAsDouble() * 60;
         inputs.rollerAppliedVolts = m_rollerAppliedVoltage.getValueAsDouble();

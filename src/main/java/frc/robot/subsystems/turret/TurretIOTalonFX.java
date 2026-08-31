@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
@@ -29,6 +30,9 @@ import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
     protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus); 
+    /** Throttles the isConnected() polling below; see ConnectionPoll. */
+    private final ConnectionPoll connectionPoll = new ConnectionPoll();
+
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
     
     protected StatusSignal<Angle> angleSignal;
@@ -103,7 +107,11 @@ public class TurretIOTalonFX implements TurretIO {
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
-        inputs.turretMotorConnected = m_turretMotor.isConnected();
+        // isConnected() is a JNI signal refresh, not a field read, and the Version signal
+        // behind it only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll.
+        if (connectionPoll.due()) {
+            inputs.turretMotorConnected = m_turretMotor.isConnected();
+        }
     }
 
     @Override

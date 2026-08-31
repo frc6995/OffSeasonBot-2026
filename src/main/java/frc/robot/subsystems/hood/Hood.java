@@ -6,6 +6,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -70,7 +71,9 @@ public class Hood extends SubsystemBase {
     private final MechanismLigament2d hoodLigament = new MechanismLigament2d("hood", Units.inchesToMeters(4), 0, 6,
             new Color8Bit(52, 137, 235));
 
-    private double requestedAngle;
+    // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last
+    // value). Mirrors Turret's commandedAngle.
+    private double commandedAngle;
 
     private HoodState hoodState = HoodState.DISABLED;
 
@@ -86,6 +89,13 @@ public class Hood extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (DriverStation.isDisabled()) {
+            // An ACTIVE request must never survive a disable -- see Flywheel.periodic() for the
+            // full mechanism. Without this the hood drives to its shot angle the instant the robot
+            // is re-enabled, with nobody touching the controller.
+            setState(HoodState.DISABLED);
+        }
+
         io.updateInputs(inputs);
 
         switch (hoodState) {
@@ -93,11 +103,12 @@ public class Hood extends SubsystemBase {
                 io.disable();
                 break;
             case ACTIVE:
-
-                double clampedAngle = applyLimits(targetData.get().hoodAngleDeg());
-
-                io.setAngle(clampedAngle);
-
+                // Store what was actually sent, so "Setpoint" reflects the live control path.
+                // requestedAngle used to be written only by setAngle(), which nothing in the live
+                // path calls, so the logged setpoint read a flat zero all match.
+                commandedAngle = applyLimits(targetData.get().hoodAngleDeg());
+                io.setAngle(commandedAngle);
+                break;
         }
     }
 
@@ -123,11 +134,11 @@ public class Hood extends SubsystemBase {
         io.resetEncoder();
     }
 
-    public void setAngle(double angle) {
-        hoodState = HoodState.ACTIVE;
-
-        requestedAngle = angle;
-    }
+    // setAngle(double) used to live here. It set requestedAngle and flipped the state to ACTIVE,
+    // but periodic()'s ACTIVE branch recomputes the angle from targetData every loop and never
+    // read requestedAngle -- so the value was discarded on the next tick and only the state change
+    // took effect. It had no callers. Removed rather than left as a trap; the Hood has no MANUAL
+    // state to make it meaningful the way Turret.setAngle has.
 
     public double applyLimits(double angle) {
         double clamped = MathUtil.clamp(angle, Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
@@ -152,7 +163,7 @@ public class Hood extends SubsystemBase {
 
     @Logged(name = "Setpoint", importance = Importance.INFO)
     public double getRequestedAngle() {
-        return requestedAngle;
+        return commandedAngle;
     }
 
     @Logged(name = "Stator Current", importance = Importance.DEBUG)

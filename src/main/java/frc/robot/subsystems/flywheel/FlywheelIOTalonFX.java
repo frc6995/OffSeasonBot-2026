@@ -19,6 +19,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.Constants.CANBuses;
+import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
@@ -34,6 +35,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   protected final TalonFX m_flywheelFollowMotor2 = new TalonFX(FlywheelConstants.kFollowMotor2CANID, CANBuses.UpperBus);
 
   protected final TalonFX m_flywheelFollowMotor3 = new TalonFX(FlywheelConstants.kFollowMotor3CANID, CANBuses.UpperBus);
+
+  /** Throttles the isConnected() polling below; see ConnectionPoll. */
+  private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
   protected VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
 
@@ -81,10 +85,14 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     inputs.appliedVolts = m_FlywheelVoltage.getValueAsDouble();
     inputs.statorCurrentAmps = m_FlywheelStatCurrent.getValueAsDouble();
     inputs.supplyCurrentAmps = m_FlywheelSupCurrent.getValueAsDouble();
-    inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
-    inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
-    inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();
-    inputs.followerMotor3Connected = m_flywheelFollowMotor3.isConnected();
+    // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
+    // only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll.
+    if (connectionPoll.due()) {
+      inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
+      inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
+      inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();
+      inputs.followerMotor3Connected = m_flywheelFollowMotor3.isConnected();
+    }
   }
 
   @Override

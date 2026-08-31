@@ -104,14 +104,18 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
+
+        // Inputs first: selectClosestAngle() reads getAngle() to decide which wrap of the target is
+        // nearest, so running the switch before this decided that against a 20ms-stale angle --
+        // exactly the error that makes a turret take the long way round near a +/-180 boundary.
+        io.updateInputs(inputs);
+
         switch (turretState) {
             case DISABLED -> io.disable();
             case AIM_CENTRAL -> commandedAngle = selectCentralAngle(shotData.get().turretAngleDeg());
             case AIM_CLOSEST -> commandedAngle = selectClosestAngle(shotData.get().turretAngleDeg());
             case MANUAL -> commandedAngle = selectClosestAngle(requestedAngle);
         }
-
-        io.updateInputs(inputs);
     }
 
     @Override

@@ -5,6 +5,7 @@ import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -220,7 +221,13 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean isDeployed() {
-        return getState().compareTo(IntakeState.RETRACTED) > 0;
+        // Not compareTo(RETRACTED) > 0: that was only correct because RETRACTED happens to be
+        // declared first, and reordering IntakeState would have silently inverted the a() toggle.
+        // Every state except RETRACTED holds the extension out (see resolveExtensionTargetPosition),
+        // so RETRACTED is the only one that counts as stowed. Comparing against ACTIVE instead made
+        // requestIntakeToggle() a no-op in both directions -- from RETRACTED it reported deployed and
+        // retracted again; from ACTIVE it reported stowed and re-deployed.
+        return getState() != IntakeState.RETRACTED;
     }
 
     public boolean areRollerMotorsConnected() {
@@ -239,11 +246,18 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (DriverStation.isDisabled()) {
+            // A roller/kicker request must never survive a disable -- see Flywheel.periodic() for
+            // the full mechanism. RETRACTED rather than IDLE, because IDLE holds the extension at
+            // kExtensionMaxMeters: re-enabling should not fling the intake back out on its own.
+            setState(IntakeState.RETRACTED);
+        }
+
         io.updateInputs(inputs);
 
         io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
         io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-        io.setExtensionPosition(resolveExtensionTargetPosition(intakeState));
+        io.setExtensionPosition(clampExtension(resolveExtensionTargetPosition(intakeState)));
     }
 
     @Override

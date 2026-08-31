@@ -6,6 +6,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -79,7 +80,21 @@ public class Superstructure extends SubsystemBase {
 
     @Override
     public void periodic() {
-       m_shotController.calculate(robotState == RobotState.PASSING);
+        if (DriverStation.isDisabled()) {
+            // robotState must not survive a disable, for the same reason the mechanism states
+            // can't (see Flywheel.periodic): requestRobotIdle() is bound to the shoot button's
+            // onFalse edge and to an end-of-auto marker, and neither can run while disabled.
+            //
+            // Unlike the mechanisms, the damage here is not a mechanism that restarts itself --
+            // it is that RobotCurrentLimits throttles the drivetrain to 1A whenever this reads
+            // SCORING or PASSING. An auto that ends before its stopScoring marker would carry
+            // that state through the disable, and teleopInit() re-enables the limit manager, so
+            // teleop would start with a near-immobile drivetrain until the driver pressed and
+            // released the shoot button.
+            robotState = RobotState.IDLE;
+        }
+
+        m_shotController.calculate(robotState == RobotState.PASSING);
     }
 
     public Command requestIntakeActive() {

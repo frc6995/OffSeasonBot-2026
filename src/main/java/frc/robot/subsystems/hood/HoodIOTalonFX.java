@@ -19,11 +19,15 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.hood.Hood.HoodConstants;
+import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class HoodIOTalonFX implements HoodIO {   
 
     protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus); 
+    /** Throttles the isConnected() polling below; see ConnectionPoll. */
+    private final ConnectionPoll connectionPoll = new ConnectionPoll();
+
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(false);
     
     protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
@@ -89,7 +93,11 @@ public class HoodIOTalonFX implements HoodIO {
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
-        inputs.hoodMotorConnected = m_hoodMotor.isConnected();
+        // isConnected() is a JNI signal refresh, not a field read, and the Version signal
+        // behind it only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll.
+        if (connectionPoll.due()) {
+            inputs.hoodMotorConnected = m_hoodMotor.isConnected();
+        }
     }
 
     @Override
