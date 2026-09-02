@@ -1,7 +1,5 @@
 package frc.robot.autos;
 
-import static edu.wpi.first.units.Units.Meters;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,40 +29,20 @@ public class Autos {
 
     // ============= BLINE PATHS =============
     /**
-     * BLine trajectory paths for autonomous routines. Each Path references a trajectory file
-     * (in lowercase) that contains waypoints and event markers for the path following controller.
+     * BLine trajectory paths for autonomous routines. Each Path references a
+     * trajectory file (in lowercase)
      */
 
     private final Path workshopTest1 = new Path("workshop-test-1".toLowerCase());
-
     private final Path Depot1Path = new Path("left-center-line-depot".toLowerCase());
-
     private final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
-
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
-
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
-
     private final Path LeftBump1Path = new Path("path-1".toLowerCase());
-
     private final Path LeftBump2Path = new Path("path-2".toLowerCase());
-
-    /** Range sensor for detecting proximity to field walls/depot. Used for sensor-based path termination. */
     private final CANRange m_canRange = new CANRange();
 
-    /**
-     * Creates an Autos manager with the given drivetrain and superstructure.
-     *
-     * <p>Initializes:
-     * <ul>
-     *   <li>Event triggers for path markers that command subsystem states
-     *   <li>BLine path following configuration with PID controllers
-     *   <li>Auto routine registration
-     * </ul>
-     *
-     * @param drivetrain the swerve drivetrain subsystem for path following
-     * @param superstructure the robot's superstructure (intake, shooter, etc.)
-     */
+    // Constructor
     public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
         this.m_drivetrain = drivetrain;
         this.m_superstructure = superstructure;
@@ -96,11 +74,11 @@ public class Autos {
         pathBuilder = new FollowPath.Builder(
                 m_drivetrain, // Subsystem requirement
                 m_drivetrain::getPose, // Supplier<Pose2d> - current robot pose from odometry
-                m_drivetrain::getChassisSpeeds, // Supplier<ChassisSpeeds> (robot-relative) - current velocities
-                m_drivetrain::drive, // Consumer<ChassisSpeeds> (robot-relative) - drivetrain command handler
-                new PIDController(5.0, 0.0, 0.0), // Translation PID - minimizes remaining distance error
-                new PIDController(7.0, 0.0, 0.0), // Rotation PID - minimizes heading error
-                new PIDController(0.0, 0.0, 0.0) // Cross-track PID - minimizes perpendicular deviation
+                m_drivetrain::getChassisSpeeds, // Supplier<ChassisSpeeds> (robot-relative), current velocities
+                m_drivetrain::drive, // Consumer<ChassisSpeeds> (robot-relative), drivetrain command handler
+                new PIDController(5.0, 0.0, 0.0), // Translation PID, minimizes remaining distance error
+                new PIDController(7.0, 0.0, 0.0), // Rotation PID, minimizes heading error
+                new PIDController(0.0, 0.0, 0.0) // Cross-track PID, minimizes perpendicular deviation
         )
                 .withDefaultShouldFlip(); // Auto-flip trajectory when on red alliance
 
@@ -108,15 +86,11 @@ public class Autos {
     }
 
     // ============= AUTO REGISTRATION =============
-
-    /**
-     * Registers all autonomous routines with the auto chooser.
-     */
+    /** Registers all autonomous routines with the auto chooser. */
     private void registerAutos() {
 
-        autos.put("BLINE Depot Auto",
+        autos.put("Depot Auto",
                 () -> auto(TRENCH_START_LEFT.get(), c -> {
-                    // Build BLine path commands from trajectory definitions
                     Command Depot1 = pathBuilder.build(Depot1Path);
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
@@ -140,7 +114,6 @@ public class Autos {
                     c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
                 }));
 
-
         autos.put("Bline_Workshop_test1",
                 () -> auto(c -> {
                     Command workshopTest1Auto = pathBuilder.build(workshopTest1);
@@ -152,23 +125,18 @@ public class Autos {
     }
 
     /**
-     * Runs a path command until it times out or the robot is close to a wall/obstacle,
-     * but only after a specified event marker has fired in the trajectory.
+     * Runs a path command until it times out or the robot is close to a
+     * wall/obstacle but only after a specified event marker has fired in the
+     * trajectory.
      *
-     * <p>This prevents the sensor from triggering early by requiring that a path event
-     * (e.g., "hubSensorActivation") has fired before the CANRange sensor can terminate the path.
-     * Useful for depot/hub detection where you want to ensure the robot has reached
-     * approximately the right location before checking distance.
-     *
-     * @param path the BLine path command to follow
-     * @param eventKey the path event marker name that must fire before sensor termination is active
+     * @param path           the BLine path command to follow
+     * @param eventKey       the path event marker name that must fire before sensor
+     *                       termination is active
      * @param timeoutSeconds maximum time to allow the path to run (safety limit)
      * @return a command that follows the path with sensor-based early termination
      */
     private Command untilCloseToWallAfterEvent(Command path, String eventKey, double timeoutSeconds) {
-        // Flag tracks whether the event has fired
         AtomicBoolean eventFired = new AtomicBoolean(false);
-        // Register this trigger to set the flag when the event fires
         FollowPath.registerEventTrigger(eventKey, () -> eventFired.set(true));
 
         return Commands.sequence(
@@ -194,46 +162,35 @@ public class Autos {
     // ============= AUTO BUILDER HELPERS =============
 
     /**
-     * Constructs an autonomous routine with a known starting pose and a sequence of commands.
-     *
-     * <p>This variant is used when the robot's starting position is known and odometry needs
-     * to be reset to that pose. The routine will:
-     * <ol>
-     *   <li>Reset the drivetrain odometry to the specified starting pose
-     *   <li>Execute all commands added to the builder in sequence
-     * </ol>
-     *
-     * @param startPose the initial robot pose for odometry reset (from POI definitions)
-     * @param builder a {@link Consumer} that accepts a {@link SequentialCommandGroup}
-     *                to which commands should be added in the desired order
-     * @return a {@link Command} that resets odometry and executes the built command sequence
+     * Constructs an autonomous routine with a starting pose and a sequence of
+     * commands.
+     * 
+     * @param startPose the initial robot pose for odometry reset
+     * @param builder   a {@link Consumer} that accepts a
+     *                  {@link SequentialCommandGroup}
+     *                  to which commands should be added in the desired order
+     * @return a {@link Command} that resets odometry and executes the command
+     *         sequence
      */
     private Command auto(Pose2d startPose, Consumer<SequentialCommandGroup> builder) {
         SequentialCommandGroup group = new SequentialCommandGroup();
-
-        // Reset odometry to the starting pose first
+        // reset odometry
         group.addCommands(Commands.runOnce(() -> m_drivetrain.resetPose(startPose), m_drivetrain));
-        // Build the rest of the autonomous routine
         builder.accept(group);
-
         return group;
     }
 
     /**
      * Constructs an autonomous routine with a sequence of commands (no pose reset).
-     *
-     * <p>This variant is used when odometry reset is not needed, or when it's handled
-     * elsewhere. The routine will execute all commands added to the builder in sequence.
-     *
-     * @param builder a {@link Consumer} that accepts a {@link SequentialCommandGroup}
+     * 
+     * @param builder a {@link Consumer} that accepts a
+     *                {@link SequentialCommandGroup}
      *                to which commands should be added in the desired order
-     * @return a {@link Command} that executes the built command sequence
+     * @return a {@link Command} that executes the command sequence
      */
     private Command auto(Consumer<SequentialCommandGroup> builder) {
         SequentialCommandGroup group = new SequentialCommandGroup();
-
         builder.accept(group);
-
         return group;
     }
 }
