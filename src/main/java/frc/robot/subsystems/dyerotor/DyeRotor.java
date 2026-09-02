@@ -138,13 +138,8 @@ public class DyeRotor extends SubsystemBase {
     @Override
     public void periodic() {
         if (DriverStation.isDisabled()) {
-            // A SPIN request must never survive a disable, for the same reason the flywheel's
-            // can't (see Flywheel.periodic): the command that would clear it is bound to a button's
-            // onFalse edge or to an end-of-auto marker, and neither can run while disabled.
-            // This one is worse than the flywheel's, though -- the flywheel forces itself DISABLED
-            // on re-enable, so an indexer that stayed at SPIN would feed balls straight into a
-            // stopped flywheel.
-            stop();
+            // A SPIN request must never survive a disable
+            setState(DyeRotorState.IDLE);
         }
 
         if (indexSpinUpTicksRemaining > 0 && --indexSpinUpTicksRemaining <= 0) {
