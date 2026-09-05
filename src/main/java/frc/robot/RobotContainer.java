@@ -61,8 +61,10 @@ public class RobotContainer {
     public Superstructure m_superstructure = new Superstructure(m_drivetrain::state);
 
     // No vision simulation -- real-life testing on hardware is more useful than simulating the
-    // Limelight, so simulation just runs without vision measurements at all.
-    public final AprilTagVision m_vision = (Utils.isSimulation())
+    // Limelight, so simulation just runs without vision measurements at all. The camera is also
+    // mounted on the turret, so it isn't there either until Turret is (see
+    // Constants.HardwarePresence.kTurretCameraInstalled).
+    public final AprilTagVision m_vision = (Utils.isSimulation() || !Constants.HardwarePresence.kTurretCameraInstalled)
             ? new NoneATVision()
             : new RealATVision(
                 m_drivetrain::state,
