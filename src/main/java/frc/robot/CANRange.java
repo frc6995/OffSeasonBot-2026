@@ -18,20 +18,27 @@ public class CANRange {
         public static final double kProximityThreshold = Units.inchesToMeters(3.0);
     }
 
-    CANrange m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.UpperBus);
+    // The sensor is mounted on Intake, so it isn't physically present until Intake is (see
+    // Constants.HardwarePresence.kCanRangeInstalled) -- only construct/configure it over CAN
+    // when it's actually there.
+    CANrange m_frontCANrange;
 
     CANrangeConfiguration m_frontCANrangeConfigurator = new CANrangeConfiguration();
 
-    // In simulation the physical sensor is never actually "detected," so it defaults to false here
-    // and is instead driven by a driver-station button (see setSimProximitySupplier) so BLine
-    // auto transitions can be exercised in sim. Ignored entirely on real hardware.
+    // In simulation (and whenever the sensor isn't installed) the physical sensor is never
+    // actually "detected," so it defaults to false here and is instead driven by a
+    // driver-station button (see setSimProximitySupplier) so BLine auto transitions can still be
+    // exercised. Ignored entirely on real hardware once the sensor is installed.
     private BooleanSupplier m_simProximitySupplier = () -> false;
 
     public CANRange() {
-        m_frontCANrangeConfigurator.ProximityParams.ProximityThreshold = CANRangeConstants.kProximityThreshold;
+        if (Constants.HardwarePresence.kCanRangeInstalled) {
+            m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.UpperBus);
+            m_frontCANrangeConfigurator.ProximityParams.ProximityThreshold = CANRangeConstants.kProximityThreshold;
 
-        CtreUtil.reportIfNotOk("Config front CANrange",
-                m_frontCANrange.getConfigurator().apply(m_frontCANrangeConfigurator));
+            CtreUtil.reportIfNotOk("Config front CANrange",
+                    m_frontCANrange.getConfigurator().apply(m_frontCANrangeConfigurator));
+        }
     }
 
     public void setSimProximitySupplier(BooleanSupplier simProximitySupplier) {
@@ -39,7 +46,7 @@ public class CANRange {
     }
 
     public Boolean isCloseToWall() {
-        if (RobotBase.isSimulation()) {
+        if (RobotBase.isSimulation() || !Constants.HardwarePresence.kCanRangeInstalled) {
            return m_simProximitySupplier.getAsBoolean();
          }
         return m_frontCANrange.getIsDetected().getValue();
