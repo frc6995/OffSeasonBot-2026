@@ -113,7 +113,7 @@ public class Flywheel extends SubsystemBase {
 
   @Logged(name = "Setpoint", importance = Importance.INFO)
   public double getSetpointRPM() {
-    return targetData.get().flywheelRpm();
+    return resolveTargetRPM(flywheelState);
   }
 
   @Logged(name = "Voltage", importance = Importance.DEBUG)

@@ -170,22 +170,21 @@ public class Superstructure extends SubsystemBase {
     }
 
     private void engageShootState(RobotState state) {
-        if(state == RobotState.SCORING) {
-            m_turret.requestAimClosest();
-            m_flywheel.requestActive();
-            m_hood.requestActive();
-        } else if(state == RobotState.SAFE_SHOT) {
-            m_turret.setState(TurretState.SAFE_SHOT);
-            m_flywheel.setState(FlywheelState.SAFE_SHOT);
-            m_hood.setState(HoodState.SAFE_SHOT);
-        } else if(state == RobotState.PASSING) {
-            m_turret.requestAimClosest();
-            m_flywheel.requestActive();
-            m_hood.requestActive();
+        switch (state) {
+            case SCORING, PASSING -> {
+                m_turret.requestAimClosest();
+                m_flywheel.requestActive();
+                m_hood.requestActive();
+            }
+            case SAFE_SHOT -> {
+                m_turret.setState(TurretState.SAFE_SHOT);
+                m_flywheel.setState(FlywheelState.SAFE_SHOT);
+                m_hood.setState(HoodState.SAFE_SHOT);
+            }
+            
         }
         robotState = state;
         m_dyeRotor.requestSpin();
-
     }
 
     public RobotState getRobotState() {

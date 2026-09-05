@@ -51,7 +51,8 @@ public final class RobotCurrentLimits {
         manager.addRule(
                 () -> {
                     RobotState state = superstructure.getRobotState();
-                    return state == RobotState.SCORING || state == RobotState.PASSING;
+                    return state == RobotState.SCORING || state == RobotState.PASSING
+                            || state == RobotState.SAFE_SHOT;
                 },
                 Map.of(
                         "Intake/Roller", kShootingRollerLimit,

@@ -113,8 +113,9 @@ public class Hood extends SubsystemBase {
                 io.setAngle(commandedAngle);
                 break;
             case SAFE_SHOT:
-                commandedAngle = HoodConstants.kSafeShotAngle;
-                io.setAngle(HoodConstants.kSafeShotAngle);
+                commandedAngle = applyLimits(HoodConstants.kSafeShotAngle);
+                io.setAngle(commandedAngle);
+                break;
         }
     }
 
