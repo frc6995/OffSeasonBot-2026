@@ -69,7 +69,8 @@ public class Superstructure extends SubsystemBase {
         // Each mechanism picks its IO in three ways:
         //  - actually simulating (desktop sim)   -> sim IO, physics model, regardless of the flag
         //  - real robot, flag installed          -> real TalonFX-backed IO
-        //  - real robot, flag NOT installed      -> None IO: touches no hardware, zero CAN traffic
+        //  - real robot, flag NOT installed      -> "None" IO (e.g. TurretIONone): never
+        //                                            constructs a TalonFX, zero CAN traffic
         // See Constants.HardwarePresence.
         this.m_intake = Robot.isSimulation()
             ? new Intake(new IntakeIOSimTalonFX())

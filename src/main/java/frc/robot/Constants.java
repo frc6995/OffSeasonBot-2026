@@ -16,10 +16,12 @@ public class Constants {
 
     /**
      * Per-mechanism switches for whether the hardware is actually bolted to the robot right now.
-     * A mechanism not installed falls back to its sim IO even on a real (non-simulated) robot, so
-     * its "hardware" is a software model instead of CAN calls to a device that isn't there --
-     * this is what stops the constant "CAN frame not received/too-stale" spam and the throttled
-     * limelight-turret disconnect reports while the robot is only partially built.
+     * A mechanism not installed falls back to its "None" IO on a real (non-simulated) robot (e.g.
+     * TurretIONone) -- a no-op that never constructs a TalonFX and never touches CAN, rather than
+     * a software model of hardware that isn't there. (Simulation still uses the sim IO regardless
+     * of these flags.) This is what stops the constant "CAN frame not received/too-stale" spam
+     * and the throttled limelight-turret disconnect reports while the robot is only partially
+     * built.
      * <p>
      * Flip these to true as each mechanism gets physically wired up.
      */
