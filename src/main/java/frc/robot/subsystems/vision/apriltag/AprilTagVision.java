@@ -13,7 +13,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
-import frc.robot.subsystems.vision.apriltag.RealATVision.ATVisionConstants;
+import frc.robot.subsystems.vision.apriltag.RealATLimelightVision.ATVisionConstants;
 
 public abstract class AprilTagVision extends SubsystemBase {
     protected ArrayList<AprilTagEstimate> estimates = new ArrayList<AprilTagEstimate>(0);

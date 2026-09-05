@@ -2,7 +2,7 @@ package frc.robot.subsystems.vision.apriltag;
 
 import edu.wpi.first.math.geometry.Pose3d;
 
-public class NoneATVision extends AprilTagVision {
+public class NoneLimelightATVision extends AprilTagVision {
     public NoneATVision() {}
 
     @Override

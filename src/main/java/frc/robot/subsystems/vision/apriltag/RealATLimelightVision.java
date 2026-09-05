@@ -30,7 +30,7 @@ import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 import frc.robot.util.LimelightHelpers;
 
-public class RealATVision extends AprilTagVision {
+public class RealATLimelightVision extends AprilTagVision {
     public static class ATVisionConstants {
         public static final String[] LL_IDS = {
             "limelight-turret"
