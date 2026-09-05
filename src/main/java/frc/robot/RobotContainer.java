@@ -133,7 +133,7 @@ public class RobotContainer {
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(m_drivetrain)));
         
-        // Deferred so TRENCH_START_LEFT.get() (and its alliance flip) is re-evaluated every time
+        // Deferred so the pose (and its alliance flip) is re-evaluated every time
         // the button is pressed
         joystick.x().whileTrue(Commands.defer(
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
