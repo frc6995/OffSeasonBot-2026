@@ -58,11 +58,14 @@ public class Hood extends SubsystemBase {
         // 5.57 inches
         public static final double kHoodLength = 0.141478;
 
+        public static final double SAFE_SHOT = 0;
+
     }
 
     public enum HoodState {
         DISABLED,
-        ACTIVE
+        ACTIVE,
+        SAFE_SHOT
     }
 
     private HoodIO io;
@@ -109,6 +112,9 @@ public class Hood extends SubsystemBase {
                 commandedAngle = applyLimits(targetData.get().hoodAngleDeg());
                 io.setAngle(commandedAngle);
                 break;
+            case SAFE_SHOT:
+                commandedAngle = HoodConstants.SAFE_SHOT;
+                io.setAngle(HoodConstants.SAFE_SHOT);
         }
     }
 

@@ -23,6 +23,7 @@ import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Superstructure.RobotState;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
@@ -30,6 +31,12 @@ import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
+import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
+import frc.robot.subsystems.hood.Hood;
+import frc.robot.subsystems.hood.Hood.HoodState;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
 
@@ -118,7 +125,14 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(m_superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_superstructure.requestIntakeActive());
 
-        joystick.y().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
+        // joystick.y().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
+
+        //Safe Shot
+        joystick.rightBumper().onTrue(
+            m_superstructure.requestRobotShootSafe());
+        joystick.rightBumper().onFalse(
+            m_superstructure.requestRobotIdle()
+        );
 
         /* For Cadsim testing */
         // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import java.util.function.Supplier;
@@ -63,6 +64,7 @@ public class Turret extends SubsystemBase {
         DISABLED,
         AIM_CLOSEST,
         AIM_CENTRAL,
+        SAFE_SHOT,
         MANUAL;
     }
 
@@ -115,6 +117,7 @@ public class Turret extends SubsystemBase {
             case AIM_CENTRAL -> commandedAngle = selectCentralAngle(shotData.get().turretAngleDeg());
             case AIM_CLOSEST -> commandedAngle = selectClosestAngle(shotData.get().turretAngleDeg());
             case MANUAL -> commandedAngle = selectClosestAngle(requestedAngle);
+            case SAFE_SHOT -> commandedAngle = selectClosestAngle(0);
         }
     }
 
