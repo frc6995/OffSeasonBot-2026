@@ -34,9 +34,9 @@ public class Turret extends SubsystemBase {
 
         public static final double kMinAngle = -360;
         public static final double kMaxAngle = 360;
+        public static final double kSafeShotAngle = 0;
 
         public static final double kReduction = 32.5;
-
         public static final double kMOI = 0.0873236726;
 
         // 6.5 in
@@ -63,6 +63,7 @@ public class Turret extends SubsystemBase {
         DISABLED,
         AIM_CLOSEST,
         AIM_CENTRAL,
+        SAFE_SHOT,
         MANUAL;
     }
 
@@ -115,6 +116,7 @@ public class Turret extends SubsystemBase {
             case AIM_CENTRAL -> commandedAngle = selectCentralAngle(shotData.get().turretAngleDeg());
             case AIM_CLOSEST -> commandedAngle = selectClosestAngle(shotData.get().turretAngleDeg());
             case MANUAL -> commandedAngle = selectClosestAngle(requestedAngle);
+            case SAFE_SHOT -> commandedAngle = selectClosestAngle(TurretConstants.kSafeShotAngle);
         }
     }
 

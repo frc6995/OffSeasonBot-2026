@@ -113,12 +113,20 @@ public class RobotContainer {
         joystick.leftTrigger().onFalse(m_superstructure.requestIntakeActive());
 
         joystick.rightBumper().whileTrue(m_superstructure.requestRobotShooting());
-        joystick.rightBumper().onFalse(m_superstructure.requestRobotIdle());
 
         joystick.leftBumper().onTrue(m_superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_superstructure.requestIntakeActive());
 
-        joystick.y().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
+         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
+
+        //Safe Shot
+        joystick.y().onTrue(
+            m_superstructure.requestRobotShootSafe());
+
+        // rightBumper (normal shoot) and y (safe shot) both drive the shared shooting state.
+        // Only return to idle once BOTH are released -- separate onFalse handlers here would
+        // let releasing one button cancel a shot still being held via the other.
+        joystick.rightBumper().or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
         /* For Cadsim testing */
         // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));

@@ -39,7 +39,8 @@ public class Superstructure extends SubsystemBase {
     public enum RobotState {
         IDLE,
         PASSING,
-        SCORING
+        SCORING,
+        SAFE_SHOT
     }
 
     public Intake m_intake;
@@ -158,6 +159,10 @@ public class Superstructure extends SubsystemBase {
         });
     }
 
+    public Command requestRobotShootSafe(){
+        return Commands.runOnce(()->{engageShootState(RobotState.SAFE_SHOT);});
+    }
+
     /** Chooses PASSING or SCORING based on whether the robot is in the configurable passing zone. */
     private RobotState determineShootState() {
         boolean inPassingZone = POI.PASSING_ZONE.get().contains(m_poseSupplier.get().getTranslation());
@@ -165,11 +170,21 @@ public class Superstructure extends SubsystemBase {
     }
 
     private void engageShootState(RobotState state) {
+        switch (state) {
+            case SCORING, PASSING -> {
+                m_turret.requestAimClosest();
+                m_flywheel.requestActive();
+                m_hood.requestActive();
+            }
+            case SAFE_SHOT -> {
+                m_turret.setState(TurretState.SAFE_SHOT);
+                m_flywheel.setState(FlywheelState.SAFE_SHOT);
+                m_hood.setState(HoodState.SAFE_SHOT);
+            }
+            
+        }
         robotState = state;
         m_dyeRotor.requestSpin();
-        m_turret.requestAimClosest();
-        m_flywheel.requestActive();
-        m_hood.requestActive();
     }
 
     public RobotState getRobotState() {
