@@ -26,6 +26,7 @@ public class Autos {
     private final AutoChooser autoChooser = new AutoChooser();
     private final Map<String, Supplier<Command>> autos = new LinkedHashMap<>();
     private final FollowPath.Builder pathBuilder;
+    private final CANRange m_canRange = new CANRange();
 
     // ============= BLINE PATHS =============
     /**
@@ -33,14 +34,18 @@ public class Autos {
      * trajectory file (in lowercase)
      */
 
-    private final Path workshopTest1 = new Path("workshop-test-1".toLowerCase());
     private final Path Depot1Path = new Path("left-center-line-depot".toLowerCase());
-    private final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
+
     private final Path LeftBump1Path = new Path("path-1".toLowerCase());
     private final Path LeftBump2Path = new Path("path-2".toLowerCase());
-    private final CANRange m_canRange = new CANRange();
+
+    private final Path Testcanrange = new Path("Test-canrange".toLowerCase());
+    private final Path Testcanrange2 = new Path("Test-canrange2".toLowerCase());
+
+    private final Supplier<Pose2d> TEST_START_CANRANGE = AllianceFlipUtil.flipped(Testcanrange.getStartPose());
+    private final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
 
     // Constructor
     public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
@@ -114,10 +119,13 @@ public class Autos {
                     c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
                 }));
 
-        autos.put("Bline_Workshop_test1",
-                () -> auto(c -> {
-                    Command workshopTest1Auto = pathBuilder.build(workshopTest1);
-                    c.addCommands(workshopTest1Auto);
+        autos.put("Bline_Workshop_Test_Canrange",
+                () -> auto(TEST_START_CANRANGE.get(), c -> {
+                    Command canRangeTestAuto1 = pathBuilder.build(Testcanrange);
+                    Command canRangeTestAuto2 = pathBuilder.build(Testcanrange2);
+
+                    c.addCommands(untilCloseToWallAfterEvent(canRangeTestAuto1, "testActivation", 6));
+                    c.addCommands((canRangeTestAuto2));
                 }));
 
         // Register all autos with the chooser for driver station selection

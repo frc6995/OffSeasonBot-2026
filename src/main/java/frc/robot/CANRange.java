@@ -40,8 +40,8 @@ public class CANRange {
 
     public Boolean isCloseToWall() {
         if (RobotBase.isSimulation()) {
-            return m_simProximitySupplier.getAsBoolean();
-        }
+           return m_simProximitySupplier.getAsBoolean();
+         }
         return m_frontCANrange.getIsDetected().getValue();
     }
 }
