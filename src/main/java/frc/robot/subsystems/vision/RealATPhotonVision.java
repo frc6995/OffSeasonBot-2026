@@ -3,9 +3,11 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -23,9 +25,11 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import java.util.List;
@@ -33,24 +37,23 @@ import java.util.List;
 public class RealATPhotonVision {
     public class PhotonVisionConstants {
 
-        public static final String rightPhotonCameraName = "Pterodactyl";
+        //peyton didn't let me name them "peyton", and "matthew"
+        public static final String rightPhotonCameraName = "rightCam";
+        public static final String leftPhotonCameraName = "leftCam";
         
-        //set these
-        public static final String leftPhotonCameraName = "Tupandactylus Imperator";
-        
-        private static final double rightPhotonCamPitch = Units.degreesToRadians(0); //TODO: for testing, check what the camera pitch is
-        private static final double leftPhotonCamPitch = Units.degreesToRadians(0); //TODO do ts
+        private static final double rightPhotonCamRoll = Units.degreesToRadians(30); //TODO: for testing, check what the camera pitch is
+        private static final double leftPhotonCamRoll = Units.degreesToRadians(-30); //TODO do ts
 
-        private static final double rightPhotonCamYaw = Units.degreesToRadians(180);
+        private static final double rightPhotonCamYaw = Units.degreesToRadians(-90);
         private static final double leftPhotonCamYaw = Units.degreesToRadians(90);
         // See https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#robot-coordinate-system
         // for why these values the way they are. In short x is positive towards the front, y is positive to left, z is positive to the sky
         //set these lolxd
         public static final Transform3d robotToRightPhotonCam =
-                new Transform3d(new Translation3d(Units.inchesToMeters(11.8), Units.inchesToMeters(7.2), Units.inchesToMeters(25.9)), new Rotation3d(0, rightPhotonCamPitch, 0));
+                new Transform3d(new Translation3d(Units.inchesToMeters(-9.37346), Units.inchesToMeters(-9.58278), Units.inchesToMeters(-21.27992)), new Rotation3d(rightPhotonCamRoll, 0, rightPhotonCamYaw));
         
         public static final Transform3d robotToleftPhotonCam =
-                new Transform3d(new Translation3d(Units.inchesToMeters(-0.6), Units.inchesToMeters(13.0), Units.inchesToMeters(27.6)), new Rotation3d(0, leftPhotonCamPitch, leftPhotonCamYaw)); 
+                new Transform3d(new Translation3d(Units.inchesToMeters(-12.00616), Units.inchesToMeters(-9.58278), Units.inchesToMeters(-21.27992)), new Rotation3d(leftPhotonCamRoll, 0, leftPhotonCamYaw)); 
 
         // The layout of the AprilTags on the field
         public static final AprilTagFieldLayout kTagLayout =
@@ -113,6 +116,10 @@ public class RealATPhotonVision {
             visionSim = new VisionSystemSim("main");
             // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
             visionSim.addAprilTags(PhotonVisionConstants.kTagLayout);
+            TargetModel targetModel = new TargetModel(0.5,0.25);
+            Pose3d targetPose = new Pose3d(16,4,2, new Rotation3d(0,0,Math.PI));
+
+            VisionTargetSim visionTarget = new VisionTargetSim(targetPose, targetModel);
             // Create simulated camera properties. These can be set to mimic your actual camera.
             var cameraProp = new SimCameraProperties();
             cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
