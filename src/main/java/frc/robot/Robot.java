@@ -57,7 +57,14 @@ public class Robot extends TimedRobot {
                 config.errorHandler = ErrorHandler.crashOnError();
             }
 
-            config.minimumImportance = Logged.Importance.CRITICAL;
+            // DEBUG, not CRITICAL: the per-motor current and voltage getters throughout the
+            // subsystems are annotated at DEBUG/INFO, so a CRITICAL floor silently dropped every
+            // one of them - logs contained no current or voltage data at all, which made offline
+            // brownout analysis impossible. See tools/power_analysis.
+            //
+            // This costs log file size, not field bandwidth: NT4 only transmits topics a client
+            // has subscribed to, and DataLogManager's NT recording runs on the roboRIO itself.
+            config.minimumImportance = Logged.Importance.DEBUG;
             // Only write a value to the backend when it actually changes, to save
             // bandwidth/log file size.
             config.backend = config.backend.lazy();

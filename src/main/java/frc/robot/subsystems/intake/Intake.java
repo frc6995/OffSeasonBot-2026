@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.epilogue.Logged;
+import frc.robot.util.ArrayUtil;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
@@ -218,6 +219,48 @@ public class Intake extends SubsystemBase {
     @Logged(name = "Extension/Supply Current", importance =  Importance.DEBUG)
     public double getExtensionSupplyCurrentAmps() {
         return inputs.extensionSupplyCurrentAmps;
+    }
+
+    /*
+     * Per-mechanism supply current totals, including the follower motors that the single-motor
+     * getters above miss. These are the series tools/power_analysis charts. Supply, not stator:
+     * stator current is measured on the motor side of the controller and can be several times what
+     * is actually drawn from the battery, so a stator sum overstates the power budget.
+     */
+
+    @Logged(name = "Roller/Supply Current Total", importance = Importance.CRITICAL)
+    public double getRollerTotalSupplyCurrentAmps() {
+        return ArrayUtil.sum(inputs.rollerMotorSupplyCurrentAmps);
+    }
+
+    @Logged(name = "Extension/Supply Current Total", importance = Importance.CRITICAL)
+    public double getExtensionTotalSupplyCurrentAmps() {
+        return ArrayUtil.sum(inputs.extensionMotorSupplyCurrentAmps);
+    }
+
+    /** Single motor, so this equals {@link #getKickSupplyCurrentAmps()}; named for consistency. */
+    @Logged(name = "Kicker/Supply Current Total", importance = Importance.CRITICAL)
+    public double getKickerTotalSupplyCurrentAmps() {
+        return inputs.kickerSupplyCurrentAmps;
+    }
+
+    /** Roller, extension, and kicker combined - the intake's line in the robot's power budget. */
+    @Logged(name = "Supply Current Total", importance = Importance.CRITICAL)
+    public double getTotalSupplyCurrentAmps() {
+        return getRollerTotalSupplyCurrentAmps()
+                + getExtensionTotalSupplyCurrentAmps()
+                + getKickerTotalSupplyCurrentAmps();
+    }
+
+    /** Per-motor detail, indexed [lead, follower]. */
+    @Logged(name = "Roller/Supply Currents", importance = Importance.DEBUG)
+    public double[] getRollerMotorSupplyCurrentsAmps() {
+        return inputs.rollerMotorSupplyCurrentAmps;
+    }
+
+    @Logged(name = "Extension/Supply Currents", importance = Importance.DEBUG)
+    public double[] getExtensionMotorSupplyCurrentsAmps() {
+        return inputs.extensionMotorSupplyCurrentAmps;
     }
 
     public boolean isDeployed() {

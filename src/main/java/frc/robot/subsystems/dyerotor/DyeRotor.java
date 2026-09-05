@@ -1,6 +1,7 @@
 package frc.robot.subsystems.dyerotor;
 
 import edu.wpi.first.epilogue.Logged;
+import frc.robot.util.ArrayUtil;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -133,6 +134,36 @@ public class DyeRotor extends SubsystemBase {
     @Logged(name = "Index Velocity", importance = Importance.INFO)
     public double getIndexVelocityRPM() {
         return inputs.indexVelocityRPM;
+    }
+
+
+    /*
+     * Supply current totals. Supply, not stator: stator current is measured on the motor side of
+     * the controller and can be several times what is drawn from the battery, so a stator sum
+     * overstates the power budget. These are the series tools/power_analysis charts.
+     */
+
+    @Logged(name = "Index/Supply Current Total", importance = Importance.CRITICAL)
+    public double getIndexTotalSupplyCurrentAmps() {
+        return ArrayUtil.sum(inputs.indexMotorSupplyCurrentAmps);
+    }
+
+    /** Single motor, so this is just the spin motor's draw; named for consistency. */
+    @Logged(name = "Spin/Supply Current Total", importance = Importance.CRITICAL)
+    public double getSpinTotalSupplyCurrentAmps() {
+        return inputs.spinSupplyCurrentAmps;
+    }
+
+    /** Spin and indexer combined - the dye rotor's line in the robot's power budget. */
+    @Logged(name = "Supply Current Total", importance = Importance.CRITICAL)
+    public double getTotalSupplyCurrentAmps() {
+        return getSpinTotalSupplyCurrentAmps() + getIndexTotalSupplyCurrentAmps();
+    }
+
+    /** Per-motor detail for the indexer pair, indexed [lead, follower]. */
+    @Logged(name = "Index/Supply Currents", importance = Importance.DEBUG)
+    public double[] getIndexMotorSupplyCurrentsAmps() {
+        return inputs.indexMotorSupplyCurrentAmps;
     }
 
     @Override

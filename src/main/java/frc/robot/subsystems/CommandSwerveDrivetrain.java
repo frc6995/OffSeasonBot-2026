@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -32,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.util.ArrayUtil;
 import frc.robot.util.CtreUtil;
 
 /**
@@ -62,7 +64,47 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.RobotCentric m_robotCentricDriveRequest = new SwerveRequest.RobotCentric()
             .withDriveRequestType(DriveRequestType.Velocity);
 
-    
+    /*
+     * Supply current for all eight drive/steer motors, for the offline power analysis in
+     * tools/power_analysis. The drivetrain has no IO layer, so unlike every other subsystem the
+     * signals live directly on the subsystem.
+     *
+     * These are field initializers rather than constructor-body code deliberately: field
+     * initializers run after super() returns, so getModules() is already populated, and this class
+     * has three constructors that would otherwise each need the same call.
+     *
+     * Drive and steer are kept as separate series rather than one drivetrain total. They fail
+     * differently - drive current tracks acceleration and pushing matches, steer current spikes on
+     * direction reversals - and lumping them hides which one is actually eating the budget.
+     */
+    private final BaseStatusSignal[] m_driveSupplyCurrentSignals = createSupplyCurrentSignals(true);
+    private final BaseStatusSignal[] m_steerSupplyCurrentSignals = createSupplyCurrentSignals(false);
+    /* Both of the above in one array, so periodic() refreshes all sixteen in a single call. */
+    private final BaseStatusSignal[] m_allSupplyCurrentSignals =
+            ArrayUtil.concat(m_driveSupplyCurrentSignals, m_steerSupplyCurrentSignals);
+
+    /* Cached by periodic(); module order matches getModules(): FL, FR, BL, BR. */
+    private final double[] m_driveSupplyCurrentsAmps = new double[m_driveSupplyCurrentSignals.length];
+    private final double[] m_steerSupplyCurrentsAmps = new double[m_steerSupplyCurrentSignals.length];
+    private double m_totalSupplyCurrentAmps = 0.0;
+
+    /**
+     * Builds a supply current signal for each module's drive motor ({@code drive == true}) or steer
+     * motor, and raises them off their Phoenix default rate - see
+     * {@link CtreUtil#kCurrentSignalFrequencyHz} for why the default is useless here.
+     */
+    private BaseStatusSignal[] createSupplyCurrentSignals(boolean drive) {
+        var modules = getModules();
+        BaseStatusSignal[] signals = new BaseStatusSignal[modules.length];
+        for (int i = 0; i < modules.length; i++) {
+            signals[i] = drive
+                    ? modules[i].getDriveMotor().getSupplyCurrent()
+                    : modules[i].getSteerMotor().getSupplyCurrent();
+        }
+        CtreUtil.setCurrentSignalFrequency(signals);
+        return signals;
+    }
+
 
     /*
      * SysId routine for characterizing translation. This is used to find PID gains
@@ -386,12 +428,61 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             });
         }
 
+        refreshSupplyCurrents();
+
         // Re-read last. Vision fusion now lives in RealATVision, a separate subsystem registered
         // after this one, so it consumes the state refreshed here and its addVisionMeasurement
         // calls land after this refresh -- the odometry thread surfaces the correction within a
         // tick either way. See state(): this is a live reference to Phoenix's own state object,
         // not a point-in-time snapshot.
         refreshState();
+    }
+
+    /**
+     * Reads this loop's supply current for all eight motors in one batched refresh and caches it,
+     * so the logged getters below are field reads rather than sixteen JNI calls.
+     */
+    private void refreshSupplyCurrents() {
+        BaseStatusSignal.refreshAll(m_allSupplyCurrentSignals);
+
+        double total = 0.0;
+        for (int i = 0; i < m_driveSupplyCurrentsAmps.length; i++) {
+            m_driveSupplyCurrentsAmps[i] = m_driveSupplyCurrentSignals[i].getValueAsDouble();
+            total += m_driveSupplyCurrentsAmps[i];
+        }
+        for (int i = 0; i < m_steerSupplyCurrentsAmps.length; i++) {
+            m_steerSupplyCurrentsAmps[i] = m_steerSupplyCurrentSignals[i].getValueAsDouble();
+            total += m_steerSupplyCurrentsAmps[i];
+        }
+        m_totalSupplyCurrentAmps = total;
+    }
+
+    /** Per-module drive motor supply current, in getModules() order: FL, FR, BL, BR. */
+    @Logged(name = "Drive/Supply Currents", importance = Importance.DEBUG)
+    public double[] getDriveSupplyCurrentsAmps() {
+        return m_driveSupplyCurrentsAmps;
+    }
+
+    /** Per-module steer motor supply current, in getModules() order: FL, FR, BL, BR. */
+    @Logged(name = "Steer/Supply Currents", importance = Importance.DEBUG)
+    public double[] getSteerSupplyCurrentsAmps() {
+        return m_steerSupplyCurrentsAmps;
+    }
+
+    @Logged(name = "Drive/Supply Current Total", importance = Importance.CRITICAL)
+    public double getDriveSupplyCurrentTotalAmps() {
+        return ArrayUtil.sum(m_driveSupplyCurrentsAmps);
+    }
+
+    @Logged(name = "Steer/Supply Current Total", importance = Importance.CRITICAL)
+    public double getSteerSupplyCurrentTotalAmps() {
+        return ArrayUtil.sum(m_steerSupplyCurrentsAmps);
+    }
+
+    /** All eight motors combined. The drivetrain's single line in the power budget. */
+    @Logged(name = "Supply Current Total", importance = Importance.CRITICAL)
+    public double getTotalSupplyCurrentAmps() {
+        return m_totalSupplyCurrentAmps;
     }
 
     private void startSimThread() {

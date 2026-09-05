@@ -56,6 +56,17 @@ public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX {
     inputs.appliedVolts = appliedVolts;
     inputs.statorCurrentAmps = flywheelLeadState.getTorqueCurrent();
     inputs.supplyCurrentAmps = flywheelLeadState.getSupplyCurrent();
+
+    // Only the lead motor's sim state is modelled (the follower sim states are commented out
+    // above), so each follower is reported as drawing what the lead draws. That is an
+    // approximation, not a measurement: on the real robot the followers share a setpoint but not a
+    // load. It exists so simulation produces non-zero, correctly-shaped power data to develop
+    // tools/power_analysis against - do not read sim flywheel current as a real number.
+    for (int i = 0; i < FlywheelIO.kMotorCount; i++) {
+      inputs.motorStatorCurrentAmps[i] = inputs.statorCurrentAmps;
+      inputs.motorSupplyCurrentAmps[i] = inputs.supplyCurrentAmps;
+    }
+
     inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
     inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
     inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();

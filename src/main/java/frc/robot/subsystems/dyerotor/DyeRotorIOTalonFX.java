@@ -48,8 +48,17 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   final StatusSignal<Current> m_indexSupCurrent = m_indexerLead.getSupplyCurrent();
   final StatusSignal<Current> m_indexStatCurrent = m_indexerLead.getStatorCurrent();
 
+  final StatusSignal<Current> m_indexFollowerSupCurrent = m_indexerFollow.getSupplyCurrent();
+  final StatusSignal<Current> m_indexFollowerStatCurrent = m_indexerFollow.getStatorCurrent();
+
   public DyeRotorIOTalonFX() {
     configureMotors();
+    // Phoenix publishes current signals far too slowly by default to resolve a brownout; see
+    // CtreUtil.kCurrentSignalFrequencyHz.
+    CtreUtil.setCurrentSignalFrequency(
+        m_spinSupCurrent, m_spinStatCurrent,
+        m_indexSupCurrent, m_indexStatCurrent,
+        m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
   }
 
   protected void configureMotors() {
@@ -115,7 +124,8 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   public void updateInputs(DyeRotorInputs inputs) {
     BaseStatusSignal.refreshAll(
         m_spinVelocity, m_spinVoltage, m_spinSupCurrent, m_spinStatCurrent,
-        m_indexVelocity, m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent);
+        m_indexVelocity, m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent,
+        m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
 
     inputs.spinVelocityRPM = m_spinVelocity.getValueAsDouble() * 60.0;
     inputs.spinAppliedVolts = m_spinVoltage.getValueAsDouble();
@@ -126,6 +136,10 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     inputs.indexAppliedVolts = m_indexVoltage.getValueAsDouble();
     inputs.indexStatorCurrentAmps = m_indexStatCurrent.getValueAsDouble();
     inputs.indexSupplyCurrentAmps = m_indexSupCurrent.getValueAsDouble();
+    inputs.indexMotorStatorCurrentAmps[0] = inputs.indexStatorCurrentAmps;
+    inputs.indexMotorStatorCurrentAmps[1] = m_indexFollowerStatCurrent.getValueAsDouble();
+    inputs.indexMotorSupplyCurrentAmps[0] = inputs.indexSupplyCurrentAmps;
+    inputs.indexMotorSupplyCurrentAmps[1] = m_indexFollowerSupCurrent.getValueAsDouble();
 
     // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
     // only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll. Grouped here

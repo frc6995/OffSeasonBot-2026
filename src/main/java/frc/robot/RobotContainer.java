@@ -23,6 +23,7 @@ import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.power.PowerMonitor;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
@@ -76,6 +77,8 @@ public class RobotContainer {
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
+
+    public final PowerMonitor m_power = new PowerMonitor();
 
     public RobotContainer() {
         VISUALIZER = RobotVisualizer.MECH_VISUALIZER;

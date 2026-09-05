@@ -37,6 +37,9 @@ public class HoodIOTalonFX implements HoodIO {
 
     public HoodIOTalonFX() {
         configMotor();
+        // Phoenix publishes current signals far too slowly by default to resolve a brownout; see
+        // CtreUtil.kCurrentSignalFrequencyHz.
+        CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
     }
 
     public void configMotor() {

@@ -77,6 +77,12 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
     inputs.indexAppliedVolts = indexAppliedVolts;
     inputs.indexStatorCurrentAmps = indexLeadState.getTorqueCurrent();
     inputs.indexSupplyCurrentAmps = indexLeadState.getSupplyCurrent();
+    // Only the lead's sim state is modelled; the follower mirrors it. Approximation for developing
+    // tools/power_analysis, not a measurement - see FlywheelIOSimTalonFX.
+    inputs.indexMotorStatorCurrentAmps[0] = inputs.indexStatorCurrentAmps;
+    inputs.indexMotorStatorCurrentAmps[1] = inputs.indexStatorCurrentAmps;
+    inputs.indexMotorSupplyCurrentAmps[0] = inputs.indexSupplyCurrentAmps;
+    inputs.indexMotorSupplyCurrentAmps[1] = inputs.indexSupplyCurrentAmps;
     inputs.indexLeadMotorConnected = true;
     inputs.indexFollowerMotorConnected = true;
   }

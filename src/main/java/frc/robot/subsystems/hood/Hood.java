@@ -178,6 +178,16 @@ public class Hood extends SubsystemBase {
         return inputs.statorCurrent;
     }
 
+    /**
+     * The hood's line in the robot's power budget. It is a single motor, so this equals
+     * {@link #getSupplyCurrent()} - it exists so every subsystem exposes the same channel name for
+     * tools/power_analysis to read.
+     */
+    @Logged(name = "Supply Current Total", importance = Importance.CRITICAL)
+    public double getTotalSupplyCurrentAmps() {
+        return getSupplyCurrent();
+    }
+
     @Logged(name = "Supply Current", importance = Importance.DEBUG)
     public double getSupplyCurrent() {
         return inputs.supplyCurrent;

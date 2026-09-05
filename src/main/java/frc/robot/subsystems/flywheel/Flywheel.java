@@ -3,6 +3,7 @@ package frc.robot.subsystems.flywheel;
 import java.util.function.Supplier;
 
 import edu.wpi.first.epilogue.Logged;
+import frc.robot.util.ArrayUtil;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -119,6 +120,28 @@ public class Flywheel extends SubsystemBase {
   @Logged(name = "Voltage", importance = Importance.DEBUG)
   public double getAppliedVolts() {
     return inputs.appliedVolts;
+  }
+
+  /**
+   * Supply current across all four flywheel motors - the flywheel's line in the robot's power
+   * budget, and the series tools/power_analysis charts. Supply, not stator: stator current is
+   * measured on the motor side of the controller and can be several times the current actually
+   * drawn from the battery, so summing stator currents badly overstates the power budget.
+   */
+  @Logged(name = "Supply Current Total", importance = Importance.CRITICAL)
+  public double getTotalSupplyCurrentAmps() {
+    return ArrayUtil.sum(inputs.motorSupplyCurrentAmps);
+  }
+
+  /** Per-motor detail behind {@link #getTotalSupplyCurrentAmps()}: [lead, f1, f2, f3]. */
+  @Logged(name = "Supply Currents", importance = Importance.DEBUG)
+  public double[] getMotorSupplyCurrentsAmps() {
+    return inputs.motorSupplyCurrentAmps;
+  }
+
+  @Logged(name = "Stator Currents", importance = Importance.DEBUG)
+  public double[] getMotorStatorCurrentsAmps() {
+    return inputs.motorStatorCurrentAmps;
   }
 
   @Override

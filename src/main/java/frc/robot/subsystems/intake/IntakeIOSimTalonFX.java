@@ -105,6 +105,13 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.rollerAppliedVolts = rollerAppliedVolts;
         inputs.rollerStatorCurrentAmps = rollerState.getTorqueCurrent();
         inputs.rollerSupplyCurrentAmps = rollerState.getSupplyCurrent();
+        // Only the lead motor's sim state is modelled, so the follower is reported as drawing what
+        // the lead draws. An approximation to give simulation correctly-shaped power data for
+        // developing tools/power_analysis, not a measurement - see FlywheelIOSimTalonFX.
+        inputs.rollerMotorStatorCurrentAmps[0] = inputs.rollerStatorCurrentAmps;
+        inputs.rollerMotorStatorCurrentAmps[1] = inputs.rollerStatorCurrentAmps;
+        inputs.rollerMotorSupplyCurrentAmps[0] = inputs.rollerSupplyCurrentAmps;
+        inputs.rollerMotorSupplyCurrentAmps[1] = inputs.rollerSupplyCurrentAmps;
         inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
         inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
 
@@ -112,6 +119,10 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.extensionAppliedVolts = extensionAppliedVolts;
         inputs.extensionStatorCurrentAmps = extensionState.getTorqueCurrent();
         inputs.extensionSupplyCurrentAmps = extensionState.getSupplyCurrent();
+        inputs.extensionMotorStatorCurrentAmps[0] = inputs.extensionStatorCurrentAmps;
+        inputs.extensionMotorStatorCurrentAmps[1] = inputs.extensionStatorCurrentAmps;
+        inputs.extensionMotorSupplyCurrentAmps[0] = inputs.extensionSupplyCurrentAmps;
+        inputs.extensionMotorSupplyCurrentAmps[1] = inputs.extensionSupplyCurrentAmps;
         inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
         inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
 

@@ -50,6 +50,10 @@ public class TurretIOTalonFX implements TurretIO {
 
         statorCurrentSignal = m_turretMotor.getStatorCurrent();
         supplyCurrentSignal = m_turretMotor.getSupplyCurrent();
+
+        // Phoenix publishes current signals far too slowly by default to resolve a brownout; see
+        // CtreUtil.kCurrentSignalFrequencyHz.
+        CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
     }
 
     public void configMotor() {

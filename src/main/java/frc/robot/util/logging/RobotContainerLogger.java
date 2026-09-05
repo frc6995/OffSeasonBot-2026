@@ -19,7 +19,9 @@ public class RobotContainerLogger extends ClassSpecificLogger<RobotContainer> {
         ErrorHandler errorHandler = Epilogue.getConfig().errorHandler;
 
         Epilogue.swerveDriveStateLogger.tryUpdate(backend.getNested("Swerve/State"), object.m_drivetrain.state(), errorHandler);
+        Epilogue.commandSwerveDrivetrainLogger.tryUpdate(backend.getNested("Swerve"), object.m_drivetrain, errorHandler);
         Epilogue.superstructureLogger.tryUpdate(backend, object.m_superstructure, errorHandler);
+        Epilogue.powerMonitorLogger.tryUpdate(backend.getNested("Power"), object.m_power, errorHandler);
     }
     
 }
