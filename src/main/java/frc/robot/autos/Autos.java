@@ -35,6 +35,7 @@ public class Autos {
      */
 
     private final Path Depot1Path = new Path("left-center-line-depot".toLowerCase());
+    public final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
 
@@ -45,7 +46,6 @@ public class Autos {
     private final Path Testcanrange2 = new Path("Test-canrange2".toLowerCase());
 
     private final Supplier<Pose2d> TEST_START_CANRANGE = AllianceFlipUtil.flipped(Testcanrange.getStartPose());
-    private final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
 
     // Constructor
     public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
@@ -162,6 +162,7 @@ public class Autos {
     public AutoChooser getAutoChooser() {
         return autoChooser;
     }
+
 
     public CANRange getCanRange() {
         return m_canRange;

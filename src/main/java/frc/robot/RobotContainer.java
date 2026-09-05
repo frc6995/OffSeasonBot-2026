@@ -26,6 +26,7 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
@@ -73,7 +74,6 @@ public class RobotContainer {
 
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
-    
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
@@ -132,24 +132,13 @@ public class RobotContainer {
                         true,
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(m_drivetrain)));
+        
+        // Deferred so the pose (and its alliance flip) is re-evaluated every time
+        // the button is pressed
+        joystick.x().whileTrue(Commands.defer(
+                () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
+                Set.of(m_drivetrain)));
 
-
-        /* 
-        *
-        *
-        *   TEST BINDINGS BELOW 
-        *
-        *
-        */
-
-        // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
-
-        // joystick.a().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestSpin()));
-        // joystick.b().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestIdle()));
-
-        // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
-        // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
-        autos.getCanRange().setSimProximitySupplier(joystick.x());
     }
   
     public Command getAutonomousCommand() {
