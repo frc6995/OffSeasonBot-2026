@@ -26,6 +26,7 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.apriltag.NoneATVision;
 import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
@@ -73,7 +74,6 @@ public class RobotContainer {
 
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
-    
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
@@ -132,7 +132,9 @@ public class RobotContainer {
                         true,
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(m_drivetrain)));
-
+        
+        joystick.x().whileTrue(
+            new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()));
 
         /* 
         *

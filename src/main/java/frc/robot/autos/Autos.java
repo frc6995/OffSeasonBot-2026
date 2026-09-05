@@ -35,7 +35,7 @@ public class Autos {
 
     private final Path workshopTest1 = new Path("workshop-test-1".toLowerCase());
     private final Path Depot1Path = new Path("left-center-line-depot".toLowerCase());
-    private final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
+    public final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
     private final Path LeftBump1Path = new Path("path-1".toLowerCase());
@@ -154,6 +154,7 @@ public class Autos {
     public AutoChooser getAutoChooser() {
         return autoChooser;
     }
+
 
     public CANRange getCanRange() {
         return m_canRange;
