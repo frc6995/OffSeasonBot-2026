@@ -13,7 +13,8 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.networktables.TimestampedDoubleArray;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.subsystems.vision.apriltag.RealATVision.ATVisionConstants;
+import frc.robot.subsystems.vision.ATVision;
+import frc.robot.subsystems.vision.apriltag.RealATLimelightVision.LimelightConstants;
 import frc.robot.util.LimelightHelpers;
 
 /**
@@ -54,7 +55,7 @@ public class AprilTagModule {
     public AprilTagModule(String limelightID, Pose3d offset, NetworkTable visionTable) {
         this.limelightID = limelightID;
 
-        defaultMode = ATVisionConstants.kDefaultMode;
+        defaultMode = LimelightConstants.kDefaultMode;
         lastMode = defaultMode;
         lastHbChangeTimestamp = Timer.getFPGATimestamp();
 
@@ -85,7 +86,7 @@ public class AprilTagModule {
     }
 
     /**
-     * Must be called periodically in {@link frc.robot.subsystems.vision.apriltag.RealATVision#periodic()}.
+     * Must be called periodically by {@link ATVision#periodic()}.
      *
      * @param mode Which MegaTag solver to read this loop.
      */
@@ -99,14 +100,14 @@ public class AprilTagModule {
         }
         // Allow for pipelines running slower than the 50 Hz robot loop -- comparing the heartbeat
         // to only the previous loop's value reports a spurious disconnect on every repeat frame.
-        connected = (now - lastHbChangeTimestamp) < ATVisionConstants.kHeartbeatTimeoutSeconds;
+        connected = (now - lastHbChangeTimestamp) < LimelightConstants.kHeartbeatTimeoutSeconds;
 
         if (connected && !wasConnected) {
             applyConfig();
         }
         wasConnected = connected;
 
-        if (!connected && (now - lastDisconnectReportTimestamp) >= ATVisionConstants.kDisconnectReportPeriodSeconds) {
+        if (!connected && (now - lastDisconnectReportTimestamp) >= LimelightConstants.kDisconnectReportPeriodSeconds) {
             lastDisconnectReportTimestamp = now;
             DriverStation.reportError(limelightID + " is not connected.", false);
         }
@@ -142,11 +143,11 @@ public class AprilTagModule {
      * Pushes the robot-to-camera transform to the Limelight.
      *
      * @param offset Robot-to-camera pose in the WPILib frame (+X fwd, +Y left, +Z up).
-     * @see ATVisionConstants#kLimelightRobotSpaceIsYRight
+     * @see LimelightConstants#kLimelightRobotSpaceIsYRight
      */
     public void updateOffset(Pose3d offset) {
         Rotation3d cameraRot = offset.getRotation();
-        double handedness = ATVisionConstants.kLimelightRobotSpaceIsYRight ? -1.0 : 1.0;
+        double handedness = LimelightConstants.kLimelightRobotSpaceIsYRight ? -1.0 : 1.0;
         // Mirroring about Y (M = diag(1,-1,1)) conjugates the rotation as M*R*M: roll (rotation
         // about X) and yaw (rotation about Z) flip sign, pitch (rotation about Y) is unchanged.
         LimelightHelpers.setCameraPose_RobotSpace(

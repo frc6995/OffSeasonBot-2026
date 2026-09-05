@@ -22,8 +22,8 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.subsystems.vision.ATVision.ATVisionConstants;
-import frc.robot.subsystems.vision.limelight.RealLimelightATVision.LimelightATVisionConstants;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -64,7 +64,7 @@ public class RealPhotonATVision {
 
         public static final double[] kStdDevCoefficients = {0.5, 1};
 
-        public static final String TABLE_ID = ATVisionConstants.NT_TABLE + "/Photon";
+        public static final String TABLE_ID = "Photon";
     }
 
     private PhotonATModule[] cameras;
@@ -77,7 +77,7 @@ public class RealPhotonATVision {
         photonTable = visionTable.getSubTable(PhotonVisionConstants.TABLE_ID);
 
         for(int i = 0; i < cameras.length; i++) {
-            cameras[i] = new PhotonATModule(PhotonVisionConstants.PHOTON_IDS[i], PhotonVisionConstants.PHOTON_OFFSETS[i], visionTable);
+            cameras[i] = new PhotonATModule(PhotonVisionConstants.PHOTON_IDS[i], PhotonVisionConstants.PHOTON_OFFSETS[i], photonTable);
         }
     }
 
@@ -87,12 +87,20 @@ public class RealPhotonATVision {
         }
     }
 
+    public ArrayList<EstimatedRobotPose> getLatestEstimates() {
+        var estimates = new ArrayList<EstimatedRobotPose>();
+        for (var cam : cameras) {
+            estimates.addAll(cam.getLatestEstimates());
+        }
+        return estimates;
+    }
+
     public Matrix<N3, N1> getEstimationStdDevs(List<PhotonTrackedTarget> targets) {
         double tagArea = 0;
         for(var target : targets) tagArea += target.getArea();
 
-        double xydevs = PhotonVisionConstants.kStdDevCoefficients[0] / tagArea / LimelightATVisionConstants.kOptimalTagCount;
-        double thetadevs = PhotonVisionConstants.kStdDevCoefficients[1] / tagArea / LimelightATVisionConstants.kOptimalTagCount;
+        double xydevs = PhotonVisionConstants.kStdDevCoefficients[0] / tagArea / ATVisionConstants.kOptimalTagCount;
+        double thetadevs = PhotonVisionConstants.kStdDevCoefficients[1] / tagArea / ATVisionConstants.kOptimalTagCount;
         return VecBuilder.fill(
                 xydevs,
                 xydevs,

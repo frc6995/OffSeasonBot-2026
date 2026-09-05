@@ -303,7 +303,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * reference read is atomic and needs no cross-field coherence.
      *
      * <p>The refresh happens at the <i>end</i> of {@link #periodic()}. AprilTag fusion lives in
-     * {@code RealATVision}, which is constructed after this subsystem and so runs later in the
+     * {@code ATVision}, which is constructed after this subsystem and so runs later in the
      * scheduler's registration order: it reads the state refreshed here, then calls
      * {@code addVisionMeasurement}, whose correction this method picks up on the next loop. The
      * ordering is belt-and-braces rather than load-bearing, given the odometry thread would
@@ -386,7 +386,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             });
         }
 
-        // Re-read last. Vision fusion now lives in RealATVision, a separate subsystem registered
+        // Re-read last. Vision fusion now lives in ATVision, a separate subsystem registered
         // after this one, so it consumes the state refreshed here and its addVisionMeasurement
         // calls land after this refresh -- the odometry thread surfaces the correction within a
         // tick either way. See state(): this is a live reference to Phoenix's own state object,

@@ -49,7 +49,7 @@ public class Turret extends SubsystemBase {
         /**
          * Pose of the Limelight in the TURRET frame -- i.e. relative to {@link #turretCenterPose},
          * with the turret at 0 deg. Composed with the live turret angle by
-         * {@link frc.robot.subsystems.vision.apriltag.RealATVision#solveRobotToCamera(double)}.
+         * {@link frc.robot.subsystems.vision.ATVision#solveRobotToCamera(double)}.
          * <p>
          * WPILib convention, so +pitch tilts the camera DOWN. The Limelight's own
          * camerapose_robotspace convention is +pitch UP and +Y right; the conversion lives in
