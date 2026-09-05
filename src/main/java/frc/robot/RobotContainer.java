@@ -139,22 +139,6 @@ public class RobotContainer {
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));
 
-        /* 
-        *
-        *
-        *   TEST BINDINGS BELOW 
-        *
-        *
-        */
-
-        // joystick.rightStick().onTrue(Commands.runOnce(() -> m_Superstucture.m_turret.setAngle(30)));
-
-        // joystick.a().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestSpin()));
-        // joystick.b().onTrue(Commands.runOnce(() -> m_Superstructure.m_dyeRotor.requestIdle()));
-
-        // Sim-only: hold right bumper to fake the CANRange detecting the wall so BLine Depot Auto's
-        // path transitions can be tested. No effect on real hardware (see CANRange.isCloseToWall).
-        autos.getCanRange().setSimProximitySupplier(joystick.x());
     }
   
     public Command getAutonomousCommand() {
