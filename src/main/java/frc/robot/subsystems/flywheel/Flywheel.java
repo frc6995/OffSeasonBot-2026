@@ -34,7 +34,7 @@ public class Flywheel extends SubsystemBase {
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
 
-    public static final double SAFE_SHOT = 0;
+    public static final double kSafeShotRPM = 1000;
     // Sim Constants
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
@@ -150,7 +150,7 @@ public class Flywheel extends SubsystemBase {
     return switch (state) {
       case DISABLED -> 0.0;
       case ACTIVE -> targetData.get().flywheelRpm();
-      case SAFE_SHOT -> FlywheelConstants.SAFE_SHOT;
+      case SAFE_SHOT -> FlywheelConstants.kSafeShotRPM;
     };
   }
 }

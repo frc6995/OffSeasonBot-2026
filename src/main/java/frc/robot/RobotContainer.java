@@ -128,9 +128,9 @@ public class RobotContainer {
         // joystick.y().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
         //Safe Shot
-        joystick.rightBumper().onTrue(
+        joystick.y().onTrue(
             m_superstructure.requestRobotShootSafe());
-        joystick.rightBumper().onFalse(
+        joystick.y().onFalse(
             m_superstructure.requestRobotIdle()
         );
 

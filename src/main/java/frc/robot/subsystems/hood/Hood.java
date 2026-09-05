@@ -58,7 +58,7 @@ public class Hood extends SubsystemBase {
         // 5.57 inches
         public static final double kHoodLength = 0.141478;
 
-        public static final double SAFE_SHOT = 0;
+        public static final double kSafeShotAngle = 20.0;
 
     }
 
@@ -113,8 +113,8 @@ public class Hood extends SubsystemBase {
                 io.setAngle(commandedAngle);
                 break;
             case SAFE_SHOT:
-                commandedAngle = HoodConstants.SAFE_SHOT;
-                io.setAngle(HoodConstants.SAFE_SHOT);
+                commandedAngle = HoodConstants.kSafeShotAngle;
+                io.setAngle(HoodConstants.kSafeShotAngle);
         }
     }
 

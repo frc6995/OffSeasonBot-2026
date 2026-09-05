@@ -160,7 +160,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command requestRobotShootSafe(){
-        return Commands.runOnce(()->{ RobotState targetState = RobotState.SAFE_SHOT;});
+        return Commands.runOnce(()->{engageShootState(RobotState.SAFE_SHOT);});
     }
 
     /** Chooses PASSING or SCORING based on whether the robot is in the configurable passing zone. */
@@ -178,6 +178,10 @@ public class Superstructure extends SubsystemBase {
             m_turret.setState(TurretState.SAFE_SHOT);
             m_flywheel.setState(FlywheelState.SAFE_SHOT);
             m_hood.setState(HoodState.SAFE_SHOT);
+        } else if(state == RobotState.PASSING) {
+            m_turret.requestAimClosest();
+            m_flywheel.requestActive();
+            m_hood.requestActive();
         }
         robotState = state;
         m_dyeRotor.requestSpin();
