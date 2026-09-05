@@ -19,6 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Tracer;
 import frc.robot.Constants;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
 import frc.robot.util.ConnectionPoll;
@@ -33,6 +34,9 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
   /** Throttles the isConnected() polling below; see ConnectionPoll. */
   private final ConnectionPoll connectionPoll = new ConnectionPoll();
+
+  /** Times the CAN refresh below; see the Tracer usage note in Superstructure.periodic(). */
+  private final Tracer m_tracer = new Tracer();
 
   private final VelocityVoltage m_spinRequest = new VelocityVoltage(0).withEnableFOC(true);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);
@@ -113,9 +117,12 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
   @Override
   public void updateInputs(DyeRotorInputs inputs) {
+    m_tracer.resetTimer();
     BaseStatusSignal.refreshAll(
         m_spinVelocity, m_spinVoltage, m_spinSupCurrent, m_spinStatCurrent,
         m_indexVelocity, m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent);
+    m_tracer.addEpoch("DyeRotor refreshAll");
+    m_tracer.printEpochs();
 
     inputs.spinVelocityRPM = m_spinVelocity.getValueAsDouble() * 60.0;
     inputs.spinAppliedVolts = m_spinVoltage.getValueAsDouble();

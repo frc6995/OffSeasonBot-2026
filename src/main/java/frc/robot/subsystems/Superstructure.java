@@ -7,6 +7,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -59,6 +60,11 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> m_poseSupplier;
 
     public final ShotController m_shotController;
+
+    // Epoch-style timer for periodic() -- see Tracer's javadoc. printEpochs() throttles its own
+    // output to at most once per second, and reports via DriverStation.reportWarning by default,
+    // so this is safe to call unconditionally every loop.
+    private final Tracer m_tracer = new Tracer();
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
@@ -114,7 +120,13 @@ public class Superstructure extends SubsystemBase {
             robotState = RobotState.IDLE;
         }
 
+        // Runs every loop regardless of RobotState (see class-level investigation notes) --
+        // traced so printEpochs() below can show whether this trig/interpolation math is
+        // actually a meaningful chunk of Superstructure's periodic() time.
+        m_tracer.resetTimer();
         m_shotController.calculate(robotState == RobotState.PASSING);
+        m_tracer.addEpoch("ShotController.calculate");
+        m_tracer.printEpochs();
     }
 
     public Command requestIntakeActive() {
