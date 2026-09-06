@@ -192,3 +192,8 @@ compile_commands.json
 # Python bytecode cache from tools/power_analysis
 __pycache__/
 *.py[cod]
+
+# Generated power-analysis reports (tools/power_analysis). Derived from the .wpilog files in
+# logs/, so they are always regenerable - keep the log, not the report.
+/reports/
+/report/

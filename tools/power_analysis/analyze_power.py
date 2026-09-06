@@ -7,7 +7,7 @@ it was actually running, and - for every voltage sag - what was drawing current 
 before it.
 
     python3 tools/power_analysis/analyze_power.py logs/FRC_20260101_120000.wpilog
-    python3 tools/power_analysis/analyze_power.py <log> --out report/ --csv
+    python3 tools/power_analysis/analyze_power.py <log> --out --csv
 
 The channels this reads are produced by the `Supply Current Total` getters on each subsystem and
 by frc.robot.subsystems.power.PowerMonitor. A log recorded before those existed will fail the
@@ -83,6 +83,12 @@ ROBOT_STATE = "Robot State"
 DS_ENABLED = "DS:enabled"
 DS_AUTONOMOUS = "DS:autonomous"
 
+# Reports default to a directory under here, named after the log. Keeping one report per log
+# means analysing a second match never silently overwrites the first - the common case is wanting
+# to compare two matches, not replace one.
+DEFAULT_REPORT_ROOT = "reports"
+
+
 # A current channel that never gets faster than this cannot resolve a brownout, which lasts a
 # couple of hundred milliseconds. The robot asks for 50 Hz; hitting this warning means that rate
 # is not reaching the logged channel - see CtreUtil.kCurrentSignalFrequencyHz.
@@ -98,6 +104,12 @@ class MissingChannels(Exception):
     def __init__(self, missing: list[str]):
         self.missing = missing
         super().__init__("missing channels: " + ", ".join(missing))
+
+
+def default_out_dir(log_path: str) -> str:
+    """`logs/FRC_20260404_143012.wpilog` -> `reports/FRC_20260404_143012`."""
+    stem = os.path.splitext(os.path.basename(log_path))[0]
+    return os.path.join(DEFAULT_REPORT_ROOT, stem)
 
 
 def resolve(log: DataLog, suffix: str) -> str | None:
@@ -354,10 +366,15 @@ def main() -> int:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("log", help="path to a .wpilog")
-    parser.add_argument("--out", help="directory for plots and CSV (created if needed)")
+    parser.add_argument(
+        "--out", nargs="?", const=True, default=None, metavar="DIR",
+        help="directory for plots and CSV (created if needed). Pass --out with no directory to "
+             f"derive one from the log's name ({DEFAULT_REPORT_ROOT}/<log name>/), so analysing a "
+             "second match never overwrites the first.",
+    )
     parser.add_argument(
         "--csv", action="store_true",
-        help="write the resampled matrix as CSV (requires --out)",
+        help="write the resampled matrix as CSV (implies --out if no directory is given)",
     )
     parser.add_argument("--dt", type=float, default=0.02, help="resample interval, seconds")
     parser.add_argument(
@@ -397,8 +414,14 @@ def main() -> int:
             f"--dt must be greater than zero (got {args.dt}). It is the resample interval in "
             "seconds; 0.02 matches the robot's loop period."
         )
-    if args.csv and not args.out:
-        parser.error("--csv writes into the report directory, so it needs --out as well.")
+    # --out DIR wins; a bare --out (or --csv with no directory, which would otherwise have
+    # nowhere to write) derives one from the log's name.
+    if isinstance(args.out, str):
+        out_dir = args.out
+    elif args.out is True or args.csv:
+        out_dir = default_out_dir(args.log)
+    else:
+        out_dir = None
 
     log = DataLog.read(args.log)
     t_start, t_end = log.span_seconds()
@@ -620,20 +643,20 @@ def main() -> int:
         print(f"\n  ... and {len(events) - len(shown)} more (pass --max-events 0 to see all).")
 
     # ---- outputs ----
-    if args.out:
-        os.makedirs(args.out, exist_ok=True)
-        summary_path = os.path.join(args.out, "summary.txt")
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+        summary_path = os.path.join(out_dir, "summary.txt")
         with open(summary_path, "w") as handle:
             handle.write(format_table(rows) + "\n")
         print(f"\nWrote {summary_path}")
 
         if args.csv:
-            csv_path = os.path.join(args.out, "resampled.csv")
+            csv_path = os.path.join(out_dir, "resampled.csv")
             write_csv(csv_path, grid, series, voltages, total_current, enabled, autonomous)
             print(f"Wrote {csv_path}")
 
         make_plots(
-            args.out, grid, series, voltages, total_current, enabled, autonomous,
+            out_dir, grid, series, voltages, total_current, enabled, autonomous,
             all_events=events, detail_events=shown,
         )
 

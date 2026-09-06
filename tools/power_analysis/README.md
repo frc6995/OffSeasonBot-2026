@@ -4,8 +4,16 @@ Offline breakdown of where a match's current went, for tracking down brownouts.
 
 ```
 python3 tools/power_analysis/analyze_power.py logs/FRC_20260101_120000.wpilog
-python3 tools/power_analysis/analyze_power.py <log> --out report/ --csv
+python3 tools/power_analysis/analyze_power.py <log> --out --csv
 ```
+
+With no `--out`, it prints to the terminal and writes nothing. A bare `--out` derives a
+directory from the log's name — `logs/FRC_20260101_120000.wpilog` becomes
+`reports/FRC_20260101_120000/` — so analysing a second match never overwrites the first. Pass
+`--out somewhere/else` to choose the directory yourself. (`--csv` implies `--out` if you don't
+give one, since it has to write somewhere.)
+
+Reusing a directory *does* overwrite it, which is what you want when re-running the same log.
 
 No install needed for the tables. Plots want matplotlib:
 `pip install -r tools/power_analysis/requirements.txt`
@@ -42,7 +50,8 @@ lazy — it only writes a value when it changes — so a channel that sat consta
 logs a low mean rate while being perfectly capable of 50 Hz. Only a channel that never gets fast
 is actually mis-configured.
 
-Plots, with `--out`: `overview.png` (voltage and total draw, auto/teleop bands, *every* sag
+Files written to the report directory: `summary.txt` (the table above, plain text so `diff`
+works across matches), and with plots available, `overview.png` (voltage and total draw, auto/teleop bands, *every* sag
 marked), `stack.png` (stacked draw by subsystem), and `events/event_NN.png` — a ±2 s zoom for
 each of the sags printed in full, so `--max-events` (default 10) caps these too. Raise it or pass
 `--max-events 0` to plot every sag.
