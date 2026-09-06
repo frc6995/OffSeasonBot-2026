@@ -14,6 +14,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -24,9 +25,10 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.power.PowerMonitor;
-import frc.robot.subsystems.vision.apriltag.AprilTagVision;
-import frc.robot.subsystems.vision.apriltag.NoneATVision;
-import frc.robot.subsystems.vision.apriltag.RealATVision;
+import frc.robot.subsystems.vision.ATVision;
+import frc.robot.subsystems.vision.apriltag.NoneATLimelightVision;
+import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
+import frc.robot.subsystems.vision.photon.RealPhotonATVision;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
@@ -63,15 +65,17 @@ public class RobotContainer {
 
     // No vision simulation -- real-life testing on hardware is more useful than simulating the
     // Limelight, so simulation just runs without vision measurements at all.
-    public final AprilTagVision m_vision = (Utils.isSimulation())
-            ? new NoneATVision()
-            : new RealATVision(
-                m_drivetrain::state,
-                m_drivetrain.getPigeon2()::getRotation3d,
-                (estimate, stdDevs) -> {
-                    m_drivetrain.addVisionMeasurement(estimate.estimatedPose(), estimate.timestampSeconds(), stdDevs);
-                },
-                m_superstructure.m_turret::getAngle);
+    public final ATVision m_vision = new ATVision(
+            Utils.isSimulation()
+                ? new NoneATLimelightVision()
+                : new RealATLimelightVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
+            Utils.isSimulation()
+                ? null
+                : new RealPhotonATVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
+            m_drivetrain::state,
+            m_drivetrain.getPigeon2()::getRotation3d,
+            m_drivetrain::addVisionMeasurement,
+            m_superstructure.m_turret::getAngle);
 
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
