@@ -197,3 +197,9 @@ __pycache__/
 # logs/, so they are always regenerable - keep the log, not the report.
 /reports/
 /report/
+
+# Robot logs, wherever they land. The logs/ rule above covers the usual location; this also
+# catches one downloaded or generated somewhere else in the project. To commit a specific log
+# deliberately, use: git add -f <path>
+*.wpilog
+*.hoot
