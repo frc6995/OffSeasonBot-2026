@@ -27,7 +27,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   public FlywheelIOTalonFX() {
     configureMotors();
-    // Phoenix publishes current signals far too slowly by default to see a brownout; see
+    // Current signals are published at an explicit rate rather than Phoenix's default,
+    // which is not guaranteed fast enough to resolve a brownout. See
     // CtreUtil.kCurrentSignalFrequencyHz.
     CtreUtil.setCurrentSignalFrequency(
         ArrayUtil.concat(m_supplyCurrentSignals, m_statorCurrentSignals));

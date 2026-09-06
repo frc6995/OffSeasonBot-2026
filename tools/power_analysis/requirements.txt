@@ -1,3 +1,12 @@
 # Only needed for the plots. The tables run on the standard library alone, so an unprepared
 # laptop in the pit can still get the numbers.
 matplotlib>=3.5
+
+# matplotlib pulls in Pillow. Pillow 12.3.0 is the first release without a set of 2026 heap
+# corruption advisories, but it also drops Python 3.9 - which is what ships on a stock Mac, and
+# what this tool is expected to run on. The marker takes the fixed version wherever the
+# interpreter allows it rather than making 3.9 unresolvable.
+#
+# Note the exposure here is low either way: the only images involved are ones matplotlib writes
+# itself from your own log files. Nothing untrusted is ever decoded.
+Pillow>=12.3.0; python_version >= "3.10"

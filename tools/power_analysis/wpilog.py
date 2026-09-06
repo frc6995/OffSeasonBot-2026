@@ -135,6 +135,18 @@ def _decode_string_array(raw: bytes) -> list[str]:
     return values
 
 
+# Exact payload width for the fixed-size scalar types. A payload that does not match is not a
+# value we can read: decoding it anyway would hand the analysis a silent 0.0, which would
+# undercount energy on a current channel and invent a sag on a voltage one. Variable-length types
+# (strings, arrays) are absent here because any length is legitimate for them.
+_SCALAR_WIDTHS = {
+    "double": 8,
+    "float": 4,
+    "int64": 8,
+    "boolean": 1,
+}
+
+
 _DECODERS = {
     "double": _decode_double,
     "float": _decode_float,
@@ -162,6 +174,10 @@ class DataLog:
     def __init__(self, entries: dict[str, Entry], start_timestamp_us: int):
         self.entries = entries
         self.start_timestamp_us = start_timestamp_us
+        # Set by from_bytes(). Reported by the analysis so a damaged log is never mistaken for a
+        # clean one with surprising numbers in it.
+        self.malformed_records = 0
+        self.truncated = False
 
     @classmethod
     def read(cls, path: str) -> "DataLog":
@@ -181,6 +197,8 @@ class DataLog:
         by_id: dict[int, Entry] = {}
         entries: dict[str, Entry] = {}
         earliest: int | None = None
+        malformed = 0
+        truncated = False
         size = len(data)
 
         while pos < size:
@@ -189,6 +207,7 @@ class DataLog:
             except (struct.error, IndexError):
                 # A log from a robot that lost power mid-write ends in a torn record. Everything
                 # before it is still valid, so keep it rather than failing the whole analysis.
+                truncated = True
                 break
 
             if entry_id == _CONTROL_ENTRY_ID:
@@ -199,12 +218,24 @@ class DataLog:
             if entry is None:
                 # A value for an entry whose start record we never saw. Not recoverable, skip.
                 continue
+
+            width = _SCALAR_WIDTHS.get(entry.type)
+            if width is not None and len(payload) != width:
+                # Dropped rather than decoded as zero; see _SCALAR_WIDTHS. Counted so callers can
+                # tell "this log is clean" from "this log is damaged and I quietly skipped part
+                # of it".
+                malformed += 1
+                continue
+
             entry.timestamps_us.append(timestamp_us)
             entry.raw_values.append(payload)
             if earliest is None or timestamp_us < earliest:
                 earliest = timestamp_us
 
-        return cls(entries, earliest or 0)
+        log = cls(entries, earliest or 0)
+        log.malformed_records = malformed
+        log.truncated = truncated
+        return log
 
     def get(self, name: str) -> Entry | None:
         return self.entries.get(name)
@@ -237,13 +268,24 @@ class DataLog:
 
 
 def _read_record(data: bytes, pos: int) -> tuple[int, int, int, bytes]:
-    """Reads one record. Returns (next position, entry id, timestamp us, payload)."""
+    """Reads one record. Returns (next position, entry id, timestamp us, payload).
+
+    Every field is bounds-checked before it is read. Python slices past the end of a bytes object
+    return short rather than raising, and int.from_bytes(b"", "little") is 0 - so a log truncated
+    mid-header would otherwise decode as a perfectly valid record with a zero timestamp. That is
+    much worse than an error: DataLog.from_bytes takes the minimum timestamp as the log's origin,
+    so one such record would drag the origin to 0 and shift every time in the analysis from
+    log-relative to absolute.
+    """
     header = data[pos]
     pos += 1
     # The header bitfield stores each field's byte length minus one.
     id_len = (header & 0x3) + 1
     payload_len_len = ((header >> 2) & 0x3) + 1
     timestamp_len = ((header >> 4) & 0x7) + 1
+
+    if pos + id_len + payload_len_len + timestamp_len > len(data):
+        raise IndexError("truncated record header")
 
     entry_id = int.from_bytes(data[pos : pos + id_len], "little")
     pos += id_len
@@ -252,9 +294,9 @@ def _read_record(data: bytes, pos: int) -> tuple[int, int, int, bytes]:
     timestamp_us = int.from_bytes(data[pos : pos + timestamp_len], "little")
     pos += timestamp_len
 
-    payload = data[pos : pos + payload_len]
-    if len(payload) < payload_len:
+    if pos + payload_len > len(data):
         raise IndexError("truncated record payload")
+    payload = data[pos : pos + payload_len]
     pos += payload_len
     return pos, entry_id, timestamp_us, payload
 

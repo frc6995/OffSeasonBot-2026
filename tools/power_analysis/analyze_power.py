@@ -50,7 +50,11 @@ class Subsystem:
 # The power budget. Drive and steer are separate rows because they fail differently - drive
 # current tracks acceleration and pushing matches, steer current spikes on direction reversals.
 SUBSYSTEMS = [
-    Subsystem("Drive", "Swerve/Drive/Supply Current Total"),
+    # Drive is bucketed by the overall robot state because that is what RobotCurrentLimits keys
+    # its drivetrain throttling off: while the superstructure is SCORING/PASSING/SAFE_SHOT the
+    # drive supply limit is cut hard. Without this split there is no way to see from a log whether
+    # that rule actually fired.
+    Subsystem("Drive", "Swerve/Drive/Supply Current Total", "Robot State"),
     Subsystem("DriveSteer", "Swerve/Steer/Supply Current Total"),
     Subsystem("Flywheel", "Flywheel/Supply Current Total", "Flywheel/State"),
     Subsystem("Intake_Roller", "Intake/Roller/Supply Current Total", "Intake/State"),
@@ -70,6 +74,8 @@ PDP_CONNECTED = "Power/PDP/Connected"
 CAN_LOWER = "Power/CAN/LowerBus Utilization"
 CAN_UPPER = "Power/CAN/UpperBus Utilization"
 
+# Logged by SuperstructureLogger directly onto the RobotContainer backend, so it sits one level
+# above the per-subsystem trees. Used as Drive's state channel above.
 ROBOT_STATE = "Robot State"
 
 # Driver Station state, written by DriverStation.startDataLog() rather than by Epilogue, so these
@@ -77,9 +83,9 @@ ROBOT_STATE = "Robot State"
 DS_ENABLED = "DS:enabled"
 DS_AUTONOMOUS = "DS:autonomous"
 
-# A current channel logged slower than this cannot resolve a brownout, which lasts a couple
-# hundred milliseconds. Hitting this warning means CtreUtil.setCurrentSignalFrequency did not take
-# effect on that motor - see CtreUtil.kCurrentSignalFrequencyHz.
+# A current channel that never gets faster than this cannot resolve a brownout, which lasts a
+# couple of hundred milliseconds. The robot asks for 50 Hz; hitting this warning means that rate
+# is not reaching the logged channel - see CtreUtil.kCurrentSignalFrequencyHz.
 MIN_USEFUL_SAMPLE_RATE_HZ = 20.0
 
 
@@ -349,7 +355,10 @@ def main() -> int:
     )
     parser.add_argument("log", help="path to a .wpilog")
     parser.add_argument("--out", help="directory for plots and CSV (created if needed)")
-    parser.add_argument("--csv", action="store_true", help="write the resampled matrix as CSV")
+    parser.add_argument(
+        "--csv", action="store_true",
+        help="write the resampled matrix as CSV (requires --out)",
+    )
     parser.add_argument("--dt", type=float, default=0.02, help="resample interval, seconds")
     parser.add_argument(
         "--on-threshold", type=float, default=1.0,
@@ -383,11 +392,25 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.dt <= 0:
+        parser.error(
+            f"--dt must be greater than zero (got {args.dt}). It is the resample interval in "
+            "seconds; 0.02 matches the robot's loop period."
+        )
+    if args.csv and not args.out:
+        parser.error("--csv writes into the report directory, so it needs --out as well.")
+
     log = DataLog.read(args.log)
     t_start, t_end = log.span_seconds()
     print(f"Log:      {args.log}")
     print(f"Entries:  {len(log.entries)}")
-    print(f"Span:     {t_end - t_start:.1f} s\n")
+    print(f"Span:     {t_end - t_start:.1f} s")
+    if log.truncated:
+        print("          (log ends in a torn record - robot lost power mid-write? "
+              "Everything before it is still valid.)")
+    if log.malformed_records:
+        print(f"          ({log.malformed_records} malformed value records skipped)")
+    print()
 
     # ---- resolve channels, and refuse to guess ----
     resolved: dict[str, str] = {}

@@ -14,11 +14,14 @@ public final class CtreUtil {
     /**
      * Rate at which supply/stator current signals are published by the motors, in Hz.
      *
-     * <p>Phoenix 6 defaults current signals to a much lower rate than the mechanism signals
-     * (4 Hz on TalonFX). That is fine for a dashboard readout but useless for brownout work: a
-     * voltage sag lasts a couple hundred milliseconds, so at 4 Hz the entire event falls between
-     * two samples. This is the rate the offline power analysis in {@code tools/power_analysis}
-     * assumes.
+     * <p>Set explicitly rather than left to Phoenix's defaults, which vary by signal and by bus
+     * type and are not guaranteed to be fast enough for this. Brownout work needs a rate that
+     * resolves the event: a voltage sag lasts a couple of hundred milliseconds, so a signal
+     * published even a handful of times per second can miss one entirely between two samples.
+     * This is the rate the offline power analysis in {@code tools/power_analysis} assumes.
+     *
+     * <p>Verify with {@code getAppliedUpdateFrequency()} on a signal, or read the effective rate
+     * off a log - the analysis reports it per channel and warns when one is too slow.
      *
      * <p>Every motor on this robot is on a CANivore ({@link frc.robot.Constants.CANBuses}), which
      * has the headroom for it - roughly 22 motors x 50 Hz of extra status frames, and Phoenix
@@ -33,7 +36,7 @@ public final class CtreUtil {
     /**
      * Publishes the given current signals at {@link #kCurrentSignalFrequencyHz}. Call once from an
      * IO layer's constructor with every current signal it reads; see that constant for why the
-     * defaults are not good enough.
+     * defaults are not relied on.
      */
     public static void setCurrentSignalFrequency(BaseStatusSignal... signals) {
         reportIfNotOk(

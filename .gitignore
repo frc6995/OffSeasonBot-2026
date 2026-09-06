@@ -188,3 +188,7 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+
+# Python bytecode cache from tools/power_analysis
+__pycache__/
+*.py[cod]

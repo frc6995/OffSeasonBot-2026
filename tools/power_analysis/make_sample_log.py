@@ -97,7 +97,9 @@ def main() -> int:
     enabled_id = writer.start_entry(ap.DS_ENABLED, "boolean")
     autonomous_id = writer.start_entry(ap.DS_AUTONOMOUS, "boolean")
 
-    writer.write_double(brownout_v_id, 0, 6.8)
+    # One value drives both the threshold channel and the flag below, so they cannot drift apart.
+    brownout_v = 6.8
+    writer.write_double(brownout_v_id, 0, brownout_v)
 
     # A 12.6 V battery with 0.018 ohm of internal resistance plus wiring - a tired one, chosen so
     # that stacking a shot on top of hard acceleration actually sags into brownout territory.
@@ -162,7 +164,7 @@ def main() -> int:
             writer.write_double(current_ids[name], timestamp_us, value)
         writer.write_double(voltage_id, timestamp_us, voltage)
         writer.write_double(pdp_total_id, timestamp_us, pdp_total)
-        writer.write_boolean(brownout_flag_id, timestamp_us, voltage < 6.8)
+        writer.write_boolean(brownout_flag_id, timestamp_us, voltage < brownout_v)
 
         if step % 25 == 0:
             writer.write_double(can_lower_id, timestamp_us, 0.31 + random.uniform(0, 0.04))

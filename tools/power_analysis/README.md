@@ -33,12 +33,19 @@ the whole story.
 That gap is the roboRIO, radio, and Limelights. A gap much larger than that means something is
 drawing power that nothing in code accounts for.
 
-**A sample-rate warning** if any current channel is logged too slowly to resolve a brownout.
-Phoenix publishes current signals at 4 Hz by default, which cannot see a 200 ms event; if this
-fires, `CtreUtil.setCurrentSignalFrequency` is not taking effect on that motor.
+**A sample-rate warning** if any current channel never reaches a rate that can resolve a
+brownout. The robot asks for 50 Hz (`CtreUtil.kCurrentSignalFrequencyHz`); if this fires, that
+rate is not reaching the logged channel, and a 200 ms event would fall between samples.
 
-Plots, with `--out`: `overview.png` (voltage and total draw, auto/teleop bands, sags marked),
-`stack.png` (stacked draw by subsystem), and `events/event_NN.png` (a ±2 s zoom per sag).
+The check uses the rate a channel reaches *while changing*, not its mean. Epilogue's backend is
+lazy — it only writes a value when it changes — so a channel that sat constant for ten seconds
+logs a low mean rate while being perfectly capable of 50 Hz. Only a channel that never gets fast
+is actually mis-configured.
+
+Plots, with `--out`: `overview.png` (voltage and total draw, auto/teleop bands, *every* sag
+marked), `stack.png` (stacked draw by subsystem), and `events/event_NN.png` — a ±2 s zoom for
+each of the sags printed in full, so `--max-events` (default 10) caps these too. Raise it or pass
+`--max-events 0` to plot every sag.
 
 ## Where the data comes from
 
@@ -55,9 +62,11 @@ charting zeros.
 ## Feeding results back
 
 The state-bucketed rows show whether the rules in `RobotCurrentLimits.java` are actually taking
-effect — `Drive:SCORING` should be visibly cheaper than `Drive` overall. The P90/P99 columns show
-how much of each configured limit is really being used. Note that `CurrentLimitManager` is
-disabled during autonomous (`Robot.autonomousInit`), which the auto/teleop split makes visible.
+effect — `Drive:SCORING` should be visibly cheaper than `Drive` overall. (Those rows exist
+because `Drive` declares `Robot State` as its `state_channel` in `SUBSYSTEMS`; add one to any
+other subsystem you want split the same way.) The P90/P99 columns show how much of each
+configured limit is really being used. Note that `CurrentLimitManager` is disabled during
+autonomous (`Robot.autonomousInit`), which the auto/teleop split makes visible.
 
 ## Files
 
@@ -65,4 +74,5 @@ disabled during autonomous (`Robot.autonomousInit`), which the auto/teleop split
 |---|---|
 | `analyze_power.py` | the analysis; `SUBSYSTEMS` at the top maps subsystem → log channel |
 | `wpilog.py` | dependency-free WPILOG reader |
+| `requirements.txt` | matplotlib, for the plots only |
 | `make_sample_log.py` | writes a synthetic match log so the analysis can be developed without a robot. **Its numbers are invented** — never read them as measurements |
