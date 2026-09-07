@@ -485,7 +485,13 @@ def main() -> int:
     mask = [True] * len(grid) if args.all_time else [bool(e) for e in enabled]
     enabled_time = sum(1 for m in mask if m) * dt
     auto_time = sum(1 for m, a in zip(mask, autonomous) if m and a) * dt
-    print(f"Enabled:  {enabled_time:.1f} s  (auto {auto_time:.1f} s, teleop {enabled_time - auto_time:.1f} s)")
+    # With --all-time the window is the whole log, not the enabled periods, so don't label it
+    # "Enabled" - the auto/teleop split is meaningless there and the number would read as a much
+    # longer match than actually happened.
+    if args.all_time:
+        print(f"Analyzed: {enabled_time:.1f} s  (whole log, --all-time)")
+    else:
+        print(f"Enabled:  {enabled_time:.1f} s  (auto {auto_time:.1f} s, teleop {enabled_time - auto_time:.1f} s)")
     if enabled_time == 0:
         print("\nWARNING: the robot was never enabled in this log. Re-run with --all-time to\n"
               "analyze it anyway; percentages relative to enabled time will be meaningless.")

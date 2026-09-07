@@ -2,6 +2,8 @@
 
 Offline breakdown of where a match's current went, for tracking down brownouts.
 
+**In a hurry?** [QUICKSTART.md](QUICKSTART.md) has the commands and nothing else.
+
 ```
 python3 tools/power_analysis/analyze_power.py logs/FRC_20260101_120000.wpilog
 python3 tools/power_analysis/analyze_power.py <log> --out --csv
