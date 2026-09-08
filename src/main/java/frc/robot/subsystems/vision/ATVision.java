@@ -338,7 +338,7 @@ public class ATVision extends SubsystemBase {
 
     private static double stdDevScale(AprilTagEstimate estimate) {
         if (estimate.tagCount() <= 0) return Double.POSITIVE_INFINITY;
-        double dist = Math.max(estimate.avgTagDistMeters(), 1.0);
-        return (dist * dist) * ATVisionConstants.kOptimalTagCount / estimate.tagCount();
+        double distMeters = Math.max(estimate.avgTagDistMeters(), 1.0);
+        return (distMeters * distMeters) * ATVisionConstants.kOptimalTagCount / estimate.tagCount();
     }
 }

@@ -35,12 +35,12 @@ public final class RobotCurrentLimits {
 
         manager.registerTarget(
                 "Intake/Roller",
-                new CurrentLimit(IntakeConstants.kRollerStatorCurrentLimit, IntakeConstants.kRollerSupplyCurrentLimit),
+                new CurrentLimit(IntakeConstants.kRollerStatorCurrentLimitAmps, IntakeConstants.kRollerSupplyCurrentLimitAmps),
                 superstructure.m_intake::setRollerCurrentLimit);
 
         manager.registerTarget(
                 "Intake/Kicker",
-                new CurrentLimit(IntakeConstants.kKickerStatorCurrentLimit, IntakeConstants.kKickerSupplyCurrentLimit),
+                new CurrentLimit(IntakeConstants.kKickerStatorCurrentLimitAmps, IntakeConstants.kKickerSupplyCurrentLimitAmps),
                 superstructure.m_intake::setKickerCurrentLimit);
 
         manager.registerTarget(

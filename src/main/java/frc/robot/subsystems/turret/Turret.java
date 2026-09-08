@@ -32,15 +32,15 @@ public class Turret extends SubsystemBase {
         public static final double kStatorCurrentLimitAmps = 80;
         public static final double kSupplyCurrentLimitAmps = 40;
 
-        public static final double kMinAngle = -360;
-        public static final double kMaxAngle = 360;
-        public static final double kSafeShotAngle = 0;
+        public static final double kMinAngleDeg = -360;
+        public static final double kMaxAngleDeg = 360;
+        public static final double kSafeShotAngleDeg = 0;
 
         public static final double kReduction = 32.5;
         public static final double kMOI = 0.0873236726;
 
         // 6.5 in
-        public static final double kLength = 0.1651;
+        public static final double kLengthMeters = 0.1651;
         /**
          * Pose of the turret's rotation axis in the ROBOT frame, with the turret at 0 deg.
          * WPILib convention: +X forward, +Y left, +Z up.
@@ -68,9 +68,9 @@ public class Turret extends SubsystemBase {
     }
 
     private TurretState turretState = TurretState.AIM_CLOSEST;
-    private double requestedAngle = 0;
+    private double requestedAngleDeg = 0;
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
-    private double commandedAngle = 0;
+    private double commandedAngleDeg = 0;
 
     private TurretIO io;
     private Supplier<ShooterTargetData> shotData;
@@ -113,10 +113,10 @@ public class Turret extends SubsystemBase {
 
         switch (turretState) {
             case DISABLED -> io.disable();
-            case AIM_CENTRAL -> commandedAngle = selectCentralAngle(shotData.get().turretAngleDeg());
-            case AIM_CLOSEST -> commandedAngle = selectClosestAngle(shotData.get().turretAngleDeg());
-            case MANUAL -> commandedAngle = selectClosestAngle(requestedAngle);
-            case SAFE_SHOT -> commandedAngle = selectClosestAngle(TurretConstants.kSafeShotAngle);
+            case AIM_CENTRAL -> commandedAngleDeg = selectCentralAngle(shotData.get().turretAngleDeg());
+            case AIM_CLOSEST -> commandedAngleDeg = selectClosestAngle(shotData.get().turretAngleDeg());
+            case MANUAL -> commandedAngleDeg = selectClosestAngle(requestedAngleDeg);
+            case SAFE_SHOT -> commandedAngleDeg = selectClosestAngle(TurretConstants.kSafeShotAngleDeg);
         }
     }
 
@@ -132,7 +132,7 @@ public class Turret extends SubsystemBase {
 
     // just for testing in sim
     public void setAngle(double angle) {
-        requestedAngle = angle;
+        requestedAngleDeg = angle;
 
         this.turretState = TurretState.MANUAL;
     }
@@ -196,8 +196,8 @@ public class Turret extends SubsystemBase {
     }
 
     @Logged(name = "Setpoint", importance = Importance.INFO)
-    public double getRequestedAngle() {
-        return commandedAngle;
+    public double getRequestedAngleDeg() {
+        return commandedAngleDeg;
     }
 
     @Logged(name = "Stator Current", importance = Importance.DEBUG)

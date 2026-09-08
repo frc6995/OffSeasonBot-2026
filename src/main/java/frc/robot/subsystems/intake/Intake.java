@@ -29,10 +29,10 @@ public class Intake extends SubsystemBase {
         public static final double kKickerS = 0.25;
         public static final double kKickerV = 0.164;
         // Kicker Config Constants
-        public static final double kKickerSupplyCurrentLimit = 40;
-        public static final double kKickerStatorCurrentLimit = 80;
-        public static final double kKickerMaxVoltage = 10;
-        public static final double kKickerMinVoltage = -10;
+        public static final double kKickerSupplyCurrentLimitAmps = 40;
+        public static final double kKickerStatorCurrentLimitAmps = 80;
+        public static final double kKickerMaxVolts = 10;
+        public static final double kKickerMinVolts = -10;
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
@@ -46,10 +46,10 @@ public class Intake extends SubsystemBase {
         public static final double kRollerS = 0.25;
         public static final double kRollerV = 0.396;
         // Roller Config Constants
-        public static final double kRollerSupplyCurrentLimit = 40;
-        public static final double kRollerStatorCurrentLimit = 80;
-        public static final double kRollerMaxVoltage = 10;
-        public static final double kRollerMinVoltage = -10;
+        public static final double kRollerSupplyCurrentLimitAmps = 40;
+        public static final double kRollerStatorCurrentLimitAmps = 80;
+        public static final double kRollerMaxVolts = 10;
+        public static final double kRollerMinVolts = -10;
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
@@ -62,15 +62,15 @@ public class Intake extends SubsystemBase {
         // Extension Feedforward Constants
         public static final double kExtensionV = 0.07;
         // Extension Config Constants
-        public static final double kExtensionStatorCurrentLimit = 80.0;
-        public static final double kExtensionSupplyCurrentLimit = 40.0;
+        public static final double kExtensionStatorCurrentLimitAmps = 80.0;
+        public static final double kExtensionSupplyCurrentLimitAmps = 40.0;
         public static final double kExtensionReduction = 3.33;
         public static final double kExtensionMaxMeters = 0.31;
         public static final double kExtensionMinMeters = 0.0;
         public static final double kIntakeAngleDegrees = 10.8;
         public static final double kDrumCircumferenceMeters = 0.119;
-        public static final double acceleration = 200.0;
-        public static final double velocity = 10.0;
+        public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
+        public static final double kExtensionCruiseVelocityRotationsPerSec = 10.0;
 
         // Extension sweeps between these two positions while agitating,
         // swapping targets every kAgitateIntervalSeconds.

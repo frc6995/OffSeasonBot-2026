@@ -27,10 +27,10 @@ public class Flywheel extends SubsystemBase {
     public static final int kFollowMotor2CANID = 42;
     public static final int kFollowMotor3CANID = 43;
     // Motor Config Constants
-    public static final double kSupplyCurrentLimit = 40;
-    public static final double kStatorCurrentLimit = 80;
-    public static final double kNewMaxVoltage = 10;
-    public static final double kNewMinVoltage = 0;
+    public static final double kSupplyCurrentLimitAmps = 40;
+    public static final double kStatorCurrentLimitAmps = 80;
+    public static final double kNewMaxVolts = 10;
+    public static final double kNewMinVolts = 0;
     public static final double kReduction = 1;
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg

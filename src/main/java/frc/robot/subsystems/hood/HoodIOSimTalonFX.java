@@ -14,9 +14,9 @@ public class HoodIOSimTalonFX extends HoodIOTalonFX {
             DCMotor.getKrakenX44(1), 
             Hood.HoodConstants.kReduction, 
             Hood.HoodConstants.kMOI, // kg m^2 
-            Hood.HoodConstants.kHoodLength,// m
-            Math.toRadians(Hood.HoodConstants.MIN_ANGLE), 
-            Math.toRadians(Hood.HoodConstants.MAX_ANGLE), 
+            Hood.HoodConstants.kHoodLengthMeters,// m
+            Math.toRadians(Hood.HoodConstants.kMinAngleDeg),
+            Math.toRadians(Hood.HoodConstants.kMaxAngleDeg),
             true, 
             0);
 

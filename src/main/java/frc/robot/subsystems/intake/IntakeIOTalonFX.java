@@ -97,9 +97,9 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.Clockwise_Positive);
         kickConfig.CurrentLimits = new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(IntakeConstants.kKickerStatorCurrentLimit)
+            .withStatorCurrentLimit(IntakeConstants.kKickerStatorCurrentLimitAmps)
             .withStatorCurrentLimitEnable(true)
-            .withSupplyCurrentLimit(IntakeConstants.kKickerSupplyCurrentLimit)
+            .withSupplyCurrentLimit(IntakeConstants.kKickerSupplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
         kickConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kKickerReduction);
         kickConfig.Slot0 = new Slot0Configs()
@@ -107,8 +107,8 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withKS(IntakeConstants.kKickerS)
             .withKV(IntakeConstants.kKickerV);
         kickConfig.Voltage = new VoltageConfigs()
-            .withPeakForwardVoltage(IntakeConstants.kKickerMaxVoltage)
-            .withPeakReverseVoltage(IntakeConstants.kKickerMinVoltage);
+            .withPeakForwardVoltage(IntakeConstants.kKickerMaxVolts)
+            .withPeakReverseVoltage(IntakeConstants.kKickerMinVolts);
         CtreUtil.reportIfNotOk("Config intake kicker",
                 m_kickerMotor.getConfigurator().apply(kickConfig));
     }
@@ -119,9 +119,9 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withNeutralMode(NeutralModeValue.Coast)
             .withInverted(InvertedValue.CounterClockwise_Positive);
         rollerConfig.CurrentLimits = new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(IntakeConstants.kRollerStatorCurrentLimit)
+            .withStatorCurrentLimit(IntakeConstants.kRollerStatorCurrentLimitAmps)
             .withStatorCurrentLimitEnable(true)
-            .withSupplyCurrentLimit(IntakeConstants.kRollerSupplyCurrentLimit)
+            .withSupplyCurrentLimit(IntakeConstants.kRollerSupplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
         rollerConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kRollerReduction);
         rollerConfig.Slot0 = new Slot0Configs()
@@ -129,8 +129,8 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withKS(IntakeConstants.kRollerS)
             .withKV(IntakeConstants.kRollerV);
         rollerConfig.Voltage = new VoltageConfigs()
-            .withPeakForwardVoltage(IntakeConstants.kRollerMaxVoltage)
-            .withPeakReverseVoltage(IntakeConstants.kRollerMinVoltage);
+            .withPeakForwardVoltage(IntakeConstants.kRollerMaxVolts)
+            .withPeakReverseVoltage(IntakeConstants.kRollerMinVolts);
 
        
         CtreUtil.reportIfNotOk("Config intake roller (lead)",
@@ -150,16 +150,16 @@ public class IntakeIOTalonFX implements IntakeIO {
 
         extensionConfig.CurrentLimits =
             new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(IntakeConstants.kExtensionStatorCurrentLimit)
+                .withStatorCurrentLimit(IntakeConstants.kExtensionStatorCurrentLimitAmps)
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(IntakeConstants.kExtensionSupplyCurrentLimit)
+                .withSupplyCurrentLimit(IntakeConstants.kExtensionSupplyCurrentLimitAmps)
                 .withSupplyCurrentLimitEnable(true);
         extensionConfig.Feedback =
             new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kExtensionReduction);
            
 
-        extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.acceleration)
-             .withMotionMagicCruiseVelocity(IntakeConstants.velocity);
+        extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.kExtensionAccelerationRotationsPerSec2)
+             .withMotionMagicCruiseVelocity(IntakeConstants.kExtensionCruiseVelocityRotationsPerSec);
 
         // The hood and turret both carry soft limits; the extension did not, so the only thing
         // keeping it inside its travel was that resolveExtensionTargetPosition() happens to return
@@ -246,7 +246,7 @@ public class IntakeIOTalonFX implements IntakeIO {
         .withPosition(metersToMechanismRotations(positionMeters)));
     }
 
-    public double getExtensionPosition() {
+    public double getExtensionMotorPositionRotations() {
         return m_extensionLeadMotor.getPosition().getValueAsDouble();
     }
 

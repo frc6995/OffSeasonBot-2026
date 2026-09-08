@@ -12,9 +12,9 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
         DCMotor.getKrakenX44(1), 
         Turret.TurretConstants.kReduction, 
         Turret.TurretConstants.kMOI, //Need MOI
-        Turret.TurretConstants.kLength, 
-        Math.toRadians(Turret.TurretConstants.kMinAngle), 
-        Math.toRadians(Turret.TurretConstants.kMaxAngle), 
+        Turret.TurretConstants.kLengthMeters, 
+        Math.toRadians(Turret.TurretConstants.kMinAngleDeg), 
+        Math.toRadians(Turret.TurretConstants.kMaxAngleDeg), 
         false, 
         0);
 

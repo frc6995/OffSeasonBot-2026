@@ -92,9 +92,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         .withNeutralMode(NeutralModeValue.Coast)
         .withInverted(InvertedValue.CounterClockwise_Positive);
     flywheelConfig.CurrentLimits = new CurrentLimitsConfigs()
-        .withStatorCurrentLimit(FlywheelConstants.kStatorCurrentLimit)
+        .withStatorCurrentLimit(FlywheelConstants.kStatorCurrentLimitAmps)
         .withStatorCurrentLimitEnable(true)
-        .withSupplyCurrentLimit(FlywheelConstants.kSupplyCurrentLimit)
+        .withSupplyCurrentLimit(FlywheelConstants.kSupplyCurrentLimitAmps)
         .withSupplyCurrentLimitEnable(true);
     flywheelConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(FlywheelConstants.kReduction);
     m_flywheelFollowMotor1.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Aligned));
@@ -105,8 +105,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         .withKS(FlywheelConstants.kS)
         .withKV(FlywheelConstants.kV);
     flywheelConfig.Voltage = new VoltageConfigs()
-        .withPeakForwardVoltage(FlywheelConstants.kNewMaxVoltage)
-        .withPeakReverseVoltage(FlywheelConstants.kNewMinVoltage);
+        .withPeakForwardVoltage(FlywheelConstants.kNewMaxVolts)
+        .withPeakReverseVoltage(FlywheelConstants.kNewMinVolts);
     CtreUtil.reportIfNotOk("Config flywheel (lead)",
         m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig));
     CtreUtil.reportIfNotOk("Config flywheel (follower 1)",

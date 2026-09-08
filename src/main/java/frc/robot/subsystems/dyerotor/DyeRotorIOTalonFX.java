@@ -73,9 +73,9 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         .withNeutralMode(NeutralModeValue.Brake)
         .withInverted(InvertedValue.CounterClockwise_Positive);
     spinConfig.CurrentLimits = new CurrentLimitsConfigs()
-        .withStatorCurrentLimit(DyeRotorConstants.kSpinStatorCurrentLimit)
+        .withStatorCurrentLimit(DyeRotorConstants.kSpinStatorCurrentLimitAmps)
         .withStatorCurrentLimitEnable(true)
-        .withSupplyCurrentLimit(DyeRotorConstants.kSpinSupplyCurrentLimit)
+        .withSupplyCurrentLimit(DyeRotorConstants.kSpinSupplyCurrentLimitAmps)
         .withSupplyCurrentLimitEnable(true);
     spinConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(DyeRotorConstants.kSpinReduction);
     spinConfig.Slot0 = new Slot0Configs()
@@ -97,9 +97,9 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         .withInverted(InvertedValue.CounterClockwise_Positive);
         
     indexConfig.CurrentLimits = new CurrentLimitsConfigs()
-        .withStatorCurrentLimit(DyeRotorConstants.kIndexStatorCurrentLimit)
+        .withStatorCurrentLimit(DyeRotorConstants.kIndexStatorCurrentLimitAmps)
         .withStatorCurrentLimitEnable(true)
-        .withSupplyCurrentLimit(DyeRotorConstants.kIndexSupplyCurrentLimit)
+        .withSupplyCurrentLimit(DyeRotorConstants.kIndexSupplyCurrentLimitAmps)
         .withSupplyCurrentLimitEnable(true);
         
     indexConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(DyeRotorConstants.kIndexReduction);

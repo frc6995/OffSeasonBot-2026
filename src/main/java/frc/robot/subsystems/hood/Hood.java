@@ -49,16 +49,16 @@ public class Hood extends SubsystemBase {
 
         public static final double kReduction = 70.2857;
 
-        public static final double MIN_ANGLE = 0;
-        public static final double MAX_ANGLE = 42.5;
+        public static final double kMinAngleDeg = 0;
+        public static final double kMaxAngleDeg = 42.5;
 
         // Originally 11.5 in^2 lbs, this is in kg m^2
         public static final double kMOI = 0.00336535601;
 
         // 5.57 inches
-        public static final double kHoodLength = 0.141478;
+        public static final double kHoodLengthMeters = 0.141478;
 
-        public static final double kSafeShotAngle = 20.0;
+        public static final double kSafeShotAngleDeg = 20.0;
 
     }
 
@@ -75,8 +75,8 @@ public class Hood extends SubsystemBase {
             new Color8Bit(52, 137, 235));
 
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last
-    // value). Mirrors Turret's commandedAngle.
-    private double commandedAngle;
+    // value). Mirrors Turret's commandedAngleDeg.
+    private double commandedAngleDeg;
 
     private HoodState hoodState = HoodState.DISABLED;
 
@@ -109,12 +109,12 @@ public class Hood extends SubsystemBase {
                 // Store what was actually sent, so "Setpoint" reflects the live control path.
                 // requestedAngle used to be written only by setAngle(), which nothing in the live
                 // path calls, so the logged setpoint read a flat zero all match.
-                commandedAngle = applyLimits(targetData.get().hoodAngleDeg());
-                io.setAngle(commandedAngle);
+                commandedAngleDeg = applyLimits(targetData.get().hoodAngleDeg());
+                io.setAngle(commandedAngleDeg);
                 break;
             case SAFE_SHOT:
-                commandedAngle = applyLimits(HoodConstants.kSafeShotAngle);
-                io.setAngle(commandedAngle);
+                commandedAngleDeg = applyLimits(HoodConstants.kSafeShotAngleDeg);
+                io.setAngle(commandedAngleDeg);
                 break;
         }
     }
@@ -148,7 +148,7 @@ public class Hood extends SubsystemBase {
     // state to make it meaningful the way Turret.setAngle has.
 
     public double applyLimits(double angle) {
-        double clamped = MathUtil.clamp(angle, Hood.HoodConstants.MIN_ANGLE, Hood.HoodConstants.MAX_ANGLE);
+        double clamped = MathUtil.clamp(angle, Hood.HoodConstants.kMinAngleDeg, Hood.HoodConstants.kMaxAngleDeg);
 
         return clamped;
     }
@@ -169,8 +169,8 @@ public class Hood extends SubsystemBase {
     }
 
     @Logged(name = "Setpoint", importance = Importance.INFO)
-    public double getRequestedAngle() {
-        return commandedAngle;
+    public double getRequestedAngleDeg() {
+        return commandedAngleDeg;
     }
 
     @Logged(name = "Stator Current", importance = Importance.DEBUG)

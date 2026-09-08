@@ -72,9 +72,9 @@ public class HoodIOTalonFX implements HoodIO {
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
-                .withForwardSoftLimitThreshold(angleToMechanismRotations(Hood.HoodConstants.MAX_ANGLE))
+                .withForwardSoftLimitThreshold(angleToMechanismRotations(Hood.HoodConstants.kMaxAngleDeg))
                 .withReverseSoftLimitEnable(true)
-                .withReverseSoftLimitThreshold(angleToMechanismRotations(Hood.HoodConstants.MIN_ANGLE));
+                .withReverseSoftLimitThreshold(angleToMechanismRotations(Hood.HoodConstants.kMinAngleDeg));
 
         config.HardwareLimitSwitch =
             new HardwareLimitSwitchConfigs()

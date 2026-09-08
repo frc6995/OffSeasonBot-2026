@@ -44,10 +44,10 @@ public class AprilTagModule {
     private EstimationMode lastMode;
 
     private double lastHb = Double.NaN;
-    private double lastHbChangeTimestamp;
+    private double lastHbChangeTimestampSeconds;
     private boolean connected = false;
     private boolean wasConnected = false;
-    private double lastDisconnectReportTimestamp = Double.NEGATIVE_INFINITY;
+    private double lastDisconnectReportTimestampSeconds = Double.NEGATIVE_INFINITY;
 
     /** Cached result of this loop's read, so telemetry and consumers share one NT round trip. */
     private Optional<AprilTagEstimate> latestEstimate = Optional.empty();
@@ -57,7 +57,7 @@ public class AprilTagModule {
 
         defaultMode = LimelightConstants.kDefaultMode;
         lastMode = defaultMode;
-        lastHbChangeTimestamp = Timer.getFPGATimestamp();
+        lastHbChangeTimestampSeconds = Timer.getFPGATimestamp();
 
             // Publishers for Limelight data
         moduleSubTable = visionTable.getSubTable(limelightID);
@@ -96,19 +96,19 @@ public class AprilTagModule {
         double hb = LimelightHelpers.getHeartbeat(limelightID);
         if (hb != lastHb) {
             lastHb = hb;
-            lastHbChangeTimestamp = now;
+            lastHbChangeTimestampSeconds = now;
         }
         // Allow for pipelines running slower than the 50 Hz robot loop -- comparing the heartbeat
         // to only the previous loop's value reports a spurious disconnect on every repeat frame.
-        connected = (now - lastHbChangeTimestamp) < LimelightConstants.kHeartbeatTimeoutSeconds;
+        connected = (now - lastHbChangeTimestampSeconds) < LimelightConstants.kHeartbeatTimeoutSeconds;
 
         if (connected && !wasConnected) {
             applyConfig();
         }
         wasConnected = connected;
 
-        if (!connected && (now - lastDisconnectReportTimestamp) >= LimelightConstants.kDisconnectReportPeriodSeconds) {
-            lastDisconnectReportTimestamp = now;
+        if (!connected && (now - lastDisconnectReportTimestampSeconds) >= LimelightConstants.kDisconnectReportPeriodSeconds) {
+            lastDisconnectReportTimestampSeconds = now;
             DriverStation.reportError(limelightID + " is not connected.", false);
         }
 
@@ -193,10 +193,10 @@ public class AprilTagModule {
             return Optional.empty();
         }
 
-        double latency = LimelightHelpers.extractArrayEntry(poseArray, 6);
+        double latencyMs = LimelightHelpers.extractArrayEntry(poseArray, 6);
         int tagCount = (int) LimelightHelpers.extractArrayEntry(poseArray, 7);
         // double tagSpan = LimelightHelpers.extractArrayEntry(poseArray, 8);
-        double tagDist = LimelightHelpers.extractArrayEntry(poseArray, 9);
+        double tagDistMeters = LimelightHelpers.extractArrayEntry(poseArray, 9);
         double tagArea = LimelightHelpers.extractArrayEntry(poseArray, 10);
 
         // With no tags the array is a valid, all-zero, 11-length array. Reject it here rather than
@@ -221,10 +221,10 @@ public class AprilTagModule {
         var pose = LimelightHelpers.toPose2D(poseArray);
 
         // Convert server timestamp from microseconds to seconds and adjust for latency
-        double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+        double adjustedTimestampSeconds = (timestamp / 1000000.0) - (latencyMs / 1000.0);
 
         lastMode = isMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
-        return Optional.of(new AprilTagEstimate(pose, adjustedTimestamp, isMegaTag2, tagDist, tagCount, avgAmbiguity, tagArea));
+        return Optional.of(new AprilTagEstimate(pose, adjustedTimestampSeconds, isMegaTag2, tagDistMeters, tagCount, avgAmbiguity, tagArea));
     }
 
     /**
