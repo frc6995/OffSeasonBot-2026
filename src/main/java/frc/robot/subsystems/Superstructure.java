@@ -70,7 +70,7 @@ public class Superstructure extends SubsystemBase {
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            this.m_intake = new Intake(new IntakeIOTalonFX());
+            this.m_intake = new Intake(new IntakeIO(){});
             this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
             this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
             this.m_turret = new Turret(new TurretIOTalonFX(), m_shotController::getCachedData);
