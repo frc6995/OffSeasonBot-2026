@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.util.ConnectionPoll;
 
 /**
  * Logs everything needed to reconstruct the robot's power budget offline: battery voltage,
@@ -69,6 +70,20 @@ public class PowerMonitor extends SubsystemBase {
     private double lowerBusUtilization;
     private double upperBusUtilization;
 
+    /**
+     * Rate-limits the two {@link com.ctre.phoenix6.CANBus#getStatus()} calls in {@link #periodic()}.
+     *
+     * <p>CTRE documents that call as blocking for up to 1 ms; two of them every loop is up to 2 ms
+     * of a 20 ms budget spent on a number that only exists to answer "is the bus overloaded". Bus
+     * utilization is a slow-moving average, so 4 Hz says exactly as much as 50 Hz did.
+     *
+     * <p>Reusing {@link ConnectionPoll} rather than a second copy of the same three lines - it is
+     * a plain rate limiter despite the name. The PDP reads below are deliberately NOT throttled:
+     * those are the per-loop ground truth the brownout analysis is built on, and at 4 Hz a sag
+     * could pass between two samples.
+     */
+    private final ConnectionPoll busPoll = new ConnectionPoll();
+
     public PowerMonitor() {
         m_pdp = createPdp();
     }
@@ -92,8 +107,12 @@ public class PowerMonitor extends SubsystemBase {
         brownoutVoltage = RobotController.getBrownoutVoltage();
         rioInputCurrentAmps = RobotController.getInputCurrent();
 
-        lowerBusUtilization = busUtilization(Constants.CANBuses.LowerBus);
-        upperBusUtilization = busUtilization(Constants.CANBuses.UpperBus);
+        // Not every loop: CTRE documents CANBus.getStatus() as blocking for up to 1 ms, and two
+        // of them is a tenth of the 20 ms loop budget. See busPoll.
+        if (busPoll.due()) {
+            lowerBusUtilization = busUtilization(Constants.CANBuses.LowerBus);
+            upperBusUtilization = busUtilization(Constants.CANBuses.UpperBus);
+        }
 
         if (m_pdp == null) {
             return;

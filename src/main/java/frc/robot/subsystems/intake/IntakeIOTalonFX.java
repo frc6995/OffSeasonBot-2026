@@ -83,6 +83,14 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_extensionStatorCurrent, m_extensionSupplyCurrent,
             m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
             m_kickerStatorCurrent, m_kickerSupplyCurrent);
+        CtreUtil.setMechanismSignalFrequency(
+            m_rollerVelocity, m_rollerAppliedVoltage, m_rollerFollowerAppliedVoltage,
+            m_extensionPosition, m_extensionAppliedVoltage, m_extensionFollowerAppliedVoltage,
+            m_kickerVelocity, m_kickerAppliedVoltage);
+        CtreUtil.optimizeBusUtilization("Intake",
+            m_rollerLeadMotor, m_rollerFollowerMotor,
+            m_extensionLeadMotor, m_extensionFollowerMotor,
+            m_kickerMotor);
     }
 
     protected void configureMotors() {

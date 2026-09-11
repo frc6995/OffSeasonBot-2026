@@ -41,6 +41,10 @@ public class HoodIOTalonFX implements HoodIO {
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+        CtreUtil.setMechanismSignalFrequency(angleSignal, voltSignal);
+        // Everything else this motor publishes (temperature, torque current, closed-loop
+        // telemetry, faults) is never read here; see CtreUtil.optimizeBusUtilization.
+        CtreUtil.optimizeBusUtilization("Hood", m_hoodMotor);
     }
 
     public void configMotor() {

@@ -32,6 +32,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // CtreUtil.kCurrentSignalFrequencyHz.
     CtreUtil.setCurrentSignalFrequency(
         ArrayUtil.concat(m_supplyCurrentSignals, m_statorCurrentSignals));
+    // Only the lead motor's velocity and voltage are read; the followers publish nothing this
+    // code looks at beyond their currents, set above.
+    CtreUtil.setMechanismSignalFrequency(m_FlywheelVelocity, m_FlywheelVoltage);
+    CtreUtil.optimizeBusUtilization("Flywheel",
+        m_flywheelLeadMotor, m_flywheelFollowMotor1, m_flywheelFollowMotor2, m_flywheelFollowMotor3);
   }
 
   protected final TalonFX m_flywheelLeadMotor = new TalonFX(FlywheelConstants.kLeadMotorCANID, CANBuses.UpperBus);

@@ -186,8 +186,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        ;
-
+        optimizeSignals();
     }
 
     /**
@@ -213,8 +212,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        ;
-
+        optimizeSignals();
     }
 
     /**
@@ -256,7 +254,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        ;
+        optimizeSignals();
+    }
+
+    /**
+     * Slows every status frame the drivetrain's devices publish that nothing reads down to 4 Hz.
+     *
+     * <p>Uses CTRE's drivetrain-aware variant rather than
+     * {@link frc.robot.util.CtreUtil#optimizeBusUtilization}, because it covers the Pigeon and
+     * both CANcoders as well as the eight motors, and CTRE documents that "all signals necessary
+     * for drivetrain functionality will remain enabled" - the odometry thread's 250 Hz position
+     * and velocity frames are set natively and are not affected.
+     *
+     * <p>The supply current signals this class reads are given an explicit rate by
+     * {@link #createSupplyCurrentSignals}, which runs as a field initializer and therefore before
+     * any constructor body reaches here, so they survive the optimize too.
+     */
+    private void optimizeSignals() {
+        CtreUtil.reportIfNotOk("Drivetrain optimize bus utilization", optimizeBusUtilization());
     }
 
     /**

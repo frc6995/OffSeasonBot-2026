@@ -11,6 +11,7 @@ import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.epilogue.logging.FileBackend;
 import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
 import edu.wpi.first.epilogue.logging.errors.ErrorHandler;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -57,19 +58,26 @@ public class Robot extends TimedRobot {
                 config.errorHandler = ErrorHandler.crashOnError();
             }
 
-            // DEBUG, not CRITICAL: the per-motor current and voltage getters throughout the
-            // subsystems are annotated at DEBUG/INFO, so a CRITICAL floor silently dropped every
-            // one of them - logs contained no current or voltage data at all, which made offline
-            // brownout analysis impossible. See tools/power_analysis.
+            // CRITICAL keeps roughly 26 topics; DEBUG turns on all ~76 (every per-motor current
+            // and voltage getter, plus the three swerve module struct arrays, which are gated at
+            // INFO). tools/power_analysis needs DEBUG to have anything to read - flip it back to
+            // DEBUG for a power-collection run, and check Epilogue/Stats/Last Run (milliseconds)
+            // in the resulting log to see what that costs.
             //
-            // This costs log file size, not field bandwidth: NT4 only transmits topics a client
-            // has subscribed to, and DataLogManager's NT recording runs on the roboRIO itself.
+            // Note the cost is NOT constant: the backend below is lazy, and a Phoenix device that
+            // is not on the bus never updates its signals, so an absent mechanism logs nothing at
+            // all. Every motor that gets bolted on turns its whole subtree live.
             config.minimumImportance = Logged.Importance.CRITICAL;
-            // Only write a value to the backend when it actually changes, to save
-            // bandwidth/log file size.
-            config.backend = config.backend.lazy();
+            // Straight to the data log rather than through NetworkTables. The default
+            // NTEpilogueBackend publishes every topic to NT, where DataLogManager's NT recorder
+            // (on by default, and it captures every value change) then writes it to the log
+            // anyway - so the NT publish, serialize and broadcast was pure overhead on the path
+            // to the same file. Writing to the log directly skips all of it.
+            //
+            // Wrapped lazily so a value is only written when it actually changes.
+            config.backend = new FileBackend(DataLogManager.getLog()).lazy();
         });
-        // DriverStation.startDataLog(DataLogManager.getLog());
+        DriverStation.startDataLog(DataLogManager.getLog());
         Epilogue.bind(this);
     }
 

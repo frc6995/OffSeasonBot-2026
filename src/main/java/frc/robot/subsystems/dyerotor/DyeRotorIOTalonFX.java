@@ -60,6 +60,10 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         m_spinSupCurrent, m_spinStatCurrent,
         m_indexSupCurrent, m_indexStatCurrent,
         m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
+    CtreUtil.setMechanismSignalFrequency(
+        m_spinVelocity, m_spinVoltage,
+        m_indexVelocity, m_indexVoltage);
+    CtreUtil.optimizeBusUtilization("Dye Rotor", m_spinMotor, m_indexerLead, m_indexerFollow);
   }
 
   protected void configureMotors() {

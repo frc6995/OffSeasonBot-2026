@@ -60,6 +60,10 @@ public class TurretIOTalonFX implements TurretIO {
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+        CtreUtil.setMechanismSignalFrequency(angleSignal, velocitySignal, voltSignal);
+        // Everything else this motor publishes (temperature, torque current, closed-loop
+        // telemetry, faults) is never read here; see CtreUtil.optimizeBusUtilization.
+        CtreUtil.optimizeBusUtilization("Turret", m_turretMotor);
     }
 
     private void configFF() {
