@@ -39,6 +39,11 @@ public class Turret extends SubsystemBase {
         public static final double kReduction = 32.5;
         public static final double kMOI = 0.0873236726;
 
+        public static final double[][] kFeedForward = {
+            {0.1, 0.68},
+            {0.2, 1.0}
+        };
+
         // 6.5 in
         public static final double kLengthMeters = 0.1651;
         /**

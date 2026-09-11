@@ -17,11 +17,13 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
@@ -41,8 +43,11 @@ public class TurretIOTalonFX implements TurretIO {
     protected StatusSignal<Current> statorCurrentSignal;
     protected StatusSignal<Current> supplyCurrentSignal;
 
+    protected InterpolatingDoubleTreeMap m_ffMap = new InterpolatingDoubleTreeMap();
+
     public TurretIOTalonFX() {
         configMotor();
+        configFF();
 
         angleSignal = m_turretMotor.getPosition();
         velocitySignal = m_turretMotor.getVelocity();
@@ -57,7 +62,24 @@ public class TurretIOTalonFX implements TurretIO {
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
     }
 
-    public void configMotor() {
+    private void configFF() {
+        for (double i = 0; i < 1.0 ; i+=0.1){
+            if (i % TurretConstants.kFeedForward[1][0] == 0){
+                m_ffMap.put(i, TurretConstants.kFeedForward[1][1]);
+                m_ffMap.put(-0.256-i, -TurretConstants.kFeedForward[1][1]);
+
+            }
+
+            if (i % TurretConstants.kFeedForward[0][0] == 0){
+                m_ffMap.put(i, TurretConstants.kFeedForward[0][1]);
+                m_ffMap.put(-0.36-i, -TurretConstants.kFeedForward[1][1]);
+
+            }
+
+        }
+    }
+
+    private void configMotor() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
         config.MotorOutput = 
@@ -124,6 +146,7 @@ public class TurretIOTalonFX implements TurretIO {
         double clampedAngle = MathUtil.clamp(angle, kMinAngleDeg, kMaxAngleDeg);
 
         double rotations = clampedAngle / 360;
+        positionRequest.FeedForward = m_ffMap.get(angleSignal.getValueAsDouble());
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
@@ -143,5 +166,4 @@ public class TurretIOTalonFX implements TurretIO {
     public void disable() {
         m_turretMotor.set(0);
     }
-    
 }
