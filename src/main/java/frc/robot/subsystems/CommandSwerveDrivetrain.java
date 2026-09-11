@@ -450,7 +450,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             });
         }
 
-        refreshSupplyCurrents();
+        if (Constants.kPowerLoggingEnabled) {
+            refreshSupplyCurrents();
+        }
 
         // Re-read last. Vision fusion now lives in ATVision, a separate subsystem registered
         // after this one, so it consumes the state refreshed here and its addVisionMeasurement

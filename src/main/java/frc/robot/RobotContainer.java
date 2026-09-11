@@ -88,7 +88,9 @@ public class RobotContainer {
     // per-module withSlipCurrent for the drivetrain, configureRollerMotors/configureKickMotor
     // for the intake). What is gone is only the REDUCED limits while shooting.
 
-    public final PowerMonitor m_power = new PowerMonitor();
+    /** Null while {@link Constants#kPowerLoggingEnabled} is false; see that flag. */
+    public final PowerMonitor m_power =
+            Constants.kPowerLoggingEnabled ? new PowerMonitor() : null;
 
     public RobotContainer() {
         VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
