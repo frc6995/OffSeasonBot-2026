@@ -63,7 +63,7 @@ public class TurretIOTalonFX implements TurretIO {
         config.MotorOutput = 
             new MotorOutputConfigs()
                 .withNeutralMode(NeutralModeValue.Brake)
-                .withInverted(InvertedValue.CounterClockwise_Positive);
+                .withInverted(InvertedValue.Clockwise_Positive);
         
         config.CurrentLimits = 
             new CurrentLimitsConfigs()

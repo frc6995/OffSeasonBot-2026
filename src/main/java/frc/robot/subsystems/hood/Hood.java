@@ -38,7 +38,7 @@ public class Hood extends SubsystemBase {
         };
 
         //Tune PID/FF constants
-        public static final double kP = 360; //Double check this
+        public static final double kP = 300; //Double check this
         public static final double kD = 0;
         public static final double kS = 0;
         public static final double kV = 2;
