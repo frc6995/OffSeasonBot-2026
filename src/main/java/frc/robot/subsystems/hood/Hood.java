@@ -38,10 +38,10 @@ public class Hood extends SubsystemBase {
         };
 
         //Tune PID/FF constants
-        public static final double kP = 20; //Double check this
+        public static final double kP = 360; //Double check this
         public static final double kD = 0;
         public static final double kS = 0;
-        public static final double kV = 0.1;
+        public static final double kV = 2;
         public static final double kG = 0;
 
         public static final double kStatorCurrentLimitAmps = 20;
@@ -58,7 +58,7 @@ public class Hood extends SubsystemBase {
         // 5.57 inches
         public static final double kHoodLengthMeters = 0.141478;
 
-        public static final double kSafeShotAngleDeg = 20.0;
+        public static final double kSafeShotAngleDeg = 35.0;
 
     }
 
