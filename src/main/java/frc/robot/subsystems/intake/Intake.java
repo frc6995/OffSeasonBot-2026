@@ -30,7 +30,7 @@ public class Intake extends SubsystemBase {
         public static final double kKickerV = 0.164;
         // Kicker Config Constants
         public static final double kKickerSupplyCurrentLimitAmps = 40;
-        public static final double kKickerStatorCurrentLimitAmps = 80;
+        public static final double kKickerStatorCurrentLimitAmps = 20;
         public static final double kKickerMaxVolts = 10;
         public static final double kKickerMinVolts = -10;
         public static final double kKickerReduction = 1.5;

@@ -29,7 +29,7 @@ public class Turret extends SubsystemBase {
         public static final double kV = 0;
         public static final double kA = 0;
 
-        public static final double kStatorCurrentLimitAmps = 80;
+        public static final double kStatorCurrentLimitAmps = 20;
         public static final double kSupplyCurrentLimitAmps = 40;
 
         public static final double kMinAngleDeg = -360;

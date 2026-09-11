@@ -28,7 +28,7 @@ public class Flywheel extends SubsystemBase {
     public static final int kFollowMotor3CANID = 43;
     // Motor Config Constants
     public static final double kSupplyCurrentLimitAmps = 40;
-    public static final double kStatorCurrentLimitAmps = 80;
+    public static final double kStatorCurrentLimitAmps = 20;
     public static final double kNewMaxVolts = 10;
     public static final double kNewMinVolts = 0;
     public static final double kReduction = 1;
