@@ -38,19 +38,19 @@ public class Hood extends SubsystemBase {
         };
 
         //Tune PID/FF constants
-        public static final double kP = 120; //Double check this
+        public static final double kP = 20; //Double check this
         public static final double kD = 0;
         public static final double kS = 0;
         public static final double kV = 0.1;
         public static final double kG = 0;
 
-        public static final double kStatorCurrentLimitAmps = 80;
+        public static final double kStatorCurrentLimitAmps = 20;
         public static final double kSupplyCurrentLimitAmps = 40;
 
         public static final double kReduction = 70.2857;
 
         public static final double kMinAngleDeg = 0;
-        public static final double kMaxAngleDeg = 42.5;
+        public static final double kMaxAngleDeg = 40;
 
         // Originally 11.5 in^2 lbs, this is in kg m^2
         public static final double kMOI = 0.00336535601;

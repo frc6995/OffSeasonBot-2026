@@ -90,7 +90,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
     flywheelConfig.MotorOutput = new MotorOutputConfigs()
         .withNeutralMode(NeutralModeValue.Coast)
-        .withInverted(InvertedValue.CounterClockwise_Positive);
+        .withInverted(InvertedValue.Clockwise_Positive);
     flywheelConfig.CurrentLimits = new CurrentLimitsConfigs()
         .withStatorCurrentLimit(FlywheelConstants.kStatorCurrentLimitAmps)
         .withStatorCurrentLimitEnable(true)

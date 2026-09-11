@@ -66,10 +66,10 @@ public class RobotContainer {
     // No vision simulation -- real-life testing on hardware is more useful than simulating the
     // Limelight, so simulation just runs without vision measurements at all.
     public final ATVision m_vision = new ATVision(
-            Utils.isSimulation()
+            true //Utils.isSimulation()
                 ? new NoneATLimelightVision()
                 : new RealATLimelightVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
-            Utils.isSimulation()
+            true // Utils.isSimulation()
                 ? null
                 : new RealPhotonATVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
             m_drivetrain::state,

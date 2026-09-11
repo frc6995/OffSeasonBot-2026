@@ -29,11 +29,11 @@ public class Turret extends SubsystemBase {
         public static final double kV = 0;
         public static final double kA = 0;
 
-        public static final double kStatorCurrentLimitAmps = 80;
+        public static final double kStatorCurrentLimitAmps = 60;
         public static final double kSupplyCurrentLimitAmps = 40;
 
-        public static final double kMinAngleDeg = -360;
-        public static final double kMaxAngleDeg = 360;
+        public static final double kMinAngleDeg = -288;
+        public static final double kMaxAngleDeg = 288;
         public static final double kSafeShotAngleDeg = 0;
 
         public static final double kReduction = 32.5;
@@ -67,7 +67,7 @@ public class Turret extends SubsystemBase {
         MANUAL;
     }
 
-    private TurretState turretState = TurretState.AIM_CLOSEST;
+    private TurretState turretState = TurretState.DISABLED;
     private double requestedAngleDeg = 0;
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
     private double commandedAngleDeg = 0;

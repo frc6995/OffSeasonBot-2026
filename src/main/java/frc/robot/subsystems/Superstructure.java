@@ -25,6 +25,7 @@ import frc.robot.subsystems.hood.HoodIOTalonFX;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSimTalonFX;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
@@ -62,7 +63,7 @@ public class Superstructure extends SubsystemBase {
             POI.PASSING_WALL_START, POI.PASSING_WALL_END);
 
         if (Robot.isSimulation()) {
-            this.m_intake = new Intake(new IntakeIOSimTalonFX());
+            this.m_intake = new Intake(new IntakeIO() {});
             this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
             this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
             this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
@@ -137,7 +138,7 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> {
             robotState = RobotState.IDLE;
             m_dyeRotor.requestIdle();
-            m_turret.requestAimCentral();
+            m_turret.requestDisable();
             m_flywheel.requestDisable();
             m_hood.requestDisable();
         });
