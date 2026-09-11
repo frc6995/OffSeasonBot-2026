@@ -386,10 +386,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 
     /**
-     * Sets the supply current limit on every drive motor. Only ever called from
-     * {@link frc.robot.util.currentlimit.CurrentLimitManager}'s background apply thread (see
-     * {@link frc.robot.RobotCurrentLimits}), never from periodic() directly - a config-apply call
-     * blocks waiting on a CAN response, which would stall the main loop if run there.
+     * Sets the supply current limit on every drive motor.
+     *
+     * <p>Nothing calls this today - dynamic current limiting is not wired up (see
+     * {@link frc.robot.RobotContainer}), and the drive motors take their nominal supply limit
+     * from {@code TunerConstants.driveInitialConfigs} at construction. Kept for when it is
+     * re-enabled.
+     *
+     * <p>When it is: call this from {@link frc.robot.util.currentlimit.CurrentLimitManager}'s
+     * background apply thread (see {@link frc.robot.RobotCurrentLimits}), never from periodic()
+     * directly - a config-apply call blocks waiting on a CAN response, which would stall the
+     * main loop if run there.
      *
      * <p>{@code CurrentLimitsConfigs} is a config *group*: applying one overwrites every field in
      * the group on the motor, including ones this call doesn't set, resetting them to their class

@@ -85,14 +85,15 @@ public class Superstructure extends SubsystemBase {
         if (DriverStation.isDisabled()) {
             // robotState must not survive a disable, for the same reason the mechanism states
             // can't (see Flywheel.periodic): requestRobotIdle() is bound to the shoot button's
-            // onFalse edge and to an end-of-auto marker, and neither can run while disabled.
+            // onFalse edge and to an end-of-auto marker, and neither can run while disabled. An
+            // auto that ends before its stopScoring marker would otherwise carry SCORING or
+            // PASSING straight through the disable and into teleop.
             //
-            // Unlike the mechanisms, the damage here is not a mechanism that restarts itself --
-            // it is that RobotCurrentLimits throttles the drivetrain to 1A whenever this reads
-            // SCORING or PASSING. An auto that ends before its stopScoring marker would carry
-            // that state through the disable, and teleopInit() re-enables the limit manager, so
-            // teleop would start with a near-immobile drivetrain until the driver pressed and
-            // released the shoot button.
+            // This used to have teeth beyond staying consistent with the mechanisms: dynamic
+            // current limiting throttled the drivetrain's supply whenever this read SCORING or
+            // PASSING, so a stale state meant teleop started with a near-immobile drivetrain.
+            // That wiring is removed (see RobotContainer), so today this only keeps the reported
+            // state honest - but re-wiring it would bring the old failure back with it.
             robotState = RobotState.IDLE;
         }
 

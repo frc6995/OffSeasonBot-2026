@@ -101,9 +101,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        // Dynamic current limiting disabled for auto
-        m_robotContainer.currentLimitManager.setEnabled(false);
-
         if (RobotBase.isSimulation()) {
             CommandScheduler.getInstance().schedule(
                     Commands.waitSeconds(autoSimTime)
@@ -136,9 +133,6 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
-
-        // enable dynamic current limiting but only for teleop
-        m_robotContainer.currentLimitManager.setEnabled(true);
 
         //Tab switches to "Teleoperated"
         Elastic.selectTab("Teleoperated");

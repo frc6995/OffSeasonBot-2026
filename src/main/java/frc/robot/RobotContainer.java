@@ -34,7 +34,6 @@ import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
-import frc.robot.util.currentlimit.CurrentLimitManager;
 
 
 import java.util.Set;
@@ -80,7 +79,14 @@ public class RobotContainer {
     private Mechanism2d VISUALIZER;
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
 
-    public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
+    // Dynamic current limiting is not wired up. CurrentLimitManager, CurrentLimit and
+    // RobotCurrentLimits are all still in the tree - to turn it back on, construct the manager
+    // here and call RobotCurrentLimits.configure(manager, m_superstructure, m_drivetrain) below.
+    //
+    // Nothing loses a current limit by this being off: every nominal limit the manager used to
+    // push is already in the static device configs (TunerConstants.driveInitialConfigs and the
+    // per-module withSlipCurrent for the drivetrain, configureRollerMotors/configureKickMotor
+    // for the intake). What is gone is only the REDUCED limits while shooting.
 
     public final PowerMonitor m_power = new PowerMonitor();
 
@@ -89,8 +95,6 @@ public class RobotContainer {
         SmartDashboard.putData("Visualizer", VISUALIZER);
         SmartDashboard.putData("Auto Mode", autos.getAutoChooser());
         SmartDashboard.putString("Superstructure state", m_superstructure.getRobotState().toString());
-
-        RobotCurrentLimits.configure(currentLimitManager, m_superstructure, m_drivetrain);
 
         configureBindings();
         SignalLogger.enableAutoLogging(false);
