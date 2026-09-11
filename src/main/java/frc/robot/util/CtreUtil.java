@@ -31,7 +31,7 @@ public final class CtreUtil {
      * <p>If bus utilization (logged as {@code Power/CAN/*}) turns out too high, 20 Hz still
      * resolves a brownout event - drop this constant rather than removing the calls.
      */
-    public static final double kCurrentSignalFrequencyHz = 50.0;
+    public static final double kCurrentSignalFrequencyHz = 20.0;
 
     /**
      * Publishes the given current signals at {@link #kCurrentSignalFrequencyHz}. Call once from an

@@ -70,7 +70,7 @@ public class TurretIOTalonFX implements TurretIO {
 
             }
 
-            if (i % TurretConstants.kFeedForward[0][0] == 0){
+            else if (i % TurretConstants.kFeedForward[0][0] == 0){
                 m_ffMap.put(i, TurretConstants.kFeedForward[0][1]);
                 m_ffMap.put(-0.36-i, -TurretConstants.kFeedForward[1][1]);
 

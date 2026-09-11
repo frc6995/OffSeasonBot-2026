@@ -64,12 +64,12 @@ public class Robot extends TimedRobot {
             //
             // This costs log file size, not field bandwidth: NT4 only transmits topics a client
             // has subscribed to, and DataLogManager's NT recording runs on the roboRIO itself.
-            config.minimumImportance = Logged.Importance.DEBUG;
+            config.minimumImportance = Logged.Importance.CRITICAL;
             // Only write a value to the backend when it actually changes, to save
             // bandwidth/log file size.
             config.backend = config.backend.lazy();
         });
-        DriverStation.startDataLog(DataLogManager.getLog());
+        // DriverStation.startDataLog(DataLogManager.getLog());
         Epilogue.bind(this);
     }
 
