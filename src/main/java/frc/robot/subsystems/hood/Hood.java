@@ -121,8 +121,11 @@ public class Hood extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        hoodLigament.setAngle(getAngle());
-        RobotVisualizer.updateHood(Units.degreesToRadians(getAngle()));
+        // Visualize from the commanded setpoint rather than the simulated arm's measured angle --
+        // the position PID tuned for the real hood does not track well in sim, so driving the pose
+        // off getAngle() makes the visualization lag/oscillate independent of tuning.
+        hoodLigament.setAngle(commandedAngleDeg);
+        RobotVisualizer.updateHood(Units.degreesToRadians(commandedAngleDeg));
     }
 
     public void setState(HoodState state) {

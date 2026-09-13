@@ -127,8 +127,11 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        turretLigament.setAngle(inputs.angle);
-        RobotVisualizer.updateTurret(Units.degreesToRadians(inputs.angle));
+        // Visualize from the commanded setpoint rather than the simulated arm's measured angle --
+        // the position PID tuned for the real turret does not track well in sim, so driving the
+        // pose off inputs.angle makes the visualization lag/oscillate independent of tuning.
+        turretLigament.setAngle(commandedAngleDeg);
+        RobotVisualizer.updateTurret(Units.degreesToRadians(commandedAngleDeg));
     }
 
     public void setState(TurretState state) {

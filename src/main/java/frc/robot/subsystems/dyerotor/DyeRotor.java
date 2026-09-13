@@ -69,6 +69,10 @@ public class DyeRotor extends SubsystemBase {
     private int indexSpinUpTicksRemaining = 0;
     private int spinSpinUpTicksRemaining = 0;
 
+    // The spin velocity actually sent to the IO this loop, used to drive the sim visualization
+    // directly from the setpoint (see simulationPeriodic()).
+    private double commandedSpinRPM = 0;
+
     public DyeRotor() {
         this(new DyeRotorIO() {
         });
@@ -182,13 +186,18 @@ public class DyeRotor extends SubsystemBase {
 
         io.updateInputs(inputs);
 
-        io.setSpinVelocity(resolveSpinTargetRPM(spinState));
+        commandedSpinRPM = resolveSpinTargetRPM(spinState);
+        io.setSpinVelocity(commandedSpinRPM);
         io.setIndexVelocity(resolveIndexTargetRPM(indexState));
     }
 
   @Override
   public void simulationPeriodic() {
-    RobotVisualizer.updateHook(inputs.spinVelocityRPM * 2 * Math.PI / 60.0 * 0.02);
+    // Visualize from the commanded setpoint rather than the simulated flywheel's measured
+    // velocity -- the velocity PID tuned for the real spin motor does not track well in sim, so
+    // integrating inputs.spinVelocityRPM makes the visualization lag/oscillate independent of
+    // tuning.
+    RobotVisualizer.updateHook(commandedSpinRPM * 2 * Math.PI / 60.0 * 0.02);
   }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {

@@ -95,6 +95,10 @@ public class Intake extends SubsystemBase {
             
     private IntakeState intakeState = IntakeState.RETRACTED;
 
+    // The extension position actually sent to the IO this loop, used to drive the sim
+    // visualization directly from the setpoint (see simulationPeriodic()).
+    private double commandedExtensionMeters = IntakeConstants.kExtensionMinMeters;
+
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
     private double agitateNearMeters = IntakeConstants.kAgitateNearMeters;
@@ -300,15 +304,19 @@ public class Intake extends SubsystemBase {
 
         io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
         io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-        io.setExtensionPosition(clampExtension(resolveExtensionTargetPosition(intakeState)));
+        commandedExtensionMeters = clampExtension(resolveExtensionTargetPosition(intakeState));
+        io.setExtensionPosition(commandedExtensionMeters);
     }
 
     @Override
     public void simulationPeriodic() {
+        // Visualize from the commanded setpoint rather than the simulated elevator's measured
+        // position -- the position PID tuned for the real intake does not track well in sim, so
+        // driving the pose off inputs.extensionPositionMeters makes the visualization lag/oscillate
+        // independent of tuning.
         double retractedLengthMeters = Units.inchesToMeters(8.0);
-        double extensionMeters = inputs.extensionPositionMeters;
-        intakeLigament.setLength(retractedLengthMeters + extensionMeters);
-        RobotVisualizer.updateIntakeExtension(extensionMeters);
+        intakeLigament.setLength(retractedLengthMeters + commandedExtensionMeters);
+        RobotVisualizer.updateIntakeExtension(commandedExtensionMeters);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {
