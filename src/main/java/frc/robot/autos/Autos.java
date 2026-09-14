@@ -1,5 +1,7 @@
 package frc.robot.autos;
 
+import static edu.wpi.first.units.Units.Centimeters;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,6 +11,7 @@ import java.util.function.Supplier;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -18,6 +21,10 @@ import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.AutoAlign;
+import frc.robot.util.AutoAlign.AutoAlignConstants;
+import frc.robot.util.AutoAlign.RotationControlMode;
+import frc.robot.util.AutoAlign.RotationProfile;
 
 public class Autos {
 
@@ -46,6 +53,17 @@ public class Autos {
     private final Path Testcanrange2 = new Path("Test-canrange2".toLowerCase());
 
     private final Supplier<Pose2d> TEST_START_CANRANGE = AllianceFlipUtil.flipped(Testcanrange.getStartPose());
+
+    // ============= AUTOALIGN API TEST WAYPOINTS =============
+    /**
+     * Waypoints for the "Test AutoAlign API" auto. These are plain {@link Pose2d}s on the blue
+     * alliance side of the field and are used as both the odometry start pose and the AutoAlign
+     * targets, so the auto exercises the whole chain: reset -> align -> align -> align.
+     */
+    private static final Pose2d ALIGN_TEST_START = new Pose2d(3.0, 3.0, Rotation2d.fromDegrees(0));
+    private static final Pose2d ALIGN_TEST_WAYPOINT_A = new Pose2d(6.0, 3.0, Rotation2d.fromDegrees(90));
+    private static final Pose2d ALIGN_TEST_WAYPOINT_B = new Pose2d(6.0, 6.0, Rotation2d.fromDegrees(180));
+    private static final Pose2d ALIGN_TEST_WAYPOINT_C = new Pose2d(3.0, 6.0, Rotation2d.fromDegrees(0));
 
     // Constructor
     public Autos(CommandSwerveDrivetrain drivetrain, Superstructure superstructure) {
@@ -126,6 +144,41 @@ public class Autos {
 
                     c.addCommands(untilCloseToWallAfterEvent(canRangeTestAuto1, "testActivation", 6));
                     c.addCommands((canRangeTestAuto2));
+                }));
+
+        // A self-contained exercise of the fluent AutoAlign configuration API. Each leg targets a
+        // Pose2d waypoint and demonstrates a different combination of profile/rotation/tolerance
+        // settings, so a change to that API is caught by simply running this auto.
+        autos.put("Test AutoAlign API",
+                () -> auto(ALIGN_TEST_START, c -> {
+                    // Leg 1: named profile + entry angle + profiled rotation, finishing on a large
+                    // translation-only tolerance (heading intentionally ignored).
+                    c.addCommands(new AutoAlign(ALIGN_TEST_WAYPOINT_A, m_drivetrain)
+                            .withProfile(AutoAlign.defaultProfile())
+                            .withEntryAngle(Rotation2d.fromDegrees(90))
+                            .withProfiledRotation(RotationProfile.of(Math.PI * 0.5))
+                            .untilWithinTolerance(Centimeters.of(15)));
+
+                    // Leg 2: slower profile tweaked via withModifiedProfile, explicit rotation
+                    // constraints, and a distance-terminated alignment.
+                    c.addCommands(new AutoAlign(ALIGN_TEST_WAYPOINT_B, m_drivetrain)
+                            .withProfile(AutoAlign.slowDriveProfile())
+                            .withModifiedProfile(p -> p.withBeelineRadius(Centimeters.of(20)))
+                            .withEntryAngle(Rotation2d.fromDegrees(180))
+                            .withProfiledRotation(
+                                    AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS, Math.PI)
+                            .untilWithinTolerance(Centimeters.of(25)));
+
+                    // Leg 3: unprofiled heading PID, a drive-through end velocity, a rotation radius
+                    // so heading is only corrected near the target, and a loose translation
+                    // tolerance. withRotationRadius + untilWithinTolerance show that the two are
+                    // independent.
+                    c.addCommands(new AutoAlign(ALIGN_TEST_WAYPOINT_C, m_drivetrain)
+                            .withProfile(AutoAlign.highJerkProfile())
+                            .withRotationControlMode(RotationControlMode.UNPROFILED_PID)
+                            .withTargetVelocity(0.5)
+                            .withRotationRadius(Centimeters.of(30))
+                            .untilWithinTolerance(Centimeters.of(30)));
                 }));
 
         // Register all autos with the chooser for driver station selection

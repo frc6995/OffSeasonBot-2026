@@ -19,6 +19,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import java.util.function.Function;
 
 /**
  * A command that drives the robot to a specified field-relative target pose using
@@ -55,6 +56,95 @@ public class AutoAlign extends Command {
          * smoothing rotation.
          */
         VELOCITY_LIMITED_PROFILE
+    }
+
+    /**
+     * Immutable configuration for the velocity-limited heading profile used by
+     * {@link RotationControlMode#VELOCITY_LIMITED_PROFILE}.
+     *
+     * <p>This is deliberately a plain config object rather than the stateful
+     * {@link PrimitiveRotationProfile}: a running profile holds position/velocity/timestamp state and
+     * must never be shared between commands. {@link AutoAlign} builds a fresh
+     * {@link PrimitiveRotationProfile} from this config each time a command is created, so a single
+     * {@code RotationProfile} is safe to reuse across every auto and binding on the robot.
+     */
+    public static final class RotationProfile {
+        private final PrimitiveRotationProfile.Constraints m_constraints;
+        private final double m_maxVelocity;
+
+        /**
+         * Builds a rotation profile with explicit constraints and maximum velocity.
+         *
+         * @param constraints rotation profile constraints (acceleration).
+         * @param maxVelocity maximum heading velocity, in rad/s.
+         */
+        public RotationProfile(PrimitiveRotationProfile.Constraints constraints, double maxVelocity) {
+            m_constraints = constraints;
+            m_maxVelocity = maxVelocity;
+        }
+
+        /**
+         * Builds a rotation profile using the default rotation constraints.
+         *
+         * @param maxVelocity maximum heading velocity, in rad/s.
+         */
+        public RotationProfile(double maxVelocity) {
+            this(AutoAlignConstants.DEFAULT_ROTATION_CONSTRAINTS, maxVelocity);
+        }
+
+        /**
+         * Factory for a rotation profile using the default rotation constraints.
+         *
+         * @param maxVelocity maximum heading velocity, in rad/s.
+         * @return a new {@link RotationProfile}.
+         */
+        public static RotationProfile of(double maxVelocity) {
+            return new RotationProfile(maxVelocity);
+        }
+
+        /**
+         * Factory for a rotation profile with explicit constraints and maximum velocity.
+         *
+         * @param constraints rotation profile constraints (acceleration).
+         * @param maxVelocity maximum heading velocity, in rad/s.
+         * @return a new {@link RotationProfile}.
+         */
+        public static RotationProfile of(
+                PrimitiveRotationProfile.Constraints constraints, double maxVelocity) {
+            return new RotationProfile(constraints, maxVelocity);
+        }
+
+        /**
+         * Returns the rotation profile constraints.
+         *
+         * @return the acceleration-limited constraints.
+         */
+        public PrimitiveRotationProfile.Constraints constraints() {
+            return m_constraints;
+        }
+
+        /**
+         * Returns the maximum heading velocity.
+         *
+         * @return the velocity in rad/s.
+         */
+        public double maxVelocity() {
+            return m_maxVelocity;
+        }
+
+        /**
+         * Builds a fresh stateful rotation profile from this configuration. Each command must own its
+         * own instance; never cache or share the result.
+         *
+         * @return a new {@link PrimitiveRotationProfile}.
+         */
+        public PrimitiveRotationProfile build() {
+            return new PrimitiveRotationProfile(
+                    m_constraints,
+                    m_maxVelocity,
+                    AutoAlignConstants.ROTATION_PROFILE_PERIOD,
+                    AutoAlignConstants.ROTATION_PROFILE_MAX_PERIOD);
+        }
     }
 
     /**
@@ -185,6 +275,18 @@ public class AutoAlign extends Command {
 
     /** Cached swerve drive state for use during execution. */
     protected SwerveDriveState swerveState = new SwerveDriveState();
+
+    /**
+     * Constructs an AutoAlign command with the default translation profile and direct (unprofiled)
+     * drivetrain heading PID. This is the minimal entry point for auto routines, which can then
+     * refine the command through the fluent {@code with*}/{@code until*} methods.
+     *
+     * @param targetPose The desired field-relative target pose (translation + rotation).
+     * @param drivetrain The drivetrain subsystem to command.
+     */
+    public AutoAlign(Pose2d targetPose, CommandSwerveDrivetrain drivetrain) {
+        this(targetPose, drivetrain, defaultProfile());
+    }
 
     /**
      * Constructs an AutoAlign command with direct (unprofiled) drivetrain heading PID.
@@ -344,6 +446,76 @@ public class AutoAlign extends Command {
     }
 
     /**
+     * Returns an independent copy of this command with the given configuration applied.
+     *
+     * <p>Every fluent method delegates here so that no setting can be dropped by a partial copy, and
+     * so that adding a new field only requires touching these overloads. The copy shares the
+     * drivetrain but owns its own {@link PrimitiveRotationProfile}, so a config chain can never leak
+     * rotation state back into the original command.
+     *
+     * @param target              the target to command toward.
+     * @param profile             the translation profile to use.
+     * @param rotationControlMode the heading control strategy.
+     * @param rotationConstraints constraints for the profiled heading controller.
+     * @param maxVelocity         maximum profiled heading velocity, in rad/s.
+     * @return a new, fully-configured {@link AutoAlign}.
+     */
+    private AutoAlign copy(
+            APTarget target,
+            APProfile profile,
+            RotationControlMode rotationControlMode,
+            PrimitiveRotationProfile.Constraints rotationConstraints,
+            double maxVelocity) {
+        return new AutoAlign(
+                target, m_drivetrain, profile, rotationControlMode, rotationConstraints, maxVelocity);
+    }
+
+    /**
+     * Returns a copy of this command with only the target changed.
+     *
+     * @param target the new target.
+     * @return a new {@link AutoAlign} preserving every other setting.
+     */
+    private AutoAlign copy(APTarget target) {
+        return copy(
+                target,
+                m_profile,
+                m_rotationControlMode,
+                m_rotationConstraints,
+                m_profiledRotationMaxVelocity);
+    }
+
+    /**
+     * Returns a copy of this command with only the translation profile changed.
+     *
+     * @param profile the new translation profile.
+     * @return a new {@link AutoAlign} preserving every other setting.
+     */
+    private AutoAlign copy(APProfile profile) {
+        return copy(
+                m_target,
+                profile,
+                m_rotationControlMode,
+                m_rotationConstraints,
+                m_profiledRotationMaxVelocity);
+    }
+
+    /**
+     * Returns a copy of this command with only the rotation control mode changed.
+     *
+     * @param rotationControlMode the new rotation control mode.
+     * @return a new {@link AutoAlign} preserving every other setting.
+     */
+    private AutoAlign copy(RotationControlMode rotationControlMode) {
+        return copy(
+                m_target,
+                m_profile,
+                rotationControlMode,
+                m_rotationConstraints,
+                m_profiledRotationMaxVelocity);
+    }
+
+    /**
      * Creates an AutoAlign command with direct (unprofiled) heading PID that ends
      * once the robot's translation is within a specified distance of the target.
      *
@@ -443,38 +615,188 @@ public class AutoAlign extends Command {
                 () -> distance));
     }
 
+    // ===================== FLUENT CONFIGURATION API =====================
+    //
+    // Every method below returns a NEW AutoAlign built through copy(...), leaving the receiver
+    // untouched. That makes a configured command safe to hand to multiple autos and means a chain
+    // can be reused as a "base" configuration without one auto's tweaks leaking into another's.
+
     /**
-     * Creates a new AutoAlign command with a modified translation profile.
+     * Returns a copy of this command targeting a different {@link APTarget}. The target carries the
+     * reference pose, optional entry angle, end velocity, and rotation radius, so it is the most
+     * general way to retarget an alignment.
      *
-     * @param profileModifier A function that takes the current profile and returns a new one.
-     * @return A new AutoAlign instance with the modified profile, preserving all other settings.
+     * @param target the new target.
+     * @return a new command aimed at {@code target}.
      */
-    public AutoAlign withModifiedProfile(java.util.function.Function<APProfile, APProfile> profileModifier) {
-        APProfile modifiedProfile = profileModifier.apply(m_profile);
-        return new AutoAlign(
-                m_target,
-                m_drivetrain,
-                modifiedProfile,
-                m_rotationControlMode,
-                m_rotationConstraints,
-                m_profiledRotationMaxVelocity);
+    public AutoAlign withTarget(APTarget target) {
+        return copy(target);
     }
 
     /**
-     * Creates a new AutoAlign command that uses velocity‑limited profiled rotation
-     * with the specified maximum velocity.
+     * Returns a copy of this command targeting a different pose. Any entry angle already set on the
+     * target is preserved; use {@link #withoutEntryAngle()} to clear it.
      *
-     * @param profiledRotationMaxVelocity New maximum profiled heading velocity (rad/s).
-     * @return A new AutoAlign instance with the rotation mode forced to VELOCITY_LIMITED_PROFILE.
+     * @param targetPose the new field-relative target pose.
+     * @return a new command aimed at {@code targetPose}.
      */
-    public AutoAlign withVelocityLimitedRotation(double profiledRotationMaxVelocity) {
-        return new AutoAlign(
+    public AutoAlign withTarget(Pose2d targetPose) {
+        return withTarget(m_target.withReference(targetPose));
+    }
+
+    /**
+     * Returns a copy of this command with the given entry angle, so the robot approaches the target
+     * travelling in that direction.
+     *
+     * @param entryAngle the desired travel direction at the target.
+     * @return a new command with the entry angle applied.
+     */
+    public AutoAlign withEntryAngle(Rotation2d entryAngle) {
+        return withTarget(m_target.withEntryAngle(entryAngle));
+    }
+
+    /**
+     * Returns a copy of this command with no entry angle, so the robot drives straight at the target.
+     *
+     * @return a new command with the entry angle cleared.
+     */
+    public AutoAlign withoutEntryAngle() {
+        return withTarget(m_target.withoutEntryAngle());
+    }
+
+    /**
+     * Returns a copy of this command with an end velocity, for drive-through waypoints where the
+     * robot should not stop on arrival.
+     *
+     * @param velocity the desired end velocity, in m/s.
+     * @return a new command with the end velocity applied.
+     */
+    public AutoAlign withTargetVelocity(double velocity) {
+        return withTarget(m_target.withVelocity(velocity));
+    }
+
+    /**
+     * Returns a copy of this command that only respects the target heading once within the given
+     * radius of the target.
+     *
+     * @param radius the distance from the target within which the heading goal is respected.
+     * @return a new command with the rotation radius applied.
+     */
+    public AutoAlign withRotationRadius(Distance radius) {
+        return withTarget(m_target.withRotationRadius(radius));
+    }
+
+    /**
+     * Returns a copy of this command using a different translation profile.
+     *
+     * @param profile the Autopilot profile to use for translation and completion tolerances.
+     * @return a new command using {@code profile}.
+     */
+    public AutoAlign withProfile(APProfile profile) {
+        return copy(profile);
+    }
+
+    /**
+     * Returns a copy of this command with the translation profile modified by the given function.
+     * The function receives the current profile, so this is the escape hatch for tuning a named
+     * profile without rebuilding it from scratch.
+     *
+     * @param profileModifier a function that takes the current profile and returns a new one.
+     * @return a new command with the modified profile, preserving every other setting.
+     */
+    public AutoAlign withModifiedProfile(Function<APProfile, APProfile> profileModifier) {
+        return withProfile(profileModifier.apply(m_profile));
+    }
+
+    /**
+     * Returns a copy of this command using a different heading control strategy.
+     *
+     * @param rotationControlMode the rotation control mode to use.
+     * @return a new command using {@code rotationControlMode}.
+     */
+    public AutoAlign withRotationControlMode(RotationControlMode rotationControlMode) {
+        return copy(rotationControlMode);
+    }
+
+    /**
+     * Returns a copy of this command that limits the heading setpoint through a rotation profile.
+     *
+     * @param rotationProfile the rotation profile configuration to use.
+     * @return a new command with {@link RotationControlMode#VELOCITY_LIMITED_PROFILE} enabled.
+     */
+    public AutoAlign withProfiledRotation(RotationProfile rotationProfile) {
+        return copy(
                 m_target,
-                m_drivetrain,
                 m_profile,
                 RotationControlMode.VELOCITY_LIMITED_PROFILE,
-                m_rotationConstraints,
-                profiledRotationMaxVelocity);
+                rotationProfile.constraints(),
+                rotationProfile.maxVelocity());
+    }
+
+    /**
+     * Returns a copy of this command that limits the heading setpoint through a rotation profile with
+     * the default rotation constraints.
+     *
+     * @param maxVelocity maximum profiled heading velocity, in rad/s.
+     * @return a new command with profiled rotation enabled.
+     */
+    public AutoAlign withProfiledRotation(double maxVelocity) {
+        return withProfiledRotation(RotationProfile.of(maxVelocity));
+    }
+
+    /**
+     * Returns a copy of this command that limits the heading setpoint through a rotation profile with
+     * explicit constraints.
+     *
+     * @param constraints rotation profile constraints (acceleration).
+     * @param maxVelocity maximum profiled heading velocity, in rad/s.
+     * @return a new command with profiled rotation enabled.
+     */
+    public AutoAlign withProfiledRotation(
+            PrimitiveRotationProfile.Constraints constraints, double maxVelocity) {
+        return withProfiledRotation(RotationProfile.of(constraints, maxVelocity));
+    }
+
+    /**
+     * Alias for {@link #withProfiledRotation(double)}.
+     *
+     * @param profiledRotationMaxVelocity maximum profiled heading velocity, in rad/s.
+     * @return a new command with profiled rotation enabled.
+     */
+    public AutoAlign withVelocityLimitedRotation(double profiledRotationMaxVelocity) {
+        return withProfiledRotation(profiledRotationMaxVelocity);
+    }
+
+    /**
+     * Returns a copy of this command that drives the heading with the drivetrain's heading PID
+     * directly, with no velocity limiting.
+     *
+     * @return a new command using {@link RotationControlMode#UNPROFILED_PID}.
+     */
+    public AutoAlign withUnprofiledRotation() {
+        return withRotationControlMode(RotationControlMode.UNPROFILED_PID);
+    }
+
+    /**
+     * Ends the alignment with a distance-to-target condition instead of the profile's own
+     * {@code atTarget} tolerances.
+     *
+     * <p>This is exactly the {@code toPoseUntilWithinDistance} pattern applied to this
+     * already-configured command: it returns a wrapper that runs this alignment and stops as soon as
+     * the robot's translation is within {@code xy} of the target. Because a larger tolerance is
+     * satisfied sooner, {@code xy} can be as large as the auto needs, and {@link #isFinished()} is
+     * no longer the thing that decides whether a leg is done - the distance condition is. That is
+     * what makes a large tolerance safe here: it fires before the profile's completion tolerance
+     * ever can.
+     *
+     * <p>Returned as a {@link Command} (a decorated, terminal command) rather than an
+     * {@link AutoAlign}, so call this last in a configuration chain.
+     *
+     * @param xy the translation tolerance.
+     * @return a command that aligns to the target and ends within {@code xy} of it.
+     */
+    public Command untilWithinTolerance(Distance xy) {
+        return withDistanceCancel(this, m_target.getReference(), m_drivetrain, xy);
     }
 
     /**
@@ -502,6 +824,16 @@ public class AutoAlign extends Command {
      */
     public double getProfiledRotationMaxVelocity() {
         return m_profiledRotationMaxVelocity;
+    }
+
+    /**
+     * Returns the current Autopilot target, including any entry angle, end velocity, or rotation
+     * radius that has been configured.
+     *
+     * @return The APTarget.
+     */
+    public APTarget getTarget() {
+        return m_target;
     }
 
     @Override
