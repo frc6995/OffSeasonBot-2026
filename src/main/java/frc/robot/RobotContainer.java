@@ -30,9 +30,7 @@ import frc.robot.subsystems.vision.apriltag.NoneATLimelightVision;
 import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
 import frc.robot.util.AutoAlign;
-import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Telemetry;
-import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
@@ -141,17 +139,16 @@ public class RobotContainer {
     
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
-                () -> new AutoAlignFixedHeading(
-                        m_drivetrain.getPose(),
-                        m_drivetrain,
-                        true,
-                        RotationControlMode.VELOCITY_LIMITED_PROFILE),
+                () -> AutoAlign.toPose(m_drivetrain.getPose(), m_drivetrain)
+                        .withCardinalizedHeading()
+                        .withProfiledRotation(AutoAlign.RotationProfile.DEFAULT),
                 Set.of(m_drivetrain)));
-        
+
         // Deferred so the pose (and its alliance flip) is re-evaluated every time
         // the button is pressed
         joystick.x().whileTrue(Commands.defer(
-                () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
+                () -> AutoAlign.toPose(autos.TRENCH_START_LEFT.get(), m_drivetrain)
+                        .withProfile(AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));
 
     }

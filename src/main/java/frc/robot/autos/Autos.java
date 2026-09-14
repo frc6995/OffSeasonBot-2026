@@ -1,5 +1,7 @@
 package frc.robot.autos;
 
+import static edu.wpi.first.units.Units.Centimeters;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,6 +11,7 @@ import java.util.function.Supplier;
 import choreo.auto.AutoChooser;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -18,6 +21,7 @@ import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.AutoAlign;
 
 public class Autos {
 
@@ -117,6 +121,34 @@ public class Autos {
                             m_superstructure.requestRobotIdle()));
 
                     c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
+                }));
+
+        autos.put("AutoAlign API Test",
+                () -> auto(new Pose2d(2.0, 2.0, Rotation2d.kZero), c -> {
+                    // Leg 1: velocity-limited profiled rotation, an explicit entry angle, and a
+                    // loose distance tolerance instead of waiting on the profile's own (tighter)
+                    // completion tolerance.
+                    c.addCommands(
+                            AutoAlign.toPose(new Pose2d(4.0, 2.0, Rotation2d.fromDegrees(90)), m_drivetrain)
+                                    .withProfile(AutoAlign.defaultVelocityLimitedProfile())
+                                    .withEntryAngle(Rotation2d.fromDegrees(90))
+                                    .withProfiledRotation(AutoAlign.RotationProfile.DEFAULT)
+                                    .untilWithinTolerance(Centimeters.of(15)));
+
+                    // Leg 2: direct (unprofiled) heading PID, running to the profile's own
+                    // completion instead of an explicit distance cutoff.
+                    c.addCommands(
+                            AutoAlign.toPose(new Pose2d(4.0, 4.0, Rotation2d.fromDegrees(180)), m_drivetrain)
+                                    .withProfile(AutoAlign.defaultProfile())
+                                    .withUnprofiledRotation());
+
+                    // Leg 3: a fixed heading (independent of the target pose's own rotation) held
+                    // via a slow crawl profile, again finishing on a loose distance tolerance.
+                    c.addCommands(
+                            AutoAlign.toPose(new Pose2d(2.0, 4.0, Rotation2d.fromDegrees(45)), m_drivetrain)
+                                    .withProfile(AutoAlign.slowCrawlProfile())
+                                    .withFixedHeading(Rotation2d.kZero)
+                                    .untilWithinTolerance(Centimeters.of(20)));
                 }));
 
         autos.put("Bline_Workshop_Test_Canrange",
