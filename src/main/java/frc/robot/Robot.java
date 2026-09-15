@@ -70,7 +70,7 @@ public class Robot extends TimedRobot {
             config.backend = config.backend.lazy();
         });
         // DriverStation.startDataLog(DataLogManager.getLog());
-        Epilogue.bind(this);
+       // Epilogue.bind(this);
     }
 
     @Override

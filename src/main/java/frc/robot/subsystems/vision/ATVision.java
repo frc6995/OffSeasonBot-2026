@@ -40,7 +40,7 @@ public class ATVision extends SubsystemBase {
         public static final String NT_TABLE = "Vision";
 
         public static final double[] kLimelightMT2StdDevCoefficients = {0.085, 0.0};
-        public static final double[] kLimelightMT1StdDevCoefficients = {0.1, 0.075};
+        public static final double[] kLimelightMT1StdDevCoefficients = {0.1, 0.015};
         public static final int kOptimalTagCount = 2;
 
         public static final Pose3d kInitialTurretCameraOffset = solveRobotToCamera(0.0);
@@ -50,7 +50,7 @@ public class ATVision extends SubsystemBase {
         /** Reject estimates while the chassis is yawing faster than this. */
         public static final double kMaxChassisOmegaRadPerSec = Math.PI / 2;
         /** Reject estimates while the robot is tilted more than this (in radians). */
-        public static final double kMaxTiltRad = Math.toRadians(20);
+        public static final double kMaxTiltRad = 20;
 
         public static final double kEstimateHistorySeconds = 1.0;
         public static final double kMaxEstimateAgeSeconds = 0.4;

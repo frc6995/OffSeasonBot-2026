@@ -13,6 +13,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -95,7 +96,14 @@ public class TurretIOTalonFX implements TurretIO {
                 .withSupplyCurrentLimitEnable(true);
         
         config.Feedback = 
-            new FeedbackConfigs().withSensorToMechanismRatio(kReduction);
+            new FeedbackConfigs()
+                // Phoenix 6 only writes config fields that are explicitly set, so a stale
+                // FusedCANcoder/RemoteCANcoder source saved in the Talon's flash (e.g. from
+                // Phoenix Tuner) survives this apply() and makes the turret boot at the
+                // absolute reading (~0.53 rot) instead of 0. Forcing RotorSensor overrides
+                // it on every boot so position starts at 0.
+                .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
+                .withSensorToMechanismRatio(kReduction);
 
         config.Slot0 = 
             new Slot0Configs()
