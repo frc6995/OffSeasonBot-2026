@@ -19,10 +19,10 @@ public class DyeRotor extends SubsystemBase {
         public static final double kSpinMOI = 0.004;
         public static final double kIndexMOI = 0.002;
 
-        public static final double kSpinStatorCurrentLimitAmps = 60.0;
-        public static final double kSpinSupplyCurrentLimitAmps = 40.0;
-        public static final double kIndexStatorCurrentLimitAmps = 60.0;
-        public static final double kIndexSupplyCurrentLimitAmps = 40.0;
+        public static final double kSpinStatorCurrentLimitAmps = 120.0;
+        public static final double kSpinSupplyCurrentLimitAmps = 120.0;
+        public static final double kIndexStatorCurrentLimitAmps = 300.0;
+        public static final double kIndexSupplyCurrentLimitAmps = 120.0;
 
         public static final double kSpinKP = 5.0;
         public static final double kSpinKS = 0.31;
@@ -32,16 +32,16 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexKS = 0.3;
         public static final double kIndexKV = 0.31;
 
-        public static final double kSpinForwardRPM = 120.0;
-        public static final double kSpinBackwardRPM = 30.0;
+        public static final double kSpinForwardRPM = 30.0;
+        public static final double kSpinBackwardRPM = 0.0;
         public static final double kSpinVelocityToleranceRPM = 20.0;
 
-        public static final double kIndexForwardRPM = 1000.0;
-        public static final double kIndexBackwardRPM = 30.0;
+        public static final double kIndexForwardRPM = 2000.0;
+        public static final double kIndexBackwardRPM = 0.0;
 
         // Delay after the state is set to shoot before each mechanism spins up.
-        public static final double kIndexSpinUpDelaySecs = 0.001;
-        public static final double kSpinSpinUpDelaySecs = 0.001;
+        public static final double kIndexSpinUpDelaySecs = 1;
+        public static final double kSpinSpinUpDelaySecs = 1;
 
         public static final double kMinAppliedVolts = 0.0;
         public static final double kMaxAppliedVolts = 10.0;

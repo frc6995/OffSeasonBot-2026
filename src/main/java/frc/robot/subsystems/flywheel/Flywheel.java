@@ -17,7 +17,7 @@ import frc.robot.util.ShotController.ShooterTargetData;
 public class Flywheel extends SubsystemBase {
   public static class FlywheelConstants {
     // PID Constants
-    public static final double kP = 0.75;
+    public static final double kP = 0.25;
     // Feedforward Constants
     public static final double kS = 0.25;
     public static final double kV = 0.095;
@@ -27,25 +27,25 @@ public class Flywheel extends SubsystemBase {
     public static final int kFollowMotor2CANID = 42;
     public static final int kFollowMotor3CANID = 43;
     // Motor Config Constants
-    public static final double kSupplyCurrentLimitAmps = 40;
-    public static final double kStatorCurrentLimitAmps = 20;
+    public static final double kSupplyCurrentLimitAmps = 120;
+    public static final double kStatorCurrentLimitAmps = 120;
     public static final double kNewMaxVolts = 10;
     public static final double kNewMinVolts = 0;
     public static final double kReduction = 1;
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
 
-    public static final double kSafeShotRPM = 4000;
+    public static final double kSafeShotRPM = 2700;
     // Sim Constants
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
     public static final double [][] kShooterData = {
-      {0.0, 4000},
-      {3.0, 4000},
-      {4.0, 4000},
-      {5.0, 4000},
-      {10, 4000},
-      {15.0, 4000}
+      {0.0, 2700},
+      {3.0, 2700},
+      {4.0, 2700},
+      {5.0, 2700},
+      {10, 2700},
+      {15.0, 2700}
     };
 
     // distance from POI.PASSING_WALL
