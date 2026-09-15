@@ -5,6 +5,11 @@ import edu.wpi.first.epilogue.Logged;
 public interface FlywheelIO {
     default void updateInputs(FlywheelInputs inputs) {}
     default void setVelocityRPM(double velocityRPM) {}
+    /**
+     * Drives the decoupled index motor at a fixed voltage. This motor no longer follows the lead,
+     * so it must be commanded separately.
+     */
+    default void setIndexVoltage(double volts) {}
     default void stop() {}
 
     /** Number of motors on the flywheel: one lead plus three followers. */

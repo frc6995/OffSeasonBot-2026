@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -46,6 +47,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
   protected VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
+  /** Drives the decoupled index motor (CAN 42, former follower 2) at a fixed voltage. */
+  protected final VoltageOut m_indexRequest = new VoltageOut(0);
 
   final StatusSignal<AngularVelocity> m_FlywheelVelocity = m_flywheelLeadMotor.getVelocity();
   final StatusSignal<Voltage> m_FlywheelVoltage = m_flywheelLeadMotor.getMotorVoltage();
@@ -98,7 +101,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         .withSupplyCurrentLimitEnable(true);
     flywheelConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(FlywheelConstants.kReduction);
     m_flywheelFollowMotor1.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-    m_flywheelFollowMotor2.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+    // Motor 2 (CAN 42) is mechanically decoupled from the flywheel and drives the index instead.
+    // It does NOT follow the lead; it is voltage-controlled via setIndexVoltage().
     m_flywheelFollowMotor3.setControl(new Follower(m_flywheelLeadMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     flywheelConfig.Slot0 = new Slot0Configs()
         .withKP(FlywheelConstants.kP)
@@ -145,8 +149,15 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   }
 
   @Override
+  public void setIndexVoltage(double volts) {
+    m_flywheelFollowMotor2.setControl(m_indexRequest.withOutput(volts));
+  }
+
+  @Override
   public void stop() {
     m_flywheelLeadMotor.stopMotor();
+    // The index motor is no longer a follower, so stopping the lead doesn't stop it.
+    m_flywheelFollowMotor2.stopMotor();
   }
 
 }

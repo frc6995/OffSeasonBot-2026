@@ -30,7 +30,10 @@ public class Flywheel extends SubsystemBase {
     public static final double kSupplyCurrentLimitAmps = 120;
     public static final double kStatorCurrentLimitAmps = 120;
     public static final double kNewMaxVolts = 10;
-    public static final double kNewMinVolts = 0;
+    public static final double kNewMinVolts = -10;
+    // The fourth flywheel motor (CAN 42) is mechanically decoupled from the wheel and drives the
+    // index only. It runs at this fixed voltage whenever the flywheel is enabled.
+    public static final double kIndexVoltageVolts = -10;
     public static final double kReduction = 1;
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
@@ -165,6 +168,7 @@ public class Flywheel extends SubsystemBase {
       io.stop();
     } else {
       io.setVelocityRPM(resolveTargetRPM(flywheelState));
+      io.setIndexVoltage(FlywheelConstants.kIndexVoltageVolts);
     }
   }
 

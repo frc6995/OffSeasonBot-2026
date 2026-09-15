@@ -9,11 +9,13 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.util.CtreUtil;
 
 public class FlywheelIOSimTalonFX extends FlywheelIOTalonFX {
+  // Three motors, not four: the fourth flywheel motor (CAN 42) is mechanically decoupled and
+  // drives the index only, so it no longer contributes torque to the wheel.
   private final FlywheelSim flywheelSim = new FlywheelSim(LinearSystemId.createFlywheelSystem(
-      DCMotor.getKrakenX44(4),
+      DCMotor.getKrakenX44(3),
       FlywheelConstants.FlywheelMOI,
       FlywheelConstants.kReduction),
-      DCMotor.getKrakenX44(4));
+      DCMotor.getKrakenX44(3));
 
   public FlywheelIOSimTalonFX() {
     super();
