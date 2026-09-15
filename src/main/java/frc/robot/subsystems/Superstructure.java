@@ -6,11 +6,13 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.util.POI;
+import frc.robot.util.ShotCalculator;
 import frc.robot.subsystems.dyerotor.DyeRotor;
 import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotorIOTalonFX;
@@ -52,6 +54,7 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> m_poseSupplier;
 
     public final ShotController m_shotController;
+    public final ShotCalculator m_shotCalculator;
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
@@ -59,18 +62,23 @@ public class Superstructure extends SubsystemBase {
             m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
             POI.PASSING_WALL_START, POI.PASSING_WALL_END);
 
+        m_shotCalculator = new ShotCalculator(m_poseSupplier, () -> 
+            ChassisSpeeds.fromRobotRelativeSpeeds(swerveState.get().Speeds, 
+            swerveState.get().Pose.getRotation()), 
+            POI.HUB_CENTER);
+
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
-            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
+            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotCalculator::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotCalculator::getCachedData);
+            this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotCalculator::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
             this.m_intake = new Intake(new IntakeIOTalonFX());
-            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotController::getCachedData);
+            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotCalculator::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotCalculator::getCachedData);
+            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotCalculator::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
@@ -80,6 +88,9 @@ public class Superstructure extends SubsystemBase {
     @Override
     public void periodic() {
        m_shotController.calculate(robotState == RobotState.PASSING);
+
+       //need to add an option for calculating a passing shot
+       m_shotCalculator.calculateShot();
     }
 
     public Command requestIntakeActive() {

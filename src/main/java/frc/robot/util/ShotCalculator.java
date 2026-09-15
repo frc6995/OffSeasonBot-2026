@@ -16,6 +16,8 @@ public class ShotCalculator {
     private final Supplier<ChassisSpeeds> robotSpeeds;
     private final Supplier<Pose2d> hubPose;
 
+    private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
+
     //from the shot calculator https://github.com/Maro1810/FRC-Shot-Calculator
     private final double[] angle_coefficients = {0.06819563819722342, -3.0312156212267225, 86.57708128244042};
     private final double[] vel_coefficients = {-0.03970191850324918, 0.6023478186630093, 8.241406861728594};
@@ -83,6 +85,12 @@ public class ShotCalculator {
 
         double launchRPM = velocityToRpmMap.get(correctedLaunchSpeed);
 
-        return new ShooterTargetData(launchRPM, correctedHoodAngle, correctedTurretAngle);
+        cachedData = new ShooterTargetData(launchRPM, correctedHoodAngle, correctedTurretAngle);
+        
+        return cachedData;
+    }
+
+    public ShooterTargetData getCachedData() {
+        return cachedData;
     }
 }
