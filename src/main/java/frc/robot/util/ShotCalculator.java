@@ -43,7 +43,6 @@ public class ShotCalculator {
         this.hubPose = hubPose;
     }
 
-    //corrected turret angle needs to be fixed since it's currently a field relative angle
     public ShooterTargetData calculateShot() {
         ChassisSpeeds currentSpeeds = robotSpeeds.get();
         Pose2d goalPose = hubPose.get();
@@ -72,7 +71,7 @@ public class ShotCalculator {
 
         Translation2d v_horizontal_new = v_horizontal.minus(v_robot);
 
-        double correctedTurretAngle = v_horizontal_new.getAngle().getDegrees();
+        double correctedTurretAngle = v_horizontal_new.getAngle().getDegrees() - predictedRobotPose.getRotation().getDegrees();
 
         double correctedLaunchSpeed = Math.sqrt(
             Math.pow(v_horizontal_new.getNorm(), 2)+
