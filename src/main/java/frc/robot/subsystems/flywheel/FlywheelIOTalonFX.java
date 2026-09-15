@@ -7,9 +7,10 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -45,7 +46,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   /** Throttles the isConnected() polling below; see ConnectionPoll. */
   private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
-  protected VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
+  protected final VelocityTorqueCurrentFOC m_velocityRequest = new VelocityTorqueCurrentFOC(0);
 
   final StatusSignal<AngularVelocity> m_FlywheelVelocity = m_flywheelLeadMotor.getVelocity();
   final StatusSignal<Voltage> m_FlywheelVoltage = m_flywheelLeadMotor.getMotorVoltage();
@@ -107,6 +108,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     flywheelConfig.Voltage = new VoltageConfigs()
         .withPeakForwardVoltage(FlywheelConstants.kNewMaxVolts)
         .withPeakReverseVoltage(FlywheelConstants.kNewMinVolts);
+    flywheelConfig.TorqueCurrent = new TorqueCurrentConfigs()
+        .withPeakForwardTorqueCurrent(FlywheelConstants.kTorqueCurrentPeakFwdAmps)
+        .withPeakReverseTorqueCurrent(FlywheelConstants.kTorqueCurrentPeakReverseAmps);
     CtreUtil.reportIfNotOk("Config flywheel (lead)",
         m_flywheelLeadMotor.getConfigurator().apply(flywheelConfig));
     CtreUtil.reportIfNotOk("Config flywheel (follower 1)",
