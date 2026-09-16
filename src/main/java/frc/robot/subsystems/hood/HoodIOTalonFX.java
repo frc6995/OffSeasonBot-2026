@@ -9,10 +9,12 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
@@ -28,7 +30,7 @@ public class HoodIOTalonFX implements HoodIO {
     /** Throttles the isConnected() polling below; see ConnectionPoll. */
     private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
-    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(false);
+    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(false);
     
     protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
     protected final StatusSignal<Voltage> voltSignal = m_hoodMotor.getMotorVoltage();
@@ -69,6 +71,12 @@ public class HoodIOTalonFX implements HoodIO {
                 .withKD(Hood.HoodConstants.kD)
                 .withKS(Hood.HoodConstants.kS);
         
+        config.MotionMagic = 
+            new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(Hood.HoodConstants.kMotionMagicCruiseVelocity)
+                .withMotionMagicAcceleration(Hood.HoodConstants.kMotionMagicAcceleration)
+                .withMotionMagicJerk(Hood.HoodConstants.kMotionMagicJerk);
+
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
@@ -105,9 +113,10 @@ public class HoodIOTalonFX implements HoodIO {
     }
 
     @Override
-    public void setAngle(double angle) {
-        double rotations = angle / 360;
-        m_hoodMotor.setControl(positionRequest.withPosition(rotations));
+    public void setAngle(double angleDeg) {
+        m_hoodMotor.setControl(
+        positionRequest.withPosition(angleToMechanismRotations(angleDeg))
+    );
     }
     
     /**

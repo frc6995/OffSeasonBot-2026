@@ -59,7 +59,12 @@ public class Hood extends SubsystemBase {
         public static final double kHoodLengthMeters = 0.141478;
 
         public static final double kSafeShotAngleDeg = 35.0;
-
+        
+        // Motion Magic values are in mechanism rotations because
+        // SensorToMechanismRatio is configured on the TalonFX.
+        public static final double kMotionMagicCruiseVelocity = 0.25; // rotations/sec
+        public static final double kMotionMagicAcceleration = 0.50;   // rotations/sec^2
+        public static final double kMotionMagicJerk = 0.0;             // 0 disables jerk limiting
     }
 
     public enum HoodState {
