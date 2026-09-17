@@ -11,7 +11,6 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -38,7 +37,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     private final TurretFeedforward m_feedforward;
 
-    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
+    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
 
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<AngularVelocity> velocitySignal;
@@ -97,14 +96,19 @@ public class TurretIOTalonFX implements TurretIO {
                 .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
                 .withSensorToMechanismRatio(kReduction);
 
-        config.Slot0 = 
+        config.Slot0 =
             new Slot0Configs()
                 .withKP(kP)
                 .withKV(kV)
                 .withKA(kA)
                 .withKS(kS);
-        
-        config.SoftwareLimitSwitch = 
+
+        config.MotionMagic =
+            new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(angleToMechanismRotations(kCruiseVelocityDegPerSec))
+                .withMotionMagicAcceleration(angleToMechanismRotations(kMaxAccelerationDegPerSec2));
+
+        config.SoftwareLimitSwitch =
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
                 .withForwardSoftLimitThreshold(angleToMechanismRotations(kMaxAngleDeg))
