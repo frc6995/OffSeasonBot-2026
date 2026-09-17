@@ -57,6 +57,10 @@ public class Turret extends SubsystemBase {
          * Verify this pitch sign against the physical camera tilt before trusting range.
          */
         public static final Pose3d CAMERA_POSE3D = new Pose3d( new Translation3d(Units.inchesToMeters(5.49), Units.inchesToMeters(0),Units.inchesToMeters(0)), new Rotation3d(0,0.366519,0));
+
+        public static final double kEChainBaseWidth = 9.375 * 0.0254;
+        public static final double kEChainBaseLength = 11.385 * 0.0254;
+        public static final double kNMPerVolt = 48.9;
     }
 
     public enum TurretState {
