@@ -156,7 +156,7 @@ public class Turret extends SubsystemBase {
         if (angle >= 0) {
             double alt = angle - 360;
             double diff = Math.abs(alt - currentAngle);
-            if (diff < smallestDifference) {
+            if (diff < smallestDifference && withinBounds(alt)) {
                 smallestDifference = diff;
                 smallestAngle = alt;
             }
@@ -165,7 +165,7 @@ public class Turret extends SubsystemBase {
         if (angle <= 0) {
             double alt = angle + 360;
             double diff = Math.abs(alt - currentAngle);
-            if (diff < smallestDifference) {
+            if (diff < smallestDifference && withinBounds(alt)) {
                 smallestDifference = diff;
                 smallestAngle = alt;
             }
@@ -180,6 +180,10 @@ public class Turret extends SubsystemBase {
 
         io.setAngle(angle);
         return angle;
+    }
+
+    private boolean withinBounds(double angleDeg) {
+        return angleDeg < TurretConstants.kMaxAngleDeg && angleDeg > TurretConstants.kMinAngleDeg;
     }
 
     @Logged(name = "State", importance = Importance.CRITICAL)

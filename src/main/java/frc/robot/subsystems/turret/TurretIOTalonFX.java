@@ -148,7 +148,7 @@ public class TurretIOTalonFX implements TurretIO {
         double clampedAngle = MathUtil.clamp(angle, kMinAngleDeg, kMaxAngleDeg);
 
         double rotations = clampedAngle / 360;
-        positionRequest.FeedForward = m_feedforward.calculate(cachedAngle * Math.PI * 2.0);
+        // positionRequest.FeedForward = -m_feedforward.calculate(cachedAngle * Math.PI * 2.0);
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
