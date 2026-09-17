@@ -23,8 +23,10 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.TurretFeedforward;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
@@ -34,6 +36,8 @@ public class TurretIOTalonFX implements TurretIO {
     /** Throttles the isConnected() polling below; see ConnectionPoll. */
     private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
+    private final TurretFeedforward m_feedforward;
+
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
 
     protected StatusSignal<Angle> angleSignal;
@@ -41,6 +45,8 @@ public class TurretIOTalonFX implements TurretIO {
     protected StatusSignal<Voltage> voltSignal;
     protected StatusSignal<Current> statorCurrentSignal;
     protected StatusSignal<Current> supplyCurrentSignal;
+
+    protected double cachedAngle = 0;
 
     public TurretIOTalonFX() {
         configMotor();
@@ -51,6 +57,14 @@ public class TurretIOTalonFX implements TurretIO {
 
         statorCurrentSignal = m_turretMotor.getStatorCurrent();
         supplyCurrentSignal = m_turretMotor.getSupplyCurrent();
+
+        m_feedforward = new TurretFeedforward(
+            TurretConstants.kSpringForceN,
+            TurretConstants.kEChainBaseWidth / 2.0,
+            TurretConstants.kEChainBaseLength / 2.0,
+            TurretConstants.kNMPerVolt,
+            -135.612
+        );
 
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
@@ -114,9 +128,11 @@ public class TurretIOTalonFX implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, velocitySignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        inputs.angle = mechanismToAngleRotations(angleSignal.getValueAsDouble());
+        cachedAngle = angleSignal.getValueAsDouble();
+
+        inputs.angle = mechanismToAngleDegrees(cachedAngle);
         // SensorToMechanismRatio is configured, so this is mechanism rotations/sec.
-        inputs.velocity = mechanismToAngleRotations(velocitySignal.getValueAsDouble());
+        inputs.velocity = mechanismToAngleDegrees(velocitySignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
@@ -132,6 +148,7 @@ public class TurretIOTalonFX implements TurretIO {
         double clampedAngle = MathUtil.clamp(angle, kMinAngleDeg, kMaxAngleDeg);
 
         double rotations = clampedAngle / 360;
+        positionRequest.FeedForward = m_feedforward.calculate(cachedAngle * Math.PI * 2.0);
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
@@ -143,7 +160,7 @@ public class TurretIOTalonFX implements TurretIO {
         return angle / 360.0;
     }
 
-    protected double mechanismToAngleRotations(double rotations) {
+    protected double mechanismToAngleDegrees(double rotations) {
         return rotations * 360.0;
     }
 

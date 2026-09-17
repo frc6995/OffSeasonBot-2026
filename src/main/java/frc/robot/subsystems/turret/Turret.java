@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
+import frc.robot.util.TurretFeedforward;
 import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
@@ -61,6 +62,7 @@ public class Turret extends SubsystemBase {
         public static final double kEChainBaseWidth = 9.375 * 0.0254;
         public static final double kEChainBaseLength = 11.385 * 0.0254;
         public static final double kNMPerVolt = 48.9;
+        public static final double kSpringForceN = 15 * 4.44822162;
     }
 
     public enum TurretState {
@@ -78,7 +80,6 @@ public class Turret extends SubsystemBase {
 
     private TurretIO io;
     private Supplier<ShooterTargetData> shotData;
-
     
     private TurretIOInputs inputs = new TurretIOInputs();
 
@@ -88,6 +89,9 @@ public class Turret extends SubsystemBase {
     public Turret(TurretIO io, Supplier<ShooterTargetData> shotData) {
         this.io = io;
         this.shotData = shotData;
+
+        
+
         RobotVisualizer.addTurret(turretLigament);
     }
 
