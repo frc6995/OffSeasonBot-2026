@@ -17,8 +17,8 @@ import frc.robot.util.ShotController.ShooterTargetData;
 public class Flywheel extends SubsystemBase {
   public static class FlywheelConstants {
 // in torque current amps
-    public static final double kP = 10.0;   // amps per (rot/s) velocity error
-    public static final double kS = 1.5;    // breakaway amps
+    public static final double kP = 0.00001;   // amps per (rot/s) velocity error
+    public static final double kS = 0.0;    // breakaway amps
     public static final double kV = 0.0;    // amps per (rot/s)
     public static final double kA = 0.0;    // amps per (rot/s^2)
     /** Peak torque current the velocity loop may command (VelocityTorqueCurrentFOC Output). */
@@ -39,7 +39,7 @@ public class Flywheel extends SubsystemBase {
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
 
-    public static final double kSafeShotRPM = 2700;
+    public static final double kSafeShotRPM = 700;
     // Sim Constants
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
