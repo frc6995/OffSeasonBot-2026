@@ -11,7 +11,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -34,7 +34,7 @@ public class TurretIOTalonFX implements TurretIO {
     /** Throttles the isConnected() polling below; see ConnectionPoll. */
     private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
-    protected final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0);
+    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
 
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<AngularVelocity> velocitySignal;

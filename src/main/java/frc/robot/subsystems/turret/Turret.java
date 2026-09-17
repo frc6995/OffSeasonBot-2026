@@ -22,10 +22,10 @@ public class Turret extends SubsystemBase {
         public static final int kCANID = 45;
 
         // Tune PID/FF constants
-        public static final double kP = 30;
+        public static final double kP = 350;
         public static final double kI = 0;
         public static final double kD = 0;
-        public static final double kS = 0;
+        public static final double kS = 5;
         public static final double kV = 0;
         public static final double kA = 0;
 
