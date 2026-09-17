@@ -11,20 +11,18 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
@@ -36,19 +34,16 @@ public class TurretIOTalonFX implements TurretIO {
     /** Throttles the isConnected() polling below; see ConnectionPoll. */
     private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
-    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true);
-    
+    protected final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0);
+
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<AngularVelocity> velocitySignal;
     protected StatusSignal<Voltage> voltSignal;
     protected StatusSignal<Current> statorCurrentSignal;
     protected StatusSignal<Current> supplyCurrentSignal;
 
-    protected InterpolatingDoubleTreeMap m_ffMap = new InterpolatingDoubleTreeMap();
-
     public TurretIOTalonFX() {
         configMotor();
-        configFF();
 
         angleSignal = m_turretMotor.getPosition();
         velocitySignal = m_turretMotor.getVelocity();
@@ -61,23 +56,6 @@ public class TurretIOTalonFX implements TurretIO {
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
-    }
-
-    private void configFF() {
-        for (double i = 0; i < 1.0 ; i+=0.1){
-            if (i % TurretConstants.kFeedForward[1][0] == 0){
-                m_ffMap.put(i, TurretConstants.kFeedForward[1][1]);
-                m_ffMap.put(-0.256-i, -TurretConstants.kFeedForward[1][1]);
-
-            }
-
-            else if (i % TurretConstants.kFeedForward[0][0] == 0){
-                m_ffMap.put(i, TurretConstants.kFeedForward[0][1]);
-                m_ffMap.put(-0.36-i, -TurretConstants.kFeedForward[1][1]);
-
-            }
-
-        }
     }
 
     private void configMotor() {
@@ -154,7 +132,6 @@ public class TurretIOTalonFX implements TurretIO {
         double clampedAngle = MathUtil.clamp(angle, kMinAngleDeg, kMaxAngleDeg);
 
         double rotations = clampedAngle / 360;
-        positionRequest.FeedForward = m_ffMap.get(angleSignal.getValueAsDouble());
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
