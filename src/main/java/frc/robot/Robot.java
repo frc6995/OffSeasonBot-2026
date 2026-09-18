@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.Elastic;
+import frc.robot.util.LoopTiming;
 
 
 //Don't edit this one, edit the one at line 60
@@ -40,6 +42,9 @@ public class Robot extends TimedRobot {
     private double autoSimTime = 20.0; // seconds to wait before disabling autonomous in simulation
 
     private final RobotContainer m_robotContainer;
+
+    /** Profiles loop time; printEpochs() reports an epoch breakdown on overruns. */
+    private final Watchdog m_watchdog = new Watchdog(0.020, () -> {});
 
     /* log and replay timestamp and joystick data */
     // private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -75,7 +80,15 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        CommandScheduler.getInstance().run(); 
+        LoopTiming.getInstance().start();
+
+        CommandScheduler.getInstance().run();
+        m_watchdog.addEpoch("CommandScheduler.run()");
+
+        m_watchdog.printEpochs();
+        m_watchdog.reset();
+
+        LoopTiming.getInstance().end();
        // SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
     }
 
