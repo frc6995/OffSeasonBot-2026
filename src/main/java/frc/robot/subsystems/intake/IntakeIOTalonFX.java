@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -83,6 +84,22 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_extensionStatorCurrent, m_extensionSupplyCurrent,
             m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
             m_kickerStatorCurrent, m_kickerSupplyCurrent);
+
+        // Must come before the optimize below, and must cover every signal updateInputs()
+        // refreshes - anything left out silently drops to 4 Hz.
+        BaseStatusSignal.setUpdateFrequencyForAll(
+            CtreUtil.kMechanismSignalFrequencyHz,
+            m_rollerVelocity, m_rollerAppliedVoltage, m_rollerFollowerAppliedVoltage,
+            m_extensionPosition, m_extensionAppliedVoltage, m_extensionFollowerAppliedVoltage,
+            m_kickerVelocity, m_kickerAppliedVoltage);
+
+        // Everything else these motors publish is never read here; on CAN FD it all defaults to
+        // 100 Hz, so Phoenix decodes it every loop for nothing.
+        CtreUtil.reportIfNotOk("Intake optimize bus utilization",
+            ParentDevice.optimizeBusUtilizationForAll(
+                m_rollerLeadMotor, m_rollerFollowerMotor,
+                m_extensionLeadMotor, m_extensionFollowerMotor,
+                m_kickerMotor));
     }
 
     protected void configureMotors() {

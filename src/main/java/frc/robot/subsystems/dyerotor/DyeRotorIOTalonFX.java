@@ -12,6 +12,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -60,6 +61,18 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         m_spinSupCurrent, m_spinStatCurrent,
         m_indexSupCurrent, m_indexStatCurrent,
         m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
+
+    // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
+    // anything left out silently drops to 4 Hz. The index follower publishes nothing this code
+    // reads beyond the currents set above.
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        CtreUtil.kMechanismSignalFrequencyHz,
+        m_spinVelocity, m_spinVoltage, m_indexVelocity, m_indexVoltage);
+
+    // Everything else these motors publish is never read here; on CAN FD it all defaults to
+    // 100 Hz, so Phoenix decodes it every loop for nothing.
+    CtreUtil.reportIfNotOk("Dye Rotor optimize bus utilization",
+        ParentDevice.optimizeBusUtilizationForAll(m_spinMotor, m_indexerLead, m_indexerFollow));
   }
 
   protected void configureMotors() {

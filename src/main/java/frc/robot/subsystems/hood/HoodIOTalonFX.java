@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -41,6 +42,16 @@ public class HoodIOTalonFX implements HoodIO {
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+
+        // Must come before the optimize below, and must cover every signal updateInputs()
+        // refreshes - anything left out silently drops to 4 Hz.
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                CtreUtil.kMechanismSignalFrequencyHz, angleSignal, voltSignal);
+
+        // Everything else this motor publishes is never read here; on CAN FD it all defaults to
+        // 100 Hz, so Phoenix decodes it every loop for nothing.
+        CtreUtil.reportIfNotOk("Hood optimize bus utilization",
+                ParentDevice.optimizeBusUtilizationForAll(m_hoodMotor));
     }
 
     public void configMotor() {

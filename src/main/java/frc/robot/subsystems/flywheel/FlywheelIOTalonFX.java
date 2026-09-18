@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -32,6 +33,18 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // CtreUtil.kCurrentSignalFrequencyHz.
     CtreUtil.setCurrentSignalFrequency(
         ArrayUtil.concat(m_supplyCurrentSignals, m_statorCurrentSignals));
+
+    // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
+    // anything left out silently drops to 4 Hz. Only the lead motor's velocity and voltage are
+    // read; the followers contribute nothing beyond the currents set above.
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        CtreUtil.kMechanismSignalFrequencyHz, m_FlywheelVelocity, m_FlywheelVoltage);
+
+    // Everything else these motors publish is never read here; on CAN FD it all defaults to
+    // 100 Hz, so Phoenix decodes it every loop for nothing.
+    CtreUtil.reportIfNotOk("Flywheel optimize bus utilization",
+        ParentDevice.optimizeBusUtilizationForAll(
+            m_flywheelLeadMotor, m_flywheelFollowMotor1, m_flywheelFollowMotor2, m_flywheelFollowMotor3));
   }
 
   protected final TalonFX m_flywheelLeadMotor = new TalonFX(FlywheelConstants.kLeadMotorCANID, CANBuses.UpperBus);

@@ -12,6 +12,7 @@ import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -69,6 +70,18 @@ public class TurretIOTalonFX implements TurretIO {
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+
+        // Must come before the optimize below, and must cover every signal updateInputs()
+        // refreshes - anything left out silently drops to 4 Hz. For this motor that would mean
+        // selectClosestAngle() and the vision camera transform running on a stale angle.
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                CtreUtil.kMechanismSignalFrequencyHz, angleSignal, velocitySignal, voltSignal);
+
+        // Everything else this motor publishes - duty cycle, torque current, temperatures,
+        // closed-loop telemetry, fault frames - is never read here. On CAN FD all of it defaults
+        // to 100 Hz, so Phoenix's receive thread decodes it every loop for nothing.
+        CtreUtil.reportIfNotOk("Turret optimize bus utilization",
+                ParentDevice.optimizeBusUtilizationForAll(m_turretMotor));
     }
 
     private void configMotor() {
