@@ -95,6 +95,8 @@ public class Intake extends SubsystemBase {
             
     private IntakeState intakeState = IntakeState.RETRACTED;
 
+    private double commandedExtensionMeters = IntakeConstants.kExtensionMinMeters;
+
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
     private double agitateNearMeters = IntakeConstants.kAgitateNearMeters;
@@ -300,15 +302,15 @@ public class Intake extends SubsystemBase {
 
         io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
         io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-        io.setExtensionPosition(clampExtension(resolveExtensionTargetPosition(intakeState)));
+        commandedExtensionMeters = clampExtension(resolveExtensionTargetPosition(intakeState));
+        io.setExtensionPosition(commandedExtensionMeters);
     }
 
     @Override
     public void simulationPeriodic() {
         double retractedLengthMeters = Units.inchesToMeters(8.0);
-        double extensionMeters = inputs.extensionPositionMeters;
-        intakeLigament.setLength(retractedLengthMeters + extensionMeters);
-        RobotVisualizer.updateIntakeExtension(extensionMeters);
+        intakeLigament.setLength(retractedLengthMeters + commandedExtensionMeters);
+        RobotVisualizer.updateIntakeExtension(commandedExtensionMeters);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {

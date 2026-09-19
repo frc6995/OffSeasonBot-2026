@@ -41,6 +41,10 @@ public class Autos {
 
     private final Path LeftBump1Path = new Path("path-1".toLowerCase());
     private final Path LeftBump2Path = new Path("path-2".toLowerCase());
+    private final Path RightBump1Path = mirroredCopy(LeftBump1Path);
+    private final Path RightBump2Path = mirroredCopy(LeftBump2Path);
+    private final Supplier<Pose2d> TRENCH_START_RIGHT =
+            AllianceFlipUtil.flipped(RightBump1Path.getStartPose());
 
     private final Path Testcanrange = new Path("Test-canrange".toLowerCase());
     private final Path Testcanrange2 = new Path("Test-canrange2".toLowerCase());
@@ -119,6 +123,17 @@ public class Autos {
                     c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
                 }));
 
+        autos.put("Right Double Swipe Bump",
+                () -> auto(TRENCH_START_RIGHT.get(), c -> {
+                    Command RightBump1Cmd = pathBuilder.build(RightBump1Path);
+                    Command RightBump2Cmd = pathBuilder.build(RightBump2Path);
+
+                    c.addCommands(RightBump1Cmd.alongWith(m_superstructure.requestIntakeActive(),
+                            m_superstructure.requestRobotIdle()));
+
+                    c.addCommands(RightBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
+                }));
+
         autos.put("Bline_Workshop_Test_Canrange",
                 () -> auto(TEST_START_CANRANGE.get(), c -> {
                     Command canRangeTestAuto1 = pathBuilder.build(Testcanrange);
@@ -166,6 +181,13 @@ public class Autos {
 
     public CANRange getCanRange() {
         return m_canRange;
+    }
+
+    /** Returns an independently mutable mirrored copy of a BLine path. */
+    private static Path mirroredCopy(Path source) {
+        Path mirrored = source.copy();
+        mirrored.mirror();
+        return mirrored;
     }
 
     // ============= AUTO BUILDER HELPERS =============
