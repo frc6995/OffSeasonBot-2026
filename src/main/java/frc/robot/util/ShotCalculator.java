@@ -19,8 +19,8 @@ public class ShotCalculator {
     private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
 
     //from the shot calculator https://github.com/Maro1810/FRC-Shot-Calculator
-    private final double[] angle_coefficients = {0.06819563819722342, -3.0312156212267225, 86.57708128244042};
-    private final double[] vel_coefficients = {-0.03970191850324918, 0.6023478186630093, 8.241406861728594};
+    private final double[] angle_coefficients = {0.0030142681165330827, -2.4717786098474197, 85.55874982794282};
+    private final double[] vel_coefficients = {-0.06857791011905315, 0.8515747825980705, 7.724035484730785};
 
     private double LATENCY_SECONDS = 0.02;
 
