@@ -95,6 +95,26 @@ public class RobotContainer {
         configureBindings();
         SignalLogger.enableAutoLogging(false);
         RobotVisualizer.setupVisualizer();
+        warmUpAutoAlignCommands();
+    }
+
+    /**
+     * Constructs one throwaway instance of each {@code Commands.defer(...)}-wrapped auto-align
+     * command bound below, purely to pay their first-use class-loading/JIT cost here during
+     * construction instead of at the driver's first button press. Confirmed on-robot
+     * 2026-09-19: pressing joystick.b()/x() for the first time each boot cost 115-135ms in
+     * {@code DeferredCommand.initialize()} - reproducible on two separate deploys, i.e. a real,
+     * repeatable one-time tax rather than random jitter, and one big enough to blow the loop
+     * budget by itself. Neither constructor below does anything beyond field assignment (no CAN
+     * writes, no scheduling), so building-and-discarding one of each here is side-effect-free.
+     */
+    private void warmUpAutoAlignCommands() {
+        new AutoAlignFixedHeading(
+                m_drivetrain.getPose(),
+                m_drivetrain,
+                true,
+                RotationControlMode.VELOCITY_LIMITED_PROFILE);
+        new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile());
     }
 
     private void configureBindings() {

@@ -19,8 +19,8 @@ public class Flywheel extends SubsystemBase {
     // PID Constants
     public static final double kP = 0.25;
     // Feedforward Constants
-    public static final double kS = 0.25;
-    public static final double kV = 0.095;
+    public static final double kS = 0.45;
+    public static final double kV = 0.1;
     // CAN IDs
     public static final int kLeadMotorCANID = 40;
     public static final int kFollowMotor1CANID = 41;
@@ -40,11 +40,11 @@ public class Flywheel extends SubsystemBase {
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
     public static final double [][] kShooterData = {
-      {0.0, 2700},
-      {3.0, 2700},
-      {4.0, 2700},
-      {5.0, 2700},
-      {10, 2700},
+      {0.0, 2400},
+      {3.0, 2400},
+      {4.0, 2400},
+      {5.0, 2400},
+      {10, 2400},
       {15.0, 2700}
     };
 

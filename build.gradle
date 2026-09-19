@@ -43,6 +43,12 @@ deploy {
 
 def deployArtifact = deploy.targets.roborio.artifacts.frcJava
 
+// TEMPORARY - loop-overrun diagnosis (tools/loop_overrun/README.md, Step 4). Writes a GC log to
+// the roboRIO so pauses can be correlated against /LoopTiming and the watchdog epoch dumps.
+// Remove once GC is ruled in or out; fetch the log first with:
+//   scp admin@10.69.95.2:/home/lvuser/gc.log .
+deployArtifact.jvmArgs.add("-Xlog:gc*:file=/home/lvuser/gc.log")
+
 // Set to true to use debug for all targets including JNI, which will drastically impact
 // performance.
 wpi.java.debugJni = false
