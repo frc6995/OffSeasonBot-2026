@@ -99,14 +99,6 @@ public class Flywheel extends SubsystemBase {
     return flywheelState;
   }
 
-  @Logged(name = "Connected", importance = Importance.CRITICAL)
-  public boolean areMotorsConnected() {
-    return inputs.leadMotorConnected
-        && inputs.followerMotor1Connected
-        && inputs.followerMotor2Connected
-        && inputs.followerMotor3Connected;
-  }
-
   @Logged(name = "Velocity", importance = Importance.INFO)
   public double getVelocityRPM() {
     return inputs.velocityRPM;

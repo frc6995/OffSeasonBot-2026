@@ -22,7 +22,6 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
-import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class DyeRotorIOTalonFX implements DyeRotorIO {
@@ -31,9 +30,6 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
       Constants.CANBuses.UpperBus);
   protected final TalonFX m_indexerFollow = new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID,
       Constants.CANBuses.UpperBus);
-
-  /** Throttles the isConnected() polling below; see ConnectionPoll. */
-  private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
   private final VelocityVoltage m_spinRequest = new VelocityVoltage(0).withEnableFOC(true);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);
@@ -154,15 +150,6 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     inputs.indexMotorStatorCurrentAmps[1] = m_indexFollowerStatCurrent.getValueAsDouble();
     inputs.indexMotorSupplyCurrentAmps[0] = inputs.indexSupplyCurrentAmps;
     inputs.indexMotorSupplyCurrentAmps[1] = m_indexFollowerSupCurrent.getValueAsDouble();
-
-    // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
-    // only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll. Grouped here
-    // rather than left inline with the spin/index readings so there is one guard, not two.
-    if (connectionPoll.due()) {
-      inputs.spinMotorConnected = m_spinMotor.isConnected();
-      inputs.indexLeadMotorConnected = m_indexerLead.isConnected();
-      inputs.indexFollowerMotorConnected = m_indexerFollow.isConnected();
-    }
   }
 
   @Override

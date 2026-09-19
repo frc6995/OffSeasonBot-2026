@@ -188,7 +188,7 @@ public class AprilTagModule {
         double[] poseArray = tsValue.value;
         long timestamp = tsValue.timestamp;
 
-        if (poseArray.length == 0) {
+        if (poseArray.length == 0 || tsValue.timestamp == 0) {
             // Handle the case where no data is available
             return Optional.empty();
         }

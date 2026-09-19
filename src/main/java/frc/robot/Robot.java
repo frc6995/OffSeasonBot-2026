@@ -140,28 +140,17 @@ public class Robot extends TimedRobot {
     public void autonomousExit() {
     }
 
-    // TEMPORARY - bisecting the 3-6s stall seen at every first teleopInit() on-robot. New Tracer
-    // instance so its first printEpochs() call fires unconditionally (its own internal 1s
-    // throttle starts at time zero), instead of possibly being suppressed by rate limiting on a
-    // shared one. Remove once the culprit line is found.
-    private final edu.wpi.first.wpilibj.Tracer m_teleopInitTracer = new edu.wpi.first.wpilibj.Tracer();
-
     @Override
     public void teleopInit() {
-        m_teleopInitTracer.resetTimer();
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
-        m_teleopInitTracer.addEpoch("cancelAuto");
 
         // enable dynamic current limiting but only for teleop
         m_robotContainer.currentLimitManager.setEnabled(true);
-        m_teleopInitTracer.addEpoch("currentLimitManager.setEnabled");
 
         //Tab switches to "Teleoperated"
         Elastic.selectTab("Teleoperated");
-        m_teleopInitTracer.addEpoch("Elastic.selectTab");
-        m_teleopInitTracer.printEpochs();
     }
 
     @Override

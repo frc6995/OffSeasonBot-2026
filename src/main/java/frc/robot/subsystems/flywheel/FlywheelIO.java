@@ -28,11 +28,6 @@ public interface FlywheelIO {
          */
         public double[] motorStatorCurrentAmps = new double[kMotorCount];
         public double[] motorSupplyCurrentAmps = new double[kMotorCount];
-
-        public boolean leadMotorConnected;
-        public boolean followerMotor1Connected;
-        public boolean followerMotor2Connected;
-        public boolean followerMotor3Connected;
     }
 
 }

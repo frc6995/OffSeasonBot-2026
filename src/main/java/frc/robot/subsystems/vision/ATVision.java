@@ -40,7 +40,7 @@ public class ATVision extends SubsystemBase {
         public static final String NT_TABLE = "Vision";
 
         public static final double[] kLimelightMT2StdDevCoefficients = {0.085, 0.0};
-        public static final double[] kLimelightMT1StdDevCoefficients = {0.1, 0.015};
+        public static final double[] kLimelightMT1StdDevCoefficients = {0.5, 0.5};
         public static final int kOptimalTagCount = 2;
 
         public static final Pose3d kInitialTurretCameraOffset = solveRobotToCamera(0.0);
@@ -56,17 +56,13 @@ public class ATVision extends SubsystemBase {
         public static final double kMaxEstimateAgeSeconds = 0.4;
         public static final double kClockSkewToleranceSeconds = 0.01;
         /**
-         * Minimum spacing between {@code NetworkTableInstance.flush()} calls while in MegaTag2
-         * mode (see {@link #periodic()}). Flushing every loop - the previous behavior - measured
-         * 22-93ms per call on-robot 2026-09-19, a synchronous instance-wide network send rather
-         * than a cheap local op, by itself enough to blow the 20ms loop budget on this radio link.
-         * Throttling means a written orientation can take up to this long to actually reach the
-         * Limelight, which is exactly what {@link #kOffsetTransportLatencySeconds} models for the
-         * turret-mismatch rejection check below - the two are kept equal on purpose so throttling
-         * the flush can't silently miscalibrate that check. Change one, change both.
+         * Assumed worst-case delay between {@link #updateTurretCameraOffset} writing the
+         * robot-to-camera geometry and the Limelight actually applying it - used below to look
+         * up what geometry was actually in effect when a given estimate was captured. This write
+         * is never flushed (relies on NT4's normal batching); unrelated to MegaTag2, which this
+         * robot does not use - see {@link #periodic()}.
          */
-        public static final double kMegaTag2FlushIntervalSeconds = 0.04;
-        public static final double kOffsetTransportLatencySeconds = kMegaTag2FlushIntervalSeconds;
+        public static final double kOffsetTransportLatencySeconds = 0.02;
         public static final double kMaxTurretMismatchDeg = 3.0;
         public static final double kMaxTurretVelDegPerSec = 180.0;
         public static final double kVelocitySampleDtSeconds = 0.02;
@@ -112,8 +108,6 @@ public class ATVision extends SubsystemBase {
     private double lastMismatchDeg = 0;
     private double lastAgeSeconds = 0;
     private String lastRejectReason = "";
-    /** See {@link ATVisionConstants#kMegaTag2FlushIntervalSeconds}. */
-    private double lastFlushTimestampSeconds = -Double.MAX_VALUE;
 
     public ATVision(
             AprilTagVision limelightVision,
@@ -179,24 +173,13 @@ public class ATVision extends SubsystemBase {
         pushedAngleBuffer.addSample(now, turretAngle);
         robotToCameraPublisher.accept(robotToCamera);
 
-        boolean useMegaTag1 = DriverStation.isDisabled() || !headingSeeded;
-        EstimationMode mode = useMegaTag1 ? EstimationMode.MEGATAG1 : EstimationMode.MEGATAG2;
-
-        // seedOrientations()+flush() only matter together: MegaTag1 never reads what's seeded
-        // (useMegaTag1 above is true whenever disabled or heading not yet seeded), and an
-        // un-flushed seed write just gets silently overwritten by the next loop's write before
-        // the Limelight ever sees it - see AprilTagModule#seedOrientation's javadoc, "the caller
-        // is expected to flush once per loop after seeding". So there is no point seeding on a
-        // loop we are not also about to flush; both are gated on the same throttle. Bisected
-        // on-robot 2026-09-19 with a scoped Tracer: even with flush already MegaTag2-gated,
-        // seedOrientations() alone (the "NoFlush" write, not the flush) was still costing a
-        // consistent 20-23ms every loop - this fix removes that call on every loop it was
-        // pure waste anyway, not just the expensive ones.
-        boolean dueForMegaTag2Sync = mode == EstimationMode.MEGATAG2
-                && now - lastFlushTimestampSeconds >= ATVisionConstants.kMegaTag2FlushIntervalSeconds;
-        if (dueForMegaTag2Sync) {
-            limelightVision.seedOrientations(seedRotation);
-        }
+        // MegaTag1-only by design (confirmed with the team 2026-09-19) - MegaTag2 is never used,
+        // so there is nothing to seed: MegaTag1's PnP solve is vision-only and never reads the
+        // external orientation MegaTag2 needs. That also removes the entire seedOrientations()+
+        // flush() cost this file used to carry (a consistent 20-23ms/loop even throttled, see
+        // git history) - it wasn't just expensive, it was never needed for the mode we actually
+        // run in.
+        EstimationMode mode = EstimationMode.MEGATAG1;
         limelightVision.periodic(mode);
 
         boolean hasTurretCameraEstimate = hasTurretCameraEstimate();
@@ -205,11 +188,6 @@ public class ATVision extends SubsystemBase {
         if (photonVision != null && !hasTurretCameraEstimate) {
             accepted += acceptPhotonEstimates();
             photonVision.periodic();
-        }
-
-        if (dueForMegaTag2Sync) {
-            limelightVision.flush();
-            lastFlushTimestampSeconds = now;
         }
 
         headingSeededPublisher.accept(headingSeeded);

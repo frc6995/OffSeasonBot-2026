@@ -31,6 +31,7 @@ import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
+import frc.robot.util.Elastic;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
@@ -96,6 +97,22 @@ public class RobotContainer {
         SignalLogger.enableAutoLogging(false);
         RobotVisualizer.setupVisualizer();
         warmUpAutoAlignCommands();
+        warmUpElastic();
+    }
+
+    /**
+     * Touches {@link Elastic} here so its static initializer - including the Jackson
+     * {@code ObjectMapper} it constructs for {@code sendNotification}, unrelated to
+     * {@code selectTab} but initialized together as one class - runs during construction rather
+     * than at the first real {@code selectTab} call. Confirmed on-robot 2026-09-19 via a scoped
+     * Tracer bracketing every line of {@code teleopInit()}: {@code cancelAuto} and
+     * {@code currentLimitManager.setEnabled} cost microseconds each, but {@code Elastic
+     * .selectTab("Teleoperated")} alone cost 3.15-3.79s, reproducible across every boot where
+     * auto never ran first (so this was the first time anything touched {@code Elastic} at all) -
+     * this is what the runbook's "large overrun at start of teleop" reports were.
+     */
+    private void warmUpElastic() {
+        Elastic.selectTab("Warmup");
     }
 
     /**

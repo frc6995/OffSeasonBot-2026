@@ -158,11 +158,6 @@ public class Hood extends SubsystemBase {
         return hoodState;
     }
     
-    @Logged(name = "Connected", importance = Importance.CRITICAL)
-    public boolean isConnected() {
-        return inputs.hoodMotorConnected;
-    }
-
     @Logged(name = "Angle", importance = Importance.INFO)
     public double getAngle() {
         return inputs.angle;

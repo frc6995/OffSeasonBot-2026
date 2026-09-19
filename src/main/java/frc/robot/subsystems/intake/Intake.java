@@ -161,11 +161,6 @@ public class Intake extends SubsystemBase {
         return intakeState;
     }
 
-    @Logged(name = "Connected", importance = Importance.CRITICAL)
-    public boolean areMotorsConnected() {
-        return areRollerMotorsConnected() && areExtensionMotorsConnected() && isKickMotorConnected();
-    }
-
     @Logged(name = "Roller/Velocity", importance = Importance.INFO)
     public double getRollerVelocityRPM() {
         return inputs.rollerVelocityRPM;
@@ -271,20 +266,6 @@ public class Intake extends SubsystemBase {
         // requestIntakeToggle() a no-op in both directions -- from RETRACTED it reported deployed and
         // retracted again; from ACTIVE it reported stowed and re-deployed.
         return getState() != IntakeState.RETRACTED;
-    }
-
-    public boolean areRollerMotorsConnected() {
-        return inputs.rollerLeadMotorConnected
-                && inputs.rollerFollowerMotorConnected;
-    }
-
-    public boolean areExtensionMotorsConnected() {
-        return inputs.extensionLeadMotorConnected
-                && inputs.extensionFollowerMotorConnected;
-    }
-
-    public boolean isKickMotorConnected() {
-        return inputs.kickerMotorConnected;
     }
 
     @Override

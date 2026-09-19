@@ -197,11 +197,6 @@ public class Turret extends SubsystemBase {
         return turretState;
     }
 
-    @Logged(name = "Connected", importance = Importance.CRITICAL)
-    public boolean isConnected() {
-        return inputs.turretMotorConnected;
-    }
-
     @Logged(name = "Angle", importance = Importance.INFO)
     public double getAngle() {
         return inputs.angle;

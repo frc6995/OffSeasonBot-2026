@@ -112,8 +112,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.rollerMotorStatorCurrentAmps[1] = inputs.rollerStatorCurrentAmps;
         inputs.rollerMotorSupplyCurrentAmps[0] = inputs.rollerSupplyCurrentAmps;
         inputs.rollerMotorSupplyCurrentAmps[1] = inputs.rollerSupplyCurrentAmps;
-        inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
-        inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
 
         inputs.extensionPositionMeters = extensionPositionMeters;
         inputs.extensionAppliedVolts = extensionAppliedVolts;
@@ -123,14 +121,11 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.extensionMotorStatorCurrentAmps[1] = inputs.extensionStatorCurrentAmps;
         inputs.extensionMotorSupplyCurrentAmps[0] = inputs.extensionSupplyCurrentAmps;
         inputs.extensionMotorSupplyCurrentAmps[1] = inputs.extensionSupplyCurrentAmps;
-        inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
-        inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
 
         inputs.kickerVelocityRPM = kickerVelocityRPM;
         inputs.kickerAppliedVolts = kickerAppliedVolts;
         inputs.kickerStatorCurrentAmps = kickerState.getTorqueCurrent();
         inputs.kickerSupplyCurrentAmps = kickerState.getSupplyCurrent();
-        inputs.kickerMotorConnected = m_kickerMotor.isConnected();
     }
 
     @Override
