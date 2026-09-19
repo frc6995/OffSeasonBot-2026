@@ -1,7 +1,10 @@
 # Loop overrun — quick reference
 
-Full runbook in [README.md](README.md). One-time setup is already done
-(`LoopTiming.java` + watchdog epochs are in the code).
+Full runbook in [README.md](README.md); step-by-step test procedure in
+[TEST_PLAN.md](TEST_PLAN.md). One-time setup is already done
+(`LoopTiming.java` is in the code; the per-subsystem/per-command epoch
+breakdown on overrun comes free from `CommandScheduler`'s own watchdog, no
+extra wiring needed).
 
 ## Run
 

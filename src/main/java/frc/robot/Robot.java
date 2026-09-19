@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -42,9 +41,6 @@ public class Robot extends TimedRobot {
     private double autoSimTime = 20.0; // seconds to wait before disabling autonomous in simulation
 
     private final RobotContainer m_robotContainer;
-
-    /** Profiles loop time; printEpochs() reports an epoch breakdown on overruns. */
-    private final Watchdog m_watchdog = new Watchdog(0.020, () -> {});
 
     /* log and replay timestamp and joystick data */
     // private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -82,11 +78,19 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         LoopTiming.getInstance().start();
 
+        // CommandScheduler.run() carries its own Watchdog (20 ms default) and already prints
+        // a per-subsystem-periodic()/per-command-execute() epoch breakdown automatically when
+        // IT overruns - see CommandScheduler.java. A second Watchdog wrapping this call used to
+        // live here, but it only ever produced one coarse "CommandScheduler.run()" epoch (strictly
+        // less informative than the breakdown above) and - because printEpochs()/reset() ran
+        // unconditionally every loop rather than only on overrun - it also added a real, permanent
+        // per-loop cost: reset()/enable() takes the Watchdog class's shared queue mutex and
+        // reinserts into its static TreeSet of pending watchdogs on every single loop, and
+        // printEpochs() emitted a DriverStation warning roughly once a second forever, not just
+        // when something was actually wrong. That is exactly the kind of unconditional per-loop
+        // work + log spam this runbook tells you to hunt for elsewhere - removed rather than left
+        // as a self-inflicted false lead. See tools/loop_overrun/README.md.
         CommandScheduler.getInstance().run();
-        m_watchdog.addEpoch("CommandScheduler.run()");
-
-        m_watchdog.printEpochs();
-        m_watchdog.reset();
 
         LoopTiming.getInstance().end();
        // SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());

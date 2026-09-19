@@ -21,8 +21,31 @@ Written for agents and first-timers alike. Start here, follow it in order.
 | Piece | File | What it gives you |
 |---|---|---|
 | Loop timer | `src/main/java/frc/robot/util/LoopTiming.java` | `currentMs`, `minMs`, `avgMs`, `maxMs`, `overrunCount` published to NT table `/LoopTiming` every loop; min/avg/max roll over every ~5 s |
-| Watchdog epochs | `Robot.java` (`m_watchdog`) | WPILib **prints an epoch table automatically on every overrun**, showing which stage ate the time |
+| Watchdog epochs | `CommandScheduler.run()` (WPILib, not our code) | `CommandScheduler` carries its own internal `Watchdog` (20 ms default) and **prints a per-subsystem-`periodic()`/per-command-`execute()` epoch breakdown automatically, only when it overruns** — no code here has to ask for it |
 | SSH profiler | `tools/deploy-and-profile.sh` | deploys, then live-tails the roboRIO program log over SSH, filtering for overruns/errors |
+
+**A second `Watchdog` used to be wired up by hand in `Robot.java`'s
+`robotPeriodic()`, wrapping just the `CommandScheduler.run()` call as one
+coarse epoch and calling `printEpochs()`/`reset()` unconditionally every
+loop.** It has been removed. Two problems with it, found while reviewing this
+tooling itself:
+
+1. It was strictly *less* informative than what `CommandScheduler` already
+   does internally (one blob epoch vs. a per-subsystem/per-command
+   breakdown), so it added no diagnostic value.
+2. Because it wasn't gated on `isExpired()`, it ran `Watchdog.reset()`
+   (→ `enable()`) — a shared-queue mutex lock + a static `TreeSet`
+   reinsertion — **every single loop, forever**, and printed a
+   `DriverStation` warning roughly once a second regardless of whether the
+   loop was actually overrunning. That's unconditional per-loop lock
+   contention plus permanent log spam — exactly the kind of thing Step 3
+   below tells you to hunt for. The tool meant to diagnose overruns was
+   quietly contributing a small one of its own. Don't reintroduce a custom
+   `Watchdog` in `Robot.java`; `CommandScheduler`'s own watchdog isn't
+   reachable from outside to add epochs to, so if you need something finer
+   than its per-subsystem breakdown, scope a one-off `Tracer` around the
+   single suspect line you're bisecting and delete it afterward, rather than
+   leaving a second always-on `Watchdog` running.
 
 ## How to run it
 
@@ -61,10 +84,11 @@ is your target.
 ### Step 3 — check the usual suspects (most common first)
 | Suspect | Why it's slow | How to check |
 |---|---|---|
-| `System.out.println` / dashboard spam | `println` is very expensive on the roboRIO; NT floods cost bandwidth | grep the codebase for `println`; count NT publishes per loop |
-| CAN traffic | every `getX()` can be a bus read if the signal isn't cached at a set frequency | Phoenix 6: signals should be fetched via cached status signals (`setUpdateFrequencyHz`); check device utilization in **Phoenix Tuner's diagnostic server** (browser to `http://roborio-6995-frc.local`, port 1250) |
+| **A device with no CAN wire, polled through error-checking calls** | On this robot this was the confirmed #1 cause, not logging volume. `PowerDistribution`'s error-checking getters (`getVoltage`, `getAllCurrents`, `getTotalCurrent`, `getTotalPower`, `getTotalEnergy`, `getTemperature` — the non-`NoError` JNI variants) were called every loop against a PDP with **no CAN wire installed**; `CANBus.getStatus()` is separately documented as blocking up to 1 ms. Removing that polling (`PowerMonitor`) was the fix that actually moved the number; unbinding Epilogue logging, tested independently, was not measurable. | Check every device's CAN connection *first*, before profiling anything. If a getter can throw/report a CAN error, assume it can also block/retry when the device never answers. |
+| CAN traffic / uncached signals | every `getX()` can be a bus read if the signal isn't cached at a set frequency | Phoenix 6: signals should be fetched via cached status signals and rated with `BaseStatusSignal.setUpdateFrequencyForAll` before `ParentDevice.optimizeBusUtilizationForAll`; check device utilization in **Phoenix Tuner's diagnostic server** (browser to `http://roborio-6995-frc.local`, port 1250) or read `CANBus.getStatus().BusUtilization`. **Already done for every `*IOTalonFX` class and the drivetrain in this repo** — see `CtreUtil.kMechanismSignalFrequencyHz`/`kCurrentSignalFrequencyHz` and each IO's constructor. Note this optimization reduces bus/background-thread load, not `refreshAll()` cost (documented non-blocking) — expect it to help bus headroom more than raw loop time. |
+| `System.out.println` / dashboard spam | `println` is very expensive on the roboRIO; NT floods cost bandwidth | grep the codebase for `println`; count NT publishes per loop. **Already ruled out here**: `Epilogue.bind(this)` and `DataLogManager`'s data log are both commented out in `Robot.java`, and unbinding Epilogue was A/B tested with no measurable loop-time change — don't re-spend time on logging volume unless that wiring changes. |
 | Vision processing on the RIO | AprilTag detection is heavy; it belongs on the coprocessor | is any Photon/Limelight solve running on the RIO thread? |
-| Blocking calls | sleeps, waits, synchronous network fetches inside `periodic()` | code review of the bisected subsystem |
+| Blocking calls | sleeps, waits, synchronous network fetches/CAN config-applies inside `periodic()` | code review of the bisected subsystem. `CurrentLimitManager` deliberately dispatches its hardware config-apply calls onto a background thread for exactly this reason (see its class javadoc) — a good pattern to point to if another subsystem is found doing a blocking config-apply inline. |
 
 ### Step 4 — GC / memory (the invisible cause)
 Java GC pauses are the classic *intermittent* overrun that epoch tables don't
