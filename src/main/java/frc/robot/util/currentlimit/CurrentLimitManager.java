@@ -162,7 +162,6 @@ public class CurrentLimitManager extends SubsystemBase {
                 dispatchApply(name, target.apply, want);
             }
         }
-       
     }
 
     // Runs applyLimit off the main thread (see class javadoc). Exceptions are caught rather than

@@ -38,14 +38,11 @@ public interface IntakeIO {
         /** Per-motor supply current, indexed [lead, follower]. */
         public double[] rollerMotorSupplyCurrentAmps = new double[kRollerMotorCount];
         public double[] rollerMotorStatorCurrentAmps = new double[kRollerMotorCount];
-        public boolean rollerLeadMotorConnected;
-        public boolean rollerFollowerMotorConnected;
 
         public double kickerVelocityRPM;
         public double kickerAppliedVolts;
         public double kickerStatorCurrentAmps;
         public double kickerSupplyCurrentAmps;
-        public boolean kickerMotorConnected;
 
         public double extensionPositionMeters;
         public double extensionAppliedVolts;
@@ -56,7 +53,5 @@ public interface IntakeIO {
         /** Per-motor supply current, indexed [lead, follower]. */
         public double[] extensionMotorSupplyCurrentAmps = new double[kExtensionMotorCount];
         public double[] extensionMotorStatorCurrentAmps = new double[kExtensionMotorCount];
-        public boolean extensionLeadMotorConnected;
-        public boolean extensionFollowerMotorConnected;
     }
 }

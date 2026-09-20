@@ -186,8 +186,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        ;
-
+        optimizeSignals();
     }
 
     /**
@@ -213,8 +212,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        ;
-
+        optimizeSignals();
     }
 
     /**
@@ -256,7 +254,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        ;
+        optimizeSignals();
+    }
+
+    /**
+     * Slows every status frame the drivetrain's devices publish that nothing reads down to 4 Hz.
+     *
+     * <p>Uses CTRE's drivetrain-aware {@code SwerveDrivetrain.optimizeBusUtilization()} rather
+     * than calling ParentDevice directly, because it covers the Pigeon and both CANcoders as well
+     * as the eight motors, and CTRE documents that "all signals necessary for drivetrain
+     * functionality will remain enabled" - the odometry thread's frames are set natively and are
+     * not affected.
+     *
+     * <p>The supply current signals this class reads are given an explicit rate by
+     * {@link #createSupplyCurrentSignals}, which runs as a field initializer and therefore before
+     * any constructor body reaches here, so they survive the optimize too.
+     */
+    private void optimizeSignals() {
+        // The Pigeon's QUATERNION signals, specifically. ATVision calls
+        // Pigeon2.getRotation3d() every loop, and that method refreshes QuatW/X/Y/Z - not
+        // yaw/pitch/roll. Odometry only needs yaw, so "signals necessary for drivetrain
+        // functionality" does not cover the quaternion and the optimize below would drop it from
+        // its 100 Hz CAN FD default to 4 Hz. That would feed MegaTag2 a robot orientation whose
+        // roll and pitch are up to 250 ms stale, and stale the tilt-rejection check with it.
+        var pigeon = getPigeon2();
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                CtreUtil.kMechanismSignalFrequencyHz,
+                pigeon.getQuatW(), pigeon.getQuatX(), pigeon.getQuatY(), pigeon.getQuatZ());
+
+        CtreUtil.reportIfNotOk("Drivetrain optimize bus utilization", optimizeBusUtilization());
     }
 
     /**

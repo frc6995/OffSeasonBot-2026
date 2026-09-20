@@ -71,7 +71,6 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
     inputs.spinAppliedVolts = spinAppliedVolts;
     inputs.spinStatorCurrentAmps = spinState.getTorqueCurrent();
     inputs.spinSupplyCurrentAmps = spinState.getSupplyCurrent();
-    inputs.spinMotorConnected = true;
 
     inputs.indexVelocityRPM = indexVelocityRPM;
     inputs.indexAppliedVolts = indexAppliedVolts;
@@ -83,7 +82,5 @@ public class DyeRotorIOSimTalonFX extends DyeRotorIOTalonFX {
     inputs.indexMotorStatorCurrentAmps[1] = inputs.indexStatorCurrentAmps;
     inputs.indexMotorSupplyCurrentAmps[0] = inputs.indexSupplyCurrentAmps;
     inputs.indexMotorSupplyCurrentAmps[1] = inputs.indexSupplyCurrentAmps;
-    inputs.indexLeadMotorConnected = true;
-    inputs.indexFollowerMotorConnected = true;
   }
 }

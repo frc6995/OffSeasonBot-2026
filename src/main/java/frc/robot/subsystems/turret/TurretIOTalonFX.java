@@ -11,8 +11,8 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -23,24 +23,27 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.util.ConnectionPoll;
+import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.TurretFeedforward;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
 public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
-    protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus); 
-    /** Throttles the isConnected() polling below; see ConnectionPoll. */
-    private final ConnectionPoll connectionPoll = new ConnectionPoll();
+    protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus);
 
-    protected final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0);
+    private final TurretFeedforward m_feedforward;
+
+    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
 
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<AngularVelocity> velocitySignal;
     protected StatusSignal<Voltage> voltSignal;
     protected StatusSignal<Current> statorCurrentSignal;
     protected StatusSignal<Current> supplyCurrentSignal;
+
+    protected double cachedAngle = 0;
 
     public TurretIOTalonFX() {
         configMotor();
@@ -52,10 +55,30 @@ public class TurretIOTalonFX implements TurretIO {
         statorCurrentSignal = m_turretMotor.getStatorCurrent();
         supplyCurrentSignal = m_turretMotor.getSupplyCurrent();
 
+        m_feedforward = new TurretFeedforward(
+            TurretConstants.kSpringForceN,
+            TurretConstants.kEChainBaseWidth / 2.0,
+            TurretConstants.kEChainBaseLength / 2.0,
+            TurretConstants.kNMPerVolt,
+            -135.612
+        );
+
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+
+        // Must come before the optimize below, and must cover every signal updateInputs()
+        // refreshes - anything left out silently drops to 4 Hz. For this motor that would mean
+        // selectClosestAngle() and the vision camera transform running on a stale angle.
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                CtreUtil.kMechanismSignalFrequencyHz, angleSignal, velocitySignal, voltSignal);
+
+        // Everything else this motor publishes - duty cycle, torque current, temperatures,
+        // closed-loop telemetry, fault frames - is never read here. On CAN FD all of it defaults
+        // to 100 Hz, so Phoenix's receive thread decodes it every loop for nothing.
+        CtreUtil.reportIfNotOk("Turret optimize bus utilization",
+                ParentDevice.optimizeBusUtilizationForAll(m_turretMotor));
     }
 
     private void configMotor() {
@@ -83,14 +106,19 @@ public class TurretIOTalonFX implements TurretIO {
                 .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
                 .withSensorToMechanismRatio(kReduction);
 
-        config.Slot0 = 
+        config.Slot0 =
             new Slot0Configs()
                 .withKP(kP)
                 .withKV(kV)
                 .withKA(kA)
                 .withKS(kS);
-        
-        config.SoftwareLimitSwitch = 
+
+        config.MotionMagic =
+            new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(angleToMechanismRotations(kCruiseVelocityDegPerSec))
+                .withMotionMagicAcceleration(angleToMechanismRotations(kMaxAccelerationDegPerSec2));
+
+        config.SoftwareLimitSwitch =
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
                 .withForwardSoftLimitThreshold(angleToMechanismRotations(kMaxAngleDeg))
@@ -114,17 +142,14 @@ public class TurretIOTalonFX implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         BaseStatusSignal.refreshAll(angleSignal, velocitySignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
 
-        inputs.angle = mechanismToAngleRotations(angleSignal.getValueAsDouble());
+        cachedAngle = angleSignal.getValueAsDouble();
+
+        inputs.angle = mechanismToAngleDegrees(cachedAngle);
         // SensorToMechanismRatio is configured, so this is mechanism rotations/sec.
-        inputs.velocity = mechanismToAngleRotations(velocitySignal.getValueAsDouble());
+        inputs.velocity = mechanismToAngleDegrees(velocitySignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
-        // isConnected() is a JNI signal refresh, not a field read, and the Version signal
-        // behind it only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll.
-        if (connectionPoll.due()) {
-            inputs.turretMotorConnected = m_turretMotor.isConnected();
-        }
     }
 
     @Override
@@ -132,6 +157,7 @@ public class TurretIOTalonFX implements TurretIO {
         double clampedAngle = MathUtil.clamp(angle, kMinAngleDeg, kMaxAngleDeg);
 
         double rotations = clampedAngle / 360;
+        // positionRequest.FeedForward = -m_feedforward.calculate(cachedAngle * Math.PI * 2.0);
         m_turretMotor.setControl(positionRequest.withPosition(rotations));
     }
     
@@ -143,7 +169,7 @@ public class TurretIOTalonFX implements TurretIO {
         return angle / 360.0;
     }
 
-    protected double mechanismToAngleRotations(double rotations) {
+    protected double mechanismToAngleDegrees(double rotations) {
         return rotations * 360.0;
     }
 

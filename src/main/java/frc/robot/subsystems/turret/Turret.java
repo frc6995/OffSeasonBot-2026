@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
+import frc.robot.util.TurretFeedforward;
 import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
@@ -22,11 +23,11 @@ public class Turret extends SubsystemBase {
         public static final int kCANID = 45;
 
         // Tune PID/FF constants
-        public static final double kP = 30;
+        public static final double kP = 400;
         public static final double kI = 0;
-        public static final double kD = 0;
-        public static final double kS = 0;
-        public static final double kV = 0;
+        public static final double kD = 2;
+        public static final double kS = 0.2;
+        public static final double kV = 5;
         public static final double kA = 0;
 
         public static final double kStatorCurrentLimitAmps = 60;
@@ -35,6 +36,9 @@ public class Turret extends SubsystemBase {
         public static final double kMinAngleDeg = -288-135.612;
         public static final double kMaxAngleDeg = 288-135.612;
         public static final double kSafeShotAngleDeg = 0;
+
+        public static final double kCruiseVelocityDegPerSec = 720;
+        public static final double kMaxAccelerationDegPerSec2 = 3600;
 
         public static final double kReduction = 32.5;
         public static final double kMOI = 0.0873236726;
@@ -61,6 +65,7 @@ public class Turret extends SubsystemBase {
         public static final double kEChainBaseWidth = 9.375 * 0.0254;
         public static final double kEChainBaseLength = 11.385 * 0.0254;
         public static final double kNMPerVolt = 48.9;
+        public static final double kSpringForceN = 15 * 4.44822162;
     }
 
     public enum TurretState {
@@ -78,7 +83,6 @@ public class Turret extends SubsystemBase {
 
     private TurretIO io;
     private Supplier<ShooterTargetData> shotData;
-
     
     private TurretIOInputs inputs = new TurretIOInputs();
 
@@ -88,6 +92,9 @@ public class Turret extends SubsystemBase {
     public Turret(TurretIO io, Supplier<ShooterTargetData> shotData) {
         this.io = io;
         this.shotData = shotData;
+
+        
+
         RobotVisualizer.addTurret(turretLigament);
     }
 
@@ -146,22 +153,25 @@ public class Turret extends SubsystemBase {
 
         angle = MathUtil.inputModulus(angle, -180, 180);
 
+        boolean isValid = withinBounds(angle);
+
         double smallestAngle = angle;
         double smallestDifference = Math.abs(angle - currentAngle);
 
         if (angle >= 0) {
             double alt = angle - 360;
             double diff = Math.abs(alt - currentAngle);
-            if (diff < smallestDifference) {
+            if ((diff < smallestDifference || !isValid) && withinBounds(alt)) {
                 smallestDifference = diff;
                 smallestAngle = alt;
+                isValid = true;
             }
         }
 
         if (angle <= 0) {
             double alt = angle + 360;
             double diff = Math.abs(alt - currentAngle);
-            if (diff < smallestDifference) {
+            if ((diff < smallestDifference || !isValid) && withinBounds(alt)) {
                 smallestDifference = diff;
                 smallestAngle = alt;
             }
@@ -178,14 +188,13 @@ public class Turret extends SubsystemBase {
         return angle;
     }
 
+    private boolean withinBounds(double angleDeg) {
+        return angleDeg < TurretConstants.kMaxAngleDeg && angleDeg > TurretConstants.kMinAngleDeg;
+    }
+
     @Logged(name = "State", importance = Importance.CRITICAL)
     public TurretState getState() {
         return turretState;
-    }
-
-    @Logged(name = "Connected", importance = Importance.CRITICAL)
-    public boolean isConnected() {
-        return inputs.turretMotorConnected;
     }
 
     @Logged(name = "Angle", importance = Importance.INFO)

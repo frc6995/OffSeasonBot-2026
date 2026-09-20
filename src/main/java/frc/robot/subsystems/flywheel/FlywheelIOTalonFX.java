@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -20,7 +21,6 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.Constants.CANBuses;
 import frc.robot.util.ArrayUtil;
-import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
@@ -32,6 +32,18 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // CtreUtil.kCurrentSignalFrequencyHz.
     CtreUtil.setCurrentSignalFrequency(
         ArrayUtil.concat(m_supplyCurrentSignals, m_statorCurrentSignals));
+
+    // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
+    // anything left out silently drops to 4 Hz. Only the lead motor's velocity and voltage are
+    // read; the followers contribute nothing beyond the currents set above.
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        CtreUtil.kMechanismSignalFrequencyHz, m_FlywheelVelocity, m_FlywheelVoltage);
+
+    // Everything else these motors publish is never read here; on CAN FD it all defaults to
+    // 100 Hz, so Phoenix decodes it every loop for nothing.
+    CtreUtil.reportIfNotOk("Flywheel optimize bus utilization",
+        ParentDevice.optimizeBusUtilizationForAll(
+            m_flywheelLeadMotor, m_flywheelFollowMotor1, m_flywheelFollowMotor2, m_flywheelFollowMotor3));
   }
 
   protected final TalonFX m_flywheelLeadMotor = new TalonFX(FlywheelConstants.kLeadMotorCANID, CANBuses.UpperBus);
@@ -41,9 +53,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   protected final TalonFX m_flywheelFollowMotor2 = new TalonFX(FlywheelConstants.kFollowMotor2CANID, CANBuses.UpperBus);
 
   protected final TalonFX m_flywheelFollowMotor3 = new TalonFX(FlywheelConstants.kFollowMotor3CANID, CANBuses.UpperBus);
-
-  /** Throttles the isConnected() polling below; see ConnectionPoll. */
-  private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
   protected VelocityVoltage m_velocityRequest = new VelocityVoltage(0);
 
@@ -128,14 +137,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     for (int i = 0; i < FlywheelIO.kMotorCount; i++) {
       inputs.motorSupplyCurrentAmps[i] = m_supplyCurrentSignals[i].getValueAsDouble();
       inputs.motorStatorCurrentAmps[i] = m_statorCurrentSignals[i].getValueAsDouble();
-    }
-    // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
-    // only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll.
-    if (connectionPoll.due()) {
-      inputs.leadMotorConnected = m_flywheelLeadMotor.isConnected();
-      inputs.followerMotor1Connected = m_flywheelFollowMotor1.isConnected();
-      inputs.followerMotor2Connected = m_flywheelFollowMotor2.isConnected();
-      inputs.followerMotor3Connected = m_flywheelFollowMotor3.isConnected();
     }
   }
 

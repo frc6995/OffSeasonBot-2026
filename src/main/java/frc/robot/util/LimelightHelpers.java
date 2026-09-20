@@ -38,6 +38,12 @@ import edu.wpi.first.net.PortForwarder;
 public class LimelightHelpers {
 
     private static final Map<String, DoubleArrayEntry> doubleArrayEntries = new ConcurrentHashMap<>();
+    // getLimelightNTTableEntry used to look up NetworkTableInstance.getTable(...).getEntry(...)
+    // fresh on every call, unlike the cached path above for double arrays. Measured on-robot
+    // 2026-09-18: that uncached path (hit every loop by getHeartbeat(), among others) cost
+    // 17-35ms per call - most of one entire loop budget, and the single largest contributor to
+    // ATVision.periodic() overruns. Caching it the same way the array entries above already are.
+    private static final Map<String, NetworkTableEntry> ntEntries = new ConcurrentHashMap<>();
 
     /**
      * Represents a Color/Retroreflective Target Result extracted from JSON Output
@@ -1123,7 +1129,8 @@ public class LimelightHelpers {
     }
 
     public static NetworkTableEntry getLimelightNTTableEntry(String tableName, String entryName) {
-        return getLimelightNTTable(tableName).getEntry(entryName);
+        String key = tableName + "/" + entryName;
+        return ntEntries.computeIfAbsent(key, k -> getLimelightNTTable(tableName).getEntry(entryName));
     }
 
     public static DoubleArrayEntry getLimelightDoubleArrayEntry(String tableName, String entryName) {

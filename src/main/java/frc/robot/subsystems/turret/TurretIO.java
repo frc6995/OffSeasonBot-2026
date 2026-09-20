@@ -12,7 +12,6 @@ public interface TurretIO {
         public double appliedVolts;
         public double statorCurrent;
         public double supplyCurrent;
-        public boolean turretMotorConnected;
     }
 
 }

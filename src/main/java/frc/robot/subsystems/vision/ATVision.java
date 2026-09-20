@@ -34,13 +34,14 @@ import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
+import frc.robot.util.LimelightHelpers;
 
 public class ATVision extends SubsystemBase {
     public static class ATVisionConstants {
         public static final String NT_TABLE = "Vision";
 
         public static final double[] kLimelightMT2StdDevCoefficients = {0.085, 0.0};
-        public static final double[] kLimelightMT1StdDevCoefficients = {0.1, 0.015};
+        public static final double[] kLimelightMT1StdDevCoefficients = {0.5, 0.5};
         public static final int kOptimalTagCount = 2;
 
         public static final Pose3d kInitialTurretCameraOffset = solveRobotToCamera(0.0);
@@ -55,6 +56,13 @@ public class ATVision extends SubsystemBase {
         public static final double kEstimateHistorySeconds = 1.0;
         public static final double kMaxEstimateAgeSeconds = 0.4;
         public static final double kClockSkewToleranceSeconds = 0.01;
+        /**
+         * Assumed worst-case delay between {@link #updateTurretCameraOffset} writing the
+         * robot-to-camera geometry and the Limelight actually applying it - used below to look
+         * up what geometry was actually in effect when a given estimate was captured. This write
+         * is never flushed (relies on NT4's normal batching); unrelated to MegaTag2, which this
+         * robot does not use - see {@link #periodic()}.
+         */
         public static final double kOffsetTransportLatencySeconds = 0.02;
         public static final double kMaxTurretMismatchDeg = 3.0;
         public static final double kMaxTurretVelDegPerSec = 180.0;
@@ -163,13 +171,22 @@ public class ATVision extends SubsystemBase {
 
         Pose3d robotToCamera = solveRobotToCamera(turretAngle.getDegrees());
         limelightVision.updateTurretCameraOffset(robotToCamera);
+        // TESTING: force the offset write out immediately instead of relying on NT batching.
+        // If the Limelight applied the offset later than the assumed 20 ms transport latency,
+        // its PnP solve used a stale turret angle and the fused pose arced off-center while the
+        // turret was slewing. Flush here only for the turret camera so fixed cameras keep the
+        // batched (cheap) path. Remove if testing shows no difference.
+        LimelightHelpers.Flush();
         pushedAngleBuffer.addSample(now, turretAngle);
         robotToCameraPublisher.accept(robotToCamera);
 
-        boolean useMegaTag1 = DriverStation.isDisabled() || !headingSeeded;
-        EstimationMode mode = useMegaTag1 ? EstimationMode.MEGATAG1 : EstimationMode.MEGATAG2;
-
-        limelightVision.seedOrientations(seedRotation);
+        // MegaTag1-only by design (confirmed with the team 2026-09-19) - MegaTag2 is never used,
+        // so there is nothing to seed: MegaTag1's PnP solve is vision-only and never reads the
+        // external orientation MegaTag2 needs. That also removes the entire seedOrientations()+
+        // flush() cost this file used to carry (a consistent 20-23ms/loop even throttled, see
+        // git history) - it wasn't just expensive, it was never needed for the mode we actually
+        // run in.
+        EstimationMode mode = EstimationMode.MEGATAG1;
         limelightVision.periodic(mode);
 
         boolean hasTurretCameraEstimate = hasTurretCameraEstimate();
@@ -179,8 +196,6 @@ public class ATVision extends SubsystemBase {
             accepted += acceptPhotonEstimates();
             photonVision.periodic();
         }
-
-        limelightVision.flush();
 
         headingSeededPublisher.accept(headingSeeded);
         seededPosePublisher.accept(new Pose3d(Translation3d.kZero, seedRotation));

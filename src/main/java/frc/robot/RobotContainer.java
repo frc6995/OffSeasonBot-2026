@@ -31,6 +31,7 @@ import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
+import frc.robot.util.Elastic;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
@@ -69,7 +70,7 @@ public class RobotContainer {
             Utils.isSimulation()
                 ? new NoneATLimelightVision()
                 : new RealATLimelightVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
-            Utils.isSimulation()
+            true //Utils.isSimulation()
                 ? null
                 : new RealPhotonATVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
             m_drivetrain::state,
@@ -95,6 +96,42 @@ public class RobotContainer {
         configureBindings();
         SignalLogger.enableAutoLogging(false);
         RobotVisualizer.setupVisualizer();
+        warmUpAutoAlignCommands();
+        warmUpElastic();
+    }
+
+    /**
+     * Touches {@link Elastic} here so its static initializer - including the Jackson
+     * {@code ObjectMapper} it constructs for {@code sendNotification}, unrelated to
+     * {@code selectTab} but initialized together as one class - runs during construction rather
+     * than at the first real {@code selectTab} call. Confirmed on-robot 2026-09-19 via a scoped
+     * Tracer bracketing every line of {@code teleopInit()}: {@code cancelAuto} and
+     * {@code currentLimitManager.setEnabled} cost microseconds each, but {@code Elastic
+     * .selectTab("Teleoperated")} alone cost 3.15-3.79s, reproducible across every boot where
+     * auto never ran first (so this was the first time anything touched {@code Elastic} at all) -
+     * this is what the runbook's "large overrun at start of teleop" reports were.
+     */
+    private void warmUpElastic() {
+        Elastic.selectTab("Warmup");
+    }
+
+    /**
+     * Constructs one throwaway instance of each {@code Commands.defer(...)}-wrapped auto-align
+     * command bound below, purely to pay their first-use class-loading/JIT cost here during
+     * construction instead of at the driver's first button press. Confirmed on-robot
+     * 2026-09-19: pressing joystick.b()/x() for the first time each boot cost 115-135ms in
+     * {@code DeferredCommand.initialize()} - reproducible on two separate deploys, i.e. a real,
+     * repeatable one-time tax rather than random jitter, and one big enough to blow the loop
+     * budget by itself. Neither constructor below does anything beyond field assignment (no CAN
+     * writes, no scheduling), so building-and-discarding one of each here is side-effect-free.
+     */
+    private void warmUpAutoAlignCommands() {
+        new AutoAlignFixedHeading(
+                m_drivetrain.getPose(),
+                m_drivetrain,
+                true,
+                RotationControlMode.VELOCITY_LIMITED_PROFILE);
+        new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile());
     }
 
     private void configureBindings() {
@@ -135,10 +172,6 @@ public class RobotContainer {
         // let releasing one button cancel a shot still being held via the other.
         joystick.rightBumper().or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
-        /* For Cadsim testing */
-        // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));
-        // joystick.y().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(0)));
-    
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
                 () -> new AutoAlignFixedHeading(
@@ -148,8 +181,6 @@ public class RobotContainer {
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(m_drivetrain)));
         
-        // Deferred so the pose (and its alliance flip) is re-evaluated every time
-        // the button is pressed
         joystick.x().whileTrue(Commands.defer(
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));

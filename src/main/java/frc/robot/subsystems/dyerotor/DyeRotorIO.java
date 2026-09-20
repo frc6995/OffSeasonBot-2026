@@ -18,7 +18,6 @@ public interface DyeRotorIO {
     public double spinAppliedVolts;
     public double spinStatorCurrentAmps;
     public double spinSupplyCurrentAmps;
-    public boolean spinMotorConnected;
 
     public double indexPositionRotations;
     public double indexVelocityRPM;
@@ -33,7 +32,5 @@ public interface DyeRotorIO {
      */
     public double[] indexMotorSupplyCurrentAmps = new double[kIndexMotorCount];
     public double[] indexMotorStatorCurrentAmps = new double[kIndexMotorCount];
-    public boolean indexLeadMotorConnected;
-    public boolean indexFollowerMotorConnected;
   }
 }

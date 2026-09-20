@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -19,14 +20,11 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.hood.Hood.HoodConstants;
-import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
-public class HoodIOTalonFX implements HoodIO {   
+public class HoodIOTalonFX implements HoodIO {
 
-    protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus); 
-    /** Throttles the isConnected() polling below; see ConnectionPoll. */
-    private final ConnectionPoll connectionPoll = new ConnectionPoll();
+    protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus);
 
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(false);
     
@@ -41,6 +39,16 @@ public class HoodIOTalonFX implements HoodIO {
         // which is not guaranteed fast enough to resolve a brownout. See
         // CtreUtil.kCurrentSignalFrequencyHz.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+
+        // Must come before the optimize below, and must cover every signal updateInputs()
+        // refreshes - anything left out silently drops to 4 Hz.
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                CtreUtil.kMechanismSignalFrequencyHz, angleSignal, voltSignal);
+
+        // Everything else this motor publishes is never read here; on CAN FD it all defaults to
+        // 100 Hz, so Phoenix decodes it every loop for nothing.
+        CtreUtil.reportIfNotOk("Hood optimize bus utilization",
+                ParentDevice.optimizeBusUtilizationForAll(m_hoodMotor));
     }
 
     public void configMotor() {
@@ -97,11 +105,6 @@ public class HoodIOTalonFX implements HoodIO {
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
-        // isConnected() is a JNI signal refresh, not a field read, and the Version signal
-        // behind it only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll.
-        if (connectionPoll.due()) {
-            inputs.hoodMotorConnected = m_hoodMotor.isConnected();
-        }
     }
 
     @Override

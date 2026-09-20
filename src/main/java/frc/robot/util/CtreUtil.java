@@ -34,6 +34,21 @@ public final class CtreUtil {
     public static final double kCurrentSignalFrequencyHz = 20.0;
 
     /**
+     * Rate for the signals the IO layers actually close the loop on - position, velocity and
+     * applied voltage - in Hz. This is already the CAN FD default, so requesting it changes
+     * nothing by itself.
+     *
+     * <p>It has to be requested explicitly anyway, because
+     * {@link com.ctre.phoenix6.hardware.ParentDevice#optimizeBusUtilizationForAll} slows every
+     * signal that was NOT given a frequency down to 4 Hz. Miss one and it drops silently - no
+     * error, just a stale reading.
+     *
+     * <p>A constant rather than a literal at five call sites; the calls themselves are stock
+     * {@link BaseStatusSignal#setUpdateFrequencyForAll} on purpose.
+     */
+    public static final double kMechanismSignalFrequencyHz = 100.0;
+
+    /**
      * Publishes the given current signals at {@link #kCurrentSignalFrequencyHz}. Call once from an
      * IO layer's constructor with every current signal it reads; see that constant for why the
      * defaults are not relied on.

@@ -13,9 +13,6 @@ public class TurretFeedforward {
     /** Rectangle half-height [m] */
     private final double halfHeightM;
 
-    /** Turret center -> effective chain contact radius [m] */
-    private final double turretRadiusM;
-
     /** Turret torque generated per volt [N*m/V] */
     private final double torquePerVolt;
 
@@ -27,18 +24,15 @@ public class TurretFeedforward {
             double springForceN,
             double halfWidthM,
             double halfHeightM,
-            double turretRadiusM,
             double torquePerVolt,
             double angleOffsetRad) {
 
         this.springForceN = springForceN;
         this.halfWidthM = halfWidthM;
         this.halfHeightM = halfHeightM;
-        this.turretRadiusM = turretRadiusM;
         this.torquePerVolt = torquePerVolt;
         this.angleOffsetRad = angleOffsetRad;
     }
-
 
     /**
      * Calculates the point where a ray from the turret

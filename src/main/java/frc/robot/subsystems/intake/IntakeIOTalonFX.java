@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -23,7 +24,6 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
-import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
@@ -42,9 +42,6 @@ public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_kickerMotor
     = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
-    /** Throttles the isConnected() polling below; see ConnectionPoll. */
-    private final ConnectionPoll connectionPoll = new ConnectionPoll();
-
     protected VelocityVoltage m_rollerVelocityRequest = new VelocityVoltage(0);
     protected VelocityVoltage m_kickerVelocityRequest = new VelocityVoltage(0);
 
@@ -55,7 +52,6 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Voltage> m_rollerAppliedVoltage = m_rollerLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_rollerStatorCurrent = m_rollerLeadMotor.getStatorCurrent();
     private final StatusSignal<Current> m_rollerSupplyCurrent = m_rollerLeadMotor.getSupplyCurrent();
-    private final StatusSignal<Voltage> m_rollerFollowerAppliedVoltage = m_rollerFollowerMotor.getMotorVoltage();
     private final StatusSignal<Current> m_rollerFollowerStatorCurrent = m_rollerFollowerMotor.getStatorCurrent();
     private final StatusSignal<Current> m_rollerFollowerSupplyCurrent = m_rollerFollowerMotor.getSupplyCurrent();
 
@@ -63,7 +59,6 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<Voltage> m_extensionAppliedVoltage = m_extensionLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_extensionStatorCurrent = m_extensionLeadMotor.getStatorCurrent();
     private final StatusSignal<Current> m_extensionSupplyCurrent = m_extensionLeadMotor.getSupplyCurrent();
-    private final StatusSignal<Voltage> m_extensionFollowerAppliedVoltage = m_extensionFollowerMotor.getMotorVoltage();
     private final StatusSignal<Current> m_extensionFollowerStatorCurrent = m_extensionFollowerMotor.getStatorCurrent();
     private final StatusSignal<Current> m_extensionFollowerSupplyCurrent = m_extensionFollowerMotor.getSupplyCurrent();
 
@@ -83,6 +78,22 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_extensionStatorCurrent, m_extensionSupplyCurrent,
             m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
             m_kickerStatorCurrent, m_kickerSupplyCurrent);
+
+        // Must come before the optimize below, and must cover every signal updateInputs()
+        // refreshes - anything left out silently drops to 4 Hz.
+        BaseStatusSignal.setUpdateFrequencyForAll(
+            CtreUtil.kMechanismSignalFrequencyHz,
+            m_rollerVelocity, m_rollerAppliedVoltage,
+            m_extensionPosition, m_extensionAppliedVoltage,
+            m_kickerVelocity, m_kickerAppliedVoltage);
+
+        // Everything else these motors publish is never read here; on CAN FD it all defaults to
+        // 100 Hz, so Phoenix decodes it every loop for nothing.
+        CtreUtil.reportIfNotOk("Intake optimize bus utilization",
+            ParentDevice.optimizeBusUtilizationForAll(
+                m_rollerLeadMotor, m_rollerFollowerMotor,
+                m_extensionLeadMotor, m_extensionFollowerMotor,
+                m_kickerMotor));
     }
 
     protected void configureMotors() {
@@ -190,21 +201,10 @@ public class IntakeIOTalonFX implements IntakeIO {
         // Batched into a single CAN round trip instead of one refreshAll() per motor.
         BaseStatusSignal.refreshAll(
             m_rollerVelocity, m_rollerAppliedVoltage, m_rollerStatorCurrent, m_rollerSupplyCurrent,
-            m_rollerFollowerAppliedVoltage, m_rollerFollowerStatorCurrent, m_rollerFollowerSupplyCurrent,
+            m_rollerFollowerStatorCurrent, m_rollerFollowerSupplyCurrent,
             m_extensionPosition, m_extensionAppliedVoltage, m_extensionStatorCurrent, m_extensionSupplyCurrent,
-            m_extensionFollowerAppliedVoltage, m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
+            m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
             m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
-
-        // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
-        // only updates at 4Hz -- so these five ran 50 times a second to learn the same thing twelve
-        // times over. See ConnectionPoll. The inputs keep their last value between polls.
-        if (connectionPoll.due()) {
-            inputs.rollerLeadMotorConnected = m_rollerLeadMotor.isConnected();
-            inputs.rollerFollowerMotorConnected = m_rollerFollowerMotor.isConnected();
-            inputs.extensionLeadMotorConnected = m_extensionLeadMotor.isConnected();
-            inputs.extensionFollowerMotorConnected = m_extensionFollowerMotor.isConnected();
-            inputs.kickerMotorConnected = m_kickerMotor.isConnected();
-        }
 
         inputs.rollerVelocityRPM = m_rollerVelocity.getValueAsDouble() * 60;
         inputs.rollerAppliedVolts = m_rollerAppliedVoltage.getValueAsDouble();

@@ -12,6 +12,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -21,7 +22,6 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
-import frc.robot.util.ConnectionPoll;
 import frc.robot.util.CtreUtil;
 
 public class DyeRotorIOTalonFX implements DyeRotorIO {
@@ -30,9 +30,6 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
       Constants.CANBuses.UpperBus);
   protected final TalonFX m_indexerFollow = new TalonFX(DyeRotorConstants.kFollowIndexMotorCANID,
       Constants.CANBuses.UpperBus);
-
-  /** Throttles the isConnected() polling below; see ConnectionPoll. */
-  private final ConnectionPoll connectionPoll = new ConnectionPoll();
 
   private final VelocityVoltage m_spinRequest = new VelocityVoltage(0).withEnableFOC(true);
   private final VoltageOut m_indexerRequest = new VoltageOut(0);
@@ -60,6 +57,18 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
         m_spinSupCurrent, m_spinStatCurrent,
         m_indexSupCurrent, m_indexStatCurrent,
         m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
+
+    // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
+    // anything left out silently drops to 4 Hz. The index follower publishes nothing this code
+    // reads beyond the currents set above.
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        CtreUtil.kMechanismSignalFrequencyHz,
+        m_spinVelocity, m_spinVoltage, m_indexVelocity, m_indexVoltage);
+
+    // Everything else these motors publish is never read here; on CAN FD it all defaults to
+    // 100 Hz, so Phoenix decodes it every loop for nothing.
+    CtreUtil.reportIfNotOk("Dye Rotor optimize bus utilization",
+        ParentDevice.optimizeBusUtilizationForAll(m_spinMotor, m_indexerLead, m_indexerFollow));
   }
 
   protected void configureMotors() {
@@ -141,15 +150,6 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     inputs.indexMotorStatorCurrentAmps[1] = m_indexFollowerStatCurrent.getValueAsDouble();
     inputs.indexMotorSupplyCurrentAmps[0] = inputs.indexSupplyCurrentAmps;
     inputs.indexMotorSupplyCurrentAmps[1] = m_indexFollowerSupCurrent.getValueAsDouble();
-
-    // isConnected() is a JNI signal refresh, not a field read, and the Version signal behind it
-    // only updates at 4Hz -- polling every loop repeats work. See ConnectionPoll. Grouped here
-    // rather than left inline with the spin/index readings so there is one guard, not two.
-    if (connectionPoll.due()) {
-      inputs.spinMotorConnected = m_spinMotor.isConnected();
-      inputs.indexLeadMotorConnected = m_indexerLead.isConnected();
-      inputs.indexFollowerMotorConnected = m_indexerFollow.isConnected();
-    }
   }
 
   @Override

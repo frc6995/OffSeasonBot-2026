@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.Elastic;
+import frc.robot.util.LoopTiming;
 
 
 //Don't edit this one, edit the one at line 60
@@ -75,7 +76,23 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        CommandScheduler.getInstance().run(); 
+        LoopTiming.getInstance().start();
+
+        // CommandScheduler.run() carries its own Watchdog (20 ms default) and already prints
+        // a per-subsystem-periodic()/per-command-execute() epoch breakdown automatically when
+        // IT overruns - see CommandScheduler.java. A second Watchdog wrapping this call used to
+        // live here, but it only ever produced one coarse "CommandScheduler.run()" epoch (strictly
+        // less informative than the breakdown above) and - because printEpochs()/reset() ran
+        // unconditionally every loop rather than only on overrun - it also added a real, permanent
+        // per-loop cost: reset()/enable() takes the Watchdog class's shared queue mutex and
+        // reinserts into its static TreeSet of pending watchdogs on every single loop, and
+        // printEpochs() emitted a DriverStation warning roughly once a second forever, not just
+        // when something was actually wrong. That is exactly the kind of unconditional per-loop
+        // work + log spam this runbook tells you to hunt for elsewhere - removed rather than left
+        // as a self-inflicted false lead. See tools/loop_overrun/README.md.
+        CommandScheduler.getInstance().run();
+
+        LoopTiming.getInstance().end();
        // SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
     }
 
