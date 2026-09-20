@@ -172,10 +172,6 @@ public class RobotContainer {
         // let releasing one button cancel a shot still being held via the other.
         joystick.rightBumper().or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
-        /* For Cadsim testing */
-        // joystick.x().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(90)));
-        // joystick.y().onTrue(Commands.runOnce(() -> m_Superstructure.m_turret.setAngle(0)));
-    
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(
                 () -> new AutoAlignFixedHeading(
@@ -185,8 +181,6 @@ public class RobotContainer {
                         RotationControlMode.VELOCITY_LIMITED_PROFILE),
                 Set.of(m_drivetrain)));
         
-        // Deferred so the pose (and its alliance flip) is re-evaluated every time
-        // the button is pressed
         joystick.x().whileTrue(Commands.defer(
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));
