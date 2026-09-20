@@ -34,6 +34,7 @@ import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
+import frc.robot.util.LimelightHelpers;
 
 public class ATVision extends SubsystemBase {
     public static class ATVisionConstants {
@@ -170,6 +171,12 @@ public class ATVision extends SubsystemBase {
 
         Pose3d robotToCamera = solveRobotToCamera(turretAngle.getDegrees());
         limelightVision.updateTurretCameraOffset(robotToCamera);
+        // TESTING: force the offset write out immediately instead of relying on NT batching.
+        // If the Limelight applied the offset later than the assumed 20 ms transport latency,
+        // its PnP solve used a stale turret angle and the fused pose arced off-center while the
+        // turret was slewing. Flush here only for the turret camera so fixed cameras keep the
+        // batched (cheap) path. Remove if testing shows no difference.
+        LimelightHelpers.Flush();
         pushedAngleBuffer.addSample(now, turretAngle);
         robotToCameraPublisher.accept(robotToCamera);
 
