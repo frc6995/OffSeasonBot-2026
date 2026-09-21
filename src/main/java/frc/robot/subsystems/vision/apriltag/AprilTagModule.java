@@ -186,7 +186,7 @@ public class AprilTagModule {
         DoubleArrayEntry poseEntry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, isMegaTag2 ? "botpose_orb_wpiblue" : "botpose_wpiblue");
         TimestampedDoubleArray tsValue = poseEntry.getAtomic();
         double[] poseArray = tsValue.value;
-        long timestamp = tsValue.timestamp;
+        long timestamp = tsValue.serverTime;
 
         if (poseArray.length == 0 || tsValue.timestamp == 0) {
             // Handle the case where no data is available
