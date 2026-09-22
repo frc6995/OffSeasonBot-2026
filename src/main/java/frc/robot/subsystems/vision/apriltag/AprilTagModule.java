@@ -186,7 +186,11 @@ public class AprilTagModule {
         DoubleArrayEntry poseEntry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, isMegaTag2 ? "botpose_orb_wpiblue" : "botpose_wpiblue");
         TimestampedDoubleArray tsValue = poseEntry.getAtomic();
         double[] poseArray = tsValue.value;
-        long timestamp = tsValue.serverTime;
+        // NT4's `timestamp` is the only field in the local (FPGA) time base, so it is the only
+        // one comparable to Timer.getFPGATimestamp() in ATVision's freshness checks. `serverTime`
+        // is in the server time base and is documented as possibly 0 or 1; it is not a valid
+        // capture time here.
+        long timestamp = tsValue.timestamp;
 
         if (poseArray.length == 0 || tsValue.timestamp == 0) {
             // Handle the case where no data is available

@@ -189,8 +189,16 @@ public class ATVision extends SubsystemBase {
         EstimationMode mode = EstimationMode.MEGATAG1;
         limelightVision.periodic(mode);
 
+        // Re-sample the clock before judging estimate freshness. `now` above was taken before the
+        // LimelightHelpers.Flush() and the Limelight NT reads that limelightVision.periodic() does,
+        // and those have measured 17-35ms on-robot (see LimelightHelpers' entry caches). Comparing
+        // a just-arrived estimate's capture time against a `now` that stale makes the estimate look
+        // like it was captured in the future, and rejectReason() drops it. The buffers above keep
+        // the original `now` -- that really is when the chassis/turret state was sampled.
+        double readNow = Timer.getFPGATimestamp();
+
         boolean hasTurretCameraEstimate = hasTurretCameraEstimate();
-        int accepted = acceptLimelightEstimates(now);
+        int accepted = acceptLimelightEstimates(readNow);
 
         if (photonVision != null && !hasTurretCameraEstimate) {
             accepted += acceptPhotonEstimates();
