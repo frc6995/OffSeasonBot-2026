@@ -7,6 +7,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.subsystems.hood.Hood.HoodConstants;
 public class ShotController {
@@ -47,6 +48,7 @@ public class ShotController {
     private final Supplier<Translation2d> passingWallEnd;
 
     private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
+    private double distanceToHubMeters = 0.0;
 
     public ShotController(
         Supplier<Pose2d> robotPose,
@@ -95,6 +97,9 @@ public class ShotController {
     public ShooterTargetData calculate(boolean isPassing) {
         Pose2d currentPose = robotPose.get();
 
+        distanceToHubMeters = goalPose.get().getTranslation().getDistance(currentPose.getTranslation());
+        SmartDashboard.putNumber("Shooter/Distance To Hub Meters", distanceToHubMeters);
+
         ShooterTargetData targetData = isPassing
             ? calculatePassingData(currentPose)
             : calculateScoringData(currentPose);
@@ -135,6 +140,10 @@ public class ShotController {
 
     public ShooterTargetData getCachedData() {
         return cachedData;
+    }
+
+    public double getDistanceToHubMeters() {
+        return distanceToHubMeters;
     }
 
     /**

@@ -177,6 +177,8 @@ public class ATVision extends SubsystemBase {
         // turret was slewing. Flush here only for the turret camera so fixed cameras keep the
         // batched (cheap) path. Remove if testing shows no difference.
         LimelightHelpers.Flush();
+                now = Timer.getFPGATimestamp();
+                
         pushedAngleBuffer.addSample(now, turretAngle);
         robotToCameraPublisher.accept(robotToCamera);
 

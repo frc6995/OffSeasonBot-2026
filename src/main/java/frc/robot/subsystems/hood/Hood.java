@@ -20,7 +20,7 @@ public class Hood extends SubsystemBase {
 
         public static final double[][] kAngleData = {
                 // Distance (Meters), Angle(Degrees)
-                { 1, 12.5 },
+                { 1, 10 },
                 { 2.5, 20 },
                 { 4, 26 },
                 { 5, 30},

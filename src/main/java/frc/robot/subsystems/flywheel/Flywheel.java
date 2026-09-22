@@ -40,12 +40,12 @@ public class Flywheel extends SubsystemBase {
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
     public static final double [][] kShooterData = {
-      {0.0, 2400},
-      {3.0, 2400},
-      {4.0, 2400},
-      {5.0, 2400},
-      {10, 2400},
-      {15.0, 2700}
+      {0.0, 2100},
+      {3.0, 2350},
+      {4.0, 2900},
+      {5.0, 3000},
+      {10, 3400},
+      {15.0, 3800}
     };
 
     // distance from POI.PASSING_WALL
