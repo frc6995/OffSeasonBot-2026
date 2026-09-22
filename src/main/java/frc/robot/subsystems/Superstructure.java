@@ -7,11 +7,13 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.util.POI;
+import frc.robot.util.ShotCalculator;
 import frc.robot.subsystems.dyerotor.DyeRotor;
 import frc.robot.subsystems.dyerotor.DyeRotorIOSimTalonFX;
 import frc.robot.subsystems.dyerotor.DyeRotorIOTalonFX;
@@ -55,12 +57,18 @@ public class Superstructure extends SubsystemBase {
     private final Supplier<Pose2d> m_poseSupplier;
 
     public final ShotController m_shotController;
+    public final ShotCalculator m_shotCalculator;
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
         m_shotController = new ShotController(
             m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
             POI.PASSING_WALL_START, POI.PASSING_WALL_END);
+
+        m_shotCalculator = new ShotCalculator(m_poseSupplier, () -> 
+            ChassisSpeeds.fromRobotRelativeSpeeds(swerveState.get().Speeds, 
+            swerveState.get().Pose.getRotation()), 
+            POI.HUB_CENTER);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIO() {});
@@ -97,6 +105,7 @@ public class Superstructure extends SubsystemBase {
         }
 
         m_shotController.calculate(robotState == RobotState.PASSING);
+        m_shotCalculator.calculateShot();
     }
 
     public Command requestIntakeActive() {

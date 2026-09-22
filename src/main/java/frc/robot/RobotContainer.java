@@ -37,7 +37,6 @@ import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
-
 import java.util.Set;
 
 // @Logged
@@ -53,7 +52,6 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     private final Telemetry logger = new Telemetry();
-    private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain m_drivetrain = new CommandSwerveDrivetrain(
             TunerConstants.DrivetrainConstants,
@@ -63,6 +61,8 @@ public class RobotContainer {
             TunerConstants.BackRight);
 
     public Superstructure m_superstructure = new Superstructure(m_drivetrain::state);
+
+    public CommandXboxController joystick = new CommandXboxController(0);
 
     // No vision simulation -- real-life testing on hardware is more useful than simulating the
     // Limelight, so simulation just runs without vision measurements at all.
@@ -136,21 +136,13 @@ public class RobotContainer {
 
     private void configureBindings() {
         m_drivetrain.setDefaultCommand(
-            m_drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
-                .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-                .withRotationalRate(-joystick.getRightX() * MaxAngularRate)
-        ));
-        
+                m_drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed)
+                        .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+                        .withRotationalRate(-joystick.getRightX() * MaxAngularRate)));
+
         m_drivetrain.registerTelemetry(logger::telemeterize);
 
-        /* 
-        *
-        *
-        *   ACTUAL BINDINGS BELOW 
-        *
-        *
-        */
-
+        // ACTUAL BINDINGS BELOW
         joystick.a().onTrue(m_superstructure.requestIntakeToggle());
 
         joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
@@ -184,9 +176,8 @@ public class RobotContainer {
         joystick.x().whileTrue(Commands.defer(
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));
-
     }
-  
+
     public Command getAutonomousCommand() {
         return autos.selectedCommand();
     }
