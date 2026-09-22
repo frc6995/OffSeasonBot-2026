@@ -8,7 +8,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.util.ShotController.ShooterTargetData;
+import frc.robot.util.ShotController.ShotConstants;
 
 public class ShotCalculator {
 
@@ -19,8 +22,8 @@ public class ShotCalculator {
     private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
 
     //from the shot calculator https://github.com/Maro1810/FRC-Shot-Calculator
-    private final double[] angle_coefficients = {0.0030142681165330827, -2.4717786098474197, 85.55874982794282};
-    private final double[] vel_coefficients = {-0.06857791011905315, 0.8515747825980705, 7.724035484730785};
+    private final double[] angle_coefficients = {-1.4712590406264083, 6.0689490309911935, 64.11638838409094};
+    private final double[] vel_coefficients = {-0.1526463705946785, 1.6055924674659063, 4.314999775236604};
 
     private double LATENCY_SECONDS = 0.02;
 
@@ -32,7 +35,10 @@ public class ShotCalculator {
         return vel_coefficients[0]*(x*x)+vel_coefficients[1]*(x)+vel_coefficients[2];
     };
 
-    private final InterpolatingDoubleTreeMap velocityToRpmMap = new InterpolatingDoubleTreeMap();
+    // private final InterpolatingDoubleTreeMap velocityToRpmMap = new InterpolatingDoubleTreeMap();
+    private final Function<Double,Double> velocityToRpmFunc = (v) -> v*310.1924977;
+
+    private final DoublePublisher m_distancePublisher;
     
     //not sure if the hubPose needs to be a supplier it could just be a pose2d i think
     //THIS REQUIRES FIELD RELATIVE ROBOT SPEEDS
@@ -43,6 +49,9 @@ public class ShotCalculator {
         this.robotPose = robotPose;
         this.robotSpeeds = robotSpeeds;
         this.hubPose = hubPose;
+
+        var table = NetworkTableInstance.getDefault().getTable("ShotCalculator");
+        m_distancePublisher = table.getDoubleTopic("Target Distance").publish();
     }
 
     public ShooterTargetData calculateShot() {
@@ -56,12 +65,16 @@ public class ShotCalculator {
             currentPose.getRotation().plus(new Rotation2d(currentSpeeds.omegaRadiansPerSecond*LATENCY_SECONDS))
         );
 
-        double xDisplacement = (goalPose.getX() - predictedRobotPose.getX());
-        double yDisplacement = (goalPose.getY() - predictedRobotPose.getY());
+        double xDisplacement = (predictedRobotPose.getX() - goalPose.getX());
+        double yDisplacement = (predictedRobotPose.getY() - goalPose.getY());
 
-        double initialTurretAngle = Math.atan2(yDisplacement, xDisplacement);
+        double initialTurretAngle = Math.PI - Math.atan2(yDisplacement, xDisplacement);
 
-        double distance = goalPose.getTranslation().getDistance(predictedRobotPose.getTranslation());
+        double distance = Math.sqrt(Math.pow(xDisplacement, 2) + Math.pow(yDisplacement, 2));
+
+        if(ShotConstants.kShouldLog) {
+            m_distancePublisher.accept(distance);
+        }
 
         double speed = velocity_function.apply(distance);
         double initialHoodAngle = angle_function.apply(distance);
@@ -83,7 +96,7 @@ public class ShotCalculator {
             Math.atan2(speed*Math.sin(initialHoodAngle), v_horizontal_new.getNorm())
         );
 
-        double launchRPM = velocityToRpmMap.get(correctedLaunchSpeed);
+        double launchRPM = velocityToRpmFunc.apply(correctedLaunchSpeed);
 
         cachedData = new ShooterTargetData(launchRPM, correctedHoodAngle, correctedTurretAngle);
         

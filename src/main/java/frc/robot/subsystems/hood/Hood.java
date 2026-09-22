@@ -20,11 +20,11 @@ public class Hood extends SubsystemBase {
 
         public static final double[][] kAngleData = {
                 // Distance (Meters), Angle(Degrees)
-                { 1, 12.5 },
-                { 2.5, 20 },
-                { 4, 26 },
-                { 5, 30},
-                { 6, 40}
+                { 1, 20.84},
+                { 2.5, 20.84},
+                { 4, 20.84},
+                { 5, 20.84},
+                { 6, 20.84}
         };
 
         // distance from the POI.PASSING_WALL line

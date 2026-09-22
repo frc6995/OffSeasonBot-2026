@@ -56,14 +56,14 @@ public class Superstructure extends SubsystemBase {
 
     private final Supplier<Pose2d> m_poseSupplier;
 
-    public final ShotController m_shotController;
+    // public final ShotController m_shotController;
     public final ShotCalculator m_shotCalculator;
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_poseSupplier = () -> swerveState.get().Pose;
-        m_shotController = new ShotController(
-            m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
-            POI.PASSING_WALL_START, POI.PASSING_WALL_END);
+        // m_shotController = new ShotController(
+        //     m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
+        //     POI.PASSING_WALL_START, POI.PASSING_WALL_END);
 
         m_shotCalculator = new ShotCalculator(m_poseSupplier, () -> 
             ChassisSpeeds.fromRobotRelativeSpeeds(swerveState.get().Speeds, 
@@ -72,16 +72,16 @@ public class Superstructure extends SubsystemBase {
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIO() {});
-            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
+            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotCalculator::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotCalculator::getCachedData);
+            this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotCalculator::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
             this.m_intake = new Intake(new IntakeIO(){});
-            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotController::getCachedData);
+            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotCalculator::getCachedData);
+            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotCalculator::getCachedData);
+            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotCalculator::getCachedData);
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
@@ -103,8 +103,6 @@ public class Superstructure extends SubsystemBase {
             // released the shoot button.
             robotState = RobotState.IDLE;
         }
-
-        m_shotController.calculate(robotState == RobotState.PASSING);
         m_shotCalculator.calculateShot();
     }
 

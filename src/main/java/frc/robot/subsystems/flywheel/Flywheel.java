@@ -19,7 +19,7 @@ public class Flywheel extends SubsystemBase {
     // PID Constants
     public static final double kP = 0.25;
     // Feedforward Constants
-    public static final double kS = 0.45;
+    public static final double kS = 0.36;
     public static final double kV = 0.1;
     // CAN IDs
     public static final int kLeadMotorCANID = 40;
@@ -40,12 +40,12 @@ public class Flywheel extends SubsystemBase {
     // public static final double kDiameter = 2;
     // public static final double kMass = 4.15;
     public static final double [][] kShooterData = {
-      {0.0, 2400},
-      {3.0, 2400},
-      {4.0, 2400},
-      {5.0, 2400},
-      {10, 2400},
-      {15.0, 2700}
+      {0.0, 2600},
+      {3.0, 2600},
+      {4.0, 2600},
+      {5.0, 2600},
+      {10, 2600},
+      {15.0, 2600}
     };
 
     // distance from POI.PASSING_WALL
@@ -54,7 +54,7 @@ public class Flywheel extends SubsystemBase {
       {3.0, 1850},
       {4.0, 1950},
       {5.0, 2050},
-      {10, 2500},
+      {10, 2600},
       {15.0, 3500}
     };
 

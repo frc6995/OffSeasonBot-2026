@@ -7,6 +7,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.subsystems.hood.Hood.HoodConstants;
 public class ShotController {
@@ -15,7 +17,7 @@ public class ShotController {
          * Turret shoot-on-the-move gain, in degrees of aim-off per m/s of tangential speed.
          * POSITIVE; {@link ShotController#calculateTurretAngle} subtracts it.
          */
-        public static final double kTurretVelocityComp = 20.0;
+        public static final double kTurretVelocityComp = 0.0;
 
         /**
          * Flywheel shoot-on-the-move gain, in RPM per m/s of radial (closing) speed. Currently
@@ -30,6 +32,8 @@ public class ShotController {
          * ball travel further, so this must be NEGATIVE to flatten the shot.
          */
         public static final double kHoodVelocityComp = 0.0;
+
+        public static final boolean kShouldLog = true;
     }
 
     public static record ShooterTargetData(double flywheelRpm, double hoodAngleDeg, double turretAngleDeg) {}
@@ -45,6 +49,8 @@ public class ShotController {
     private final Supplier<Rotation2d> passingAngle;
     private final Supplier<Translation2d> passingWallStart;
     private final Supplier<Translation2d> passingWallEnd;
+
+    private final DoublePublisher m_distancePublisher;
 
     private ShooterTargetData cachedData = new ShooterTargetData(0, 0, 0);
 
@@ -63,6 +69,9 @@ public class ShotController {
         this.passingWallStart = passingWallStart;
         this.passingWallEnd = passingWallEnd;
         populateLUTs();
+
+        var table = NetworkTableInstance.getDefault().getTable("ShotCalculator");
+        m_distancePublisher = table.getDoubleTopic("Target Distance").publish();
     }
 
     private void populateLUTs() {
@@ -108,6 +117,9 @@ public class ShotController {
 
         Translation2d robotToGoal = targetPose.getTranslation().minus(currentPose.getTranslation());
 
+        if(ShotConstants.kShouldLog) {
+            m_distancePublisher.accept(robotToGoal.getNorm());
+        }
         // robotSpeeds is robot-centric (Phoenix documents SwerveDriveState.Speeds as
         // "the current robot-centric velocity"), but rHat/tHat below are built from robotToGoal
         // and are therefore field-relative. Convert before projecting, or the decomposition is

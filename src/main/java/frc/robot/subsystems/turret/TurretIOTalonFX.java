@@ -109,6 +109,7 @@ public class TurretIOTalonFX implements TurretIO {
         config.Slot0 =
             new Slot0Configs()
                 .withKP(kP)
+                .withKD(kD)
                 .withKV(kV)
                 .withKA(kA)
                 .withKS(kS);
