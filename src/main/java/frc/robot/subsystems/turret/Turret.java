@@ -77,6 +77,10 @@ public class Turret extends SubsystemBase {
 
     private TurretState turretState = TurretState.AIM_CLOSEST;
     private double requestedAngleDeg = 0;
+    // Which selection function MANUAL should re-apply each loop; set by setClosestAngleManual /
+    // setCentralAngleManual. Without this, MANUAL always used selectClosestAngle, silently
+    // discarding setCentralAngleManual's central-angle request after its first tick.
+    private boolean manualUsesCentralAngle = false;
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
     private double commandedAngleDeg = 0;
 
@@ -123,7 +127,9 @@ public class Turret extends SubsystemBase {
             case DISABLED -> io.disable();
             case AIM_CENTRAL -> commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
             case AIM_CLOSEST -> commandedAngleDeg = selectClosestAngle(targetAngleDeg.get());
-            case MANUAL -> commandedAngleDeg = selectClosestAngle(requestedAngleDeg);
+            case MANUAL -> commandedAngleDeg = manualUsesCentralAngle
+                    ? selectCentralAngle(requestedAngleDeg)
+                    : selectClosestAngle(requestedAngleDeg);
             case SAFE_SHOT -> commandedAngleDeg = selectClosestAngle(TurretConstants.kSafeShotAngleDeg);
         }
     }
@@ -144,18 +150,23 @@ public class Turret extends SubsystemBase {
     // just for testing in sim
     public void setAngleManual(double angle) {
         requestedAngleDeg = angle;
+        manualUsesCentralAngle = false;
 
         this.turretState = TurretState.MANUAL;
     }
 
     public void setClosestAngleManual(double angle) {
-        requestedAngleDeg = selectClosestAngle(angle);
+        // Don't resolve via selectClosestAngle here -- periodic()'s MANUAL branch does that every
+        // loop, and that helper also calls io.setAngle, so calling it here too would double-send.
+        requestedAngleDeg = angle;
+        manualUsesCentralAngle = false;
 
         this.turretState = TurretState.MANUAL;
     }
 
     public void setCentralAngleManual(double angle) {
-        requestedAngleDeg = selectCentralAngle(angle);
+        requestedAngleDeg = angle;
+        manualUsesCentralAngle = true;
 
         this.turretState = TurretState.MANUAL;
     }

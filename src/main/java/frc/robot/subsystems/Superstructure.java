@@ -102,8 +102,13 @@ public class Superstructure extends SubsystemBase {
             var state = m_swerveState.get();
              var pose = state.Pose;
              var goalPose = POI.PASSING_WALL_START.get();
-            m_shotProjector.solvePassing(pose.getX(), pose.getY(), pose.getRotation().getRadians(), goalPose.getX());
-            
+            m_shotProjector.solvePassing(
+                pose.getX(),
+                pose.getY(),
+                pose.getRotation().getRadians(),
+                goalPose.getX(),
+                POI.PASSING_ANGLE.get().getRadians());
+
         } else {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
