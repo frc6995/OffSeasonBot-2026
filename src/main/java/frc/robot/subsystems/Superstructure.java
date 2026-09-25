@@ -6,6 +6,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -107,7 +108,7 @@ public class Superstructure extends SubsystemBase {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
             var pose = state.Pose;
-            var speeds = state.Speeds;
+            var speeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, pose.getRotation());
 
             m_shotProjector.solve(
                 pose.getX(),

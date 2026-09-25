@@ -112,8 +112,8 @@ public final class ShotProjection {
     }
     public void solvePassing(double rx, double ry,double rtheta, double gx) {
         double dist = Math.abs(rx - gx);
-        robotAngleRad = (180-rtheta)/(2*Math.PI);
-        passRPMLut.get(dist);
-        passHoodLut.get(dist);
+        robotAngleRad = (Math.PI-rtheta);
+        rpm = passRPMLut.get(dist);
+        hoodDeg = passHoodLut.get(dist);
     }
 }
