@@ -1,7 +1,6 @@
 package frc.robot.subsystems.vision.apriltag;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import edu.wpi.first.math.geometry.Pose3d;
@@ -26,7 +25,11 @@ public abstract class AprilTagVision {
 
     public abstract void captureRewinds(double seconds);
 
+    /**
+     * Returns the live backing list, not a defensive copy: this is read every loop by ATVision,
+     * and only ATVision (which never mutates it) and this class's own periodic() touch it.
+     */
     public List<AprilTagEstimate> getAllEstimates() {
-        return Collections.unmodifiableList(estimates);
+        return estimates;
     }
 }

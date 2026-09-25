@@ -6,7 +6,6 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -113,18 +112,27 @@ public class Superstructure extends SubsystemBase {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
             var pose = state.Pose;
+            var rotation = pose.getRotation();
             // state.Speeds is robot-relative (CTRE's SwerveDriveState), but solve() requires
             // field-relative velocity -- see its javadoc. Left un-rotated, the compensation is
             // only correct at 0 deg heading and rotates away from the field frame as the robot
             // turns, which is why it only showed up while actually driving/turning.
-            var fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, pose.getRotation());
+            //
+            // Inlined from ChassisSpeeds.fromRobotRelativeSpeeds (Translation2d.rotateBy's
+            // formula) on primitives to avoid allocating a ChassisSpeeds/Translation2d per loop.
+            double cos = rotation.getCos();
+            double sin = rotation.getSin();
+            double vxRobot = state.Speeds.vxMetersPerSecond;
+            double vyRobot = state.Speeds.vyMetersPerSecond;
+            double vxField = vxRobot * cos - vyRobot * sin;
+            double vyField = vxRobot * sin + vyRobot * cos;
 
             m_shotProjector.solve(
                 pose.getX(),
                 pose.getY(),
-                pose.getRotation().getRadians(),
-                fieldRelativeSpeeds.vxMetersPerSecond,
-                fieldRelativeSpeeds.vyMetersPerSecond,
+                rotation.getRadians(),
+                vxField,
+                vyField,
                 goalPose.getX(),
                 goalPose.getY(),
                 ShotConstants.kShotDelay

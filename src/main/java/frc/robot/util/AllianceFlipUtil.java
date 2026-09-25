@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,9 +21,14 @@ public class AllianceFlipUtil {
     public static final double FIELD_WIDTH = FieldSize.FIELD_WIDTH_M;
     public static final double FIELD_LENGTH = FieldSize.FIELD_LENGTH_M;
 
+    /**
+     * Uses getRawAllianceStation() rather than getAlliance(): the latter boxes a fresh
+     * Optional<Alliance> on every call, and this is read every loop via the POI suppliers below.
+     */
     public static boolean isRedAlliance() {
-        var alliance = DriverStation.getAlliance();
-        return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+        AllianceStationID station = DriverStation.getRawAllianceStation();
+        return station == AllianceStationID.Red1 || station == AllianceStationID.Red2
+                || station == AllianceStationID.Red3;
     }
 
     public static Translation2d flipTranslation(Translation2d t) {
@@ -65,7 +71,7 @@ public class AllianceFlipUtil {
     }
 
     public static <T> Supplier<T> constant(T blue, T red) {
-        return () -> DriverStation.getAlliance().orElse(Alliance.Blue).equals(Alliance.Blue) ? blue : red;
+        return () -> isRedAlliance() ? red : blue;
     }
 
     public static Supplier<Rotation2d> flipped(Rotation2d blue) {

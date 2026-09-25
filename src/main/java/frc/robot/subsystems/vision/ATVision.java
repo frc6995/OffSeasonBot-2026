@@ -106,6 +106,7 @@ public class ATVision extends SubsystemBase {
     private final StringPublisher rejectReasonPublisher;
 
     private boolean headingSeeded = false;
+    private boolean sawTurretCameraEstimate = false;
     private double lastMismatchDeg = 0;
     private double lastAgeSeconds = 0;
     private String lastRejectReason = "";
@@ -191,10 +192,9 @@ public class ATVision extends SubsystemBase {
         EstimationMode mode = EstimationMode.MEGATAG1;
         limelightVision.periodic(mode);
 
-        boolean hasTurretCameraEstimate = hasTurretCameraEstimate();
         int accepted = acceptLimelightEstimates(now);
 
-        if (photonVision != null && !hasTurretCameraEstimate) {
+        if (photonVision != null && !sawTurretCameraEstimate) {
             accepted += acceptPhotonEstimates();
             photonVision.periodic();
         }
@@ -209,11 +209,13 @@ public class ATVision extends SubsystemBase {
 
     private int acceptLimelightEstimates(double now) {
         int accepted = 0;
+        sawTurretCameraEstimate = false;
 
         for (AprilTagEstimate estimate : limelightVision.getAllEstimates()) {
             boolean isTurretCam = limelightVision.isTurretCameraEstimate(estimate);
 
             if (isTurretCam) {
+                sawTurretCameraEstimate = true;
                 lastAgeSeconds = now - estimate.timestampSeconds();
                 if (isFresh(estimate.timestampSeconds(), now)) {
                     turretMismatchDeg(estimate.timestampSeconds())
@@ -235,15 +237,6 @@ public class ATVision extends SubsystemBase {
         }
 
         return accepted;
-    }
-
-    private boolean hasTurretCameraEstimate() {
-        for (AprilTagEstimate estimate : limelightVision.getAllEstimates()) {
-            if (limelightVision.isTurretCameraEstimate(estimate)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private int acceptPhotonEstimates() {
