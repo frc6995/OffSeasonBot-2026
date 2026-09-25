@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.HoodIO.HoodIOInputs;
-import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Hood extends SubsystemBase {
     public static class HoodConstants {
@@ -90,12 +89,12 @@ public class Hood extends SubsystemBase {
 
     private HoodState hoodState = HoodState.DISABLED;
 
-    private final Supplier<ShooterTargetData> targetData;
+    private final Supplier<Double> targetAngleDeg;
 
 
-    public Hood(HoodIO io, Supplier<ShooterTargetData> shotData) {
+    public Hood(HoodIO io, Supplier<Double> targetAngleDeg) {
         this.io = io;
-        this.targetData = shotData;
+        this.targetAngleDeg = targetAngleDeg;
         RobotVisualizer.addHood(hoodLigament);
     }
     
@@ -119,7 +118,7 @@ public class Hood extends SubsystemBase {
                 // Store what was actually sent, so "Setpoint" reflects the live control path.
                 // requestedAngle used to be written only by setAngle(), which nothing in the live
                 // path calls, so the logged setpoint read a flat zero all match.
-                commandedAngleDeg = applyLimits(targetData.get().hoodAngleDeg());
+                commandedAngleDeg = applyLimits(targetAngleDeg.get());
                 io.setAngle(commandedAngleDeg);
                 break;
             case SAFE_SHOT:

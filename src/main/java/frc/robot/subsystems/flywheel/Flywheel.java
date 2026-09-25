@@ -9,8 +9,6 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
-import frc.robot.util.ShotController;
-import frc.robot.util.ShotController.ShooterTargetData;
 
 // import frc.robot.util.CtreUtil;
 
@@ -78,13 +76,13 @@ public class Flywheel extends SubsystemBase {
 
   private final FlywheelIO io;
   private final FlywheelIO.FlywheelInputs inputs = new FlywheelIO.FlywheelInputs();
-  private final Supplier<ShooterTargetData> targetData;
+  private final Supplier<Double> targetRpm;
 
   private FlywheelState flywheelState = FlywheelState.DISABLED;
 
-  public Flywheel(FlywheelIO io, Supplier<ShooterTargetData> shotData) {
+  public Flywheel(FlywheelIO io, Supplier<Double> targetRpm) {
     this.io = io;
-    this.targetData = shotData;
+    this.targetRpm = targetRpm;
   }
 
   public void setState(FlywheelState state) {
@@ -174,7 +172,7 @@ public class Flywheel extends SubsystemBase {
   private double resolveTargetRPM(FlywheelState state) {
     return switch (state) {
       case DISABLED -> 0.0;
-      case ACTIVE -> targetData.get().flywheelRpm();
+      case ACTIVE -> targetRpm.get();
       case SAFE_SHOT -> FlywheelConstants.kSafeShotRPM;
     };
   }

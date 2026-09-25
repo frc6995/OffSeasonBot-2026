@@ -12,7 +12,7 @@ import static frc.robot.util.AllianceFlipUtil.flipped;
 public class POI {
     // ============= POSES =============
     public static final Supplier<Pose2d> HUB_CENTER = flipped(
-            new Pose2d(4.624246120452881, 4.037848949432373, Rotation2d.kZero));
+        new Pose2d(4.624246120452881, 4.037848949432373, Rotation2d.kZero));
 
     // ============= ZONES =============
     // Blue-alliance-relative corners of the zone where a shot should PASS
