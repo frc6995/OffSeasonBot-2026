@@ -19,13 +19,23 @@ public class Hood extends SubsystemBase {
         public static final int kCANID = 44; // Should be right with doc
 
         public static final double[][] kAngleData = {
-                // Distance (Meters), Angle(Degrees)
-                { 1, 10 },
-                { 2.5, 20 },
-                { 4, 26 },
-                { 5, 30},
-                { 6, 40}
-        };
+        // Distance (Meters), Angle(Degrees)
+        // launch@hood0=85°, 1°/hood°, aim +0.25, weights 0.35/0.15/0.2, drag off
+        { 1.0, 5.75 },
+        { 1.5, 11.75 },
+        { 2.0, 14.75 },
+        { 2.5, 17.25 },
+        { 3.0, 19.25 },
+        { 3.5, 23.5 },
+        { 4.0, 25.25 },
+        { 4.5, 29.75 },
+        { 5.0, 33.0 },
+        { 6.0, 34.0 },
+        { 7.0, 35.0 },
+        { 8.0, 35.75 },
+        { 9.0, 36.0 },
+        { 10.0, 36.5 }
+};
 
         // distance from the POI.PASSING_WALL line
         public static final double[][] kPassingAngleData = {

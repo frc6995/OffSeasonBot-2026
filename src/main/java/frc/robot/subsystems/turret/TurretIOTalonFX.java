@@ -111,7 +111,8 @@ public class TurretIOTalonFX implements TurretIO {
                 .withKP(kP)
                 .withKV(kV)
                 .withKA(kA)
-                .withKS(kS);
+                .withKS(kS)
+                .withKD(kD);
 
         config.MotionMagic =
             new MotionMagicConfigs()

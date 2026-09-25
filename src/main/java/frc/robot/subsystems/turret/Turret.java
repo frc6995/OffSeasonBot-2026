@@ -27,8 +27,8 @@ public class Turret extends SubsystemBase {
         public static final double kI = 0;
         public static final double kD = 2;
         public static final double kS = 0.2;
-        public static final double kV = 5;
-        public static final double kA = 0;
+        public static final double kV = 2;
+        public static final double kA = 0.07;
 
         public static final double kStatorCurrentLimitAmps = 60;
         public static final double kSupplyCurrentLimitAmps = 40;

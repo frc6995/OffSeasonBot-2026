@@ -41,9 +41,19 @@ public class Flywheel extends SubsystemBase {
     // public static final double kMass = 4.15;
     public static final double [][] kShooterData = {
       {0.0, 2100},
+      {1.0, 2200},
+      {1.5, 2250},
+      {2.0, 2300},
+      {2.5, 2350},
       {3.0, 2350},
+      {3.5, 2400},
       {4.0, 2900},
+      {4.5, 2950},
       {5.0, 3000},
+      {6.0, 3100},
+      {7.0, 3200},
+      {8.0, 3300},
+      {9.0, 3400},
       {10, 3400},
       {15.0, 3800}
     };
