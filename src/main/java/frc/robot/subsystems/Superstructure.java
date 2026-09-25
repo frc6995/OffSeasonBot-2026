@@ -6,6 +6,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -19,9 +20,11 @@ import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.hood.Hood.HoodConstants;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
@@ -33,7 +36,8 @@ import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-import frc.robot.util.ShotController;
+import frc.robot.util.ShotProjection;
+import frc.robot.util.ShotProjection.ShotConstants;
 
 public class Superstructure extends SubsystemBase {
 
@@ -52,28 +56,26 @@ public class Superstructure extends SubsystemBase {
 
     RobotState robotState = RobotState.IDLE;
 
-    private final Supplier<Pose2d> m_poseSupplier;
+    private final Supplier<SwerveDriveState> m_swerveState;
 
-    public final ShotController m_shotController;
+    public final ShotProjection m_shotProjector;
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
-        this.m_poseSupplier = () -> swerveState.get().Pose;
-        m_shotController = new ShotController(
-            m_poseSupplier, () -> swerveState.get().Speeds, POI.HUB_CENTER, POI.PASSING_ANGLE,
-            POI.PASSING_WALL_START, POI.PASSING_WALL_END);
+        this.m_swerveState = swerveState;
+        m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData, FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIO() {});
-            this.m_hood = new Hood(new HoodIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOSimTalonFX(), m_shotController::getCachedData);
+            this.m_hood = new Hood(new HoodIOSimTalonFX(), () -> m_shotProjector.hoodDeg);
+            this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), () -> m_shotProjector.rpm);
+            this.m_turret = new Turret(new TurretIOSimTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
             this.m_intake = new Intake(new IntakeIO(){});
-            this.m_hood = new Hood(new HoodIOTalonFX(), m_shotController::getCachedData);
-            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), m_shotController::getCachedData);
-            this.m_turret = new Turret(new TurretIOTalonFX(), m_shotController::getCachedData);
+            this.m_hood = new Hood(new HoodIOTalonFX(), () -> m_shotProjector.hoodDeg);
+            this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), () -> m_shotProjector.rpm);
+            this.m_turret = new Turret(new TurretIOTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
 
@@ -96,7 +98,31 @@ public class Superstructure extends SubsystemBase {
             robotState = RobotState.IDLE;
         }
 
-        m_shotController.calculate(robotState == RobotState.PASSING);
+        if(robotState == RobotState.PASSING) {
+            var state = m_swerveState.get();
+             var pose = state.Pose;
+             var goalPose = POI.PASSING_WALL_START.get();
+            m_shotProjector.solvePassing(pose.getX(), pose.getY(), pose.getRotation().getRadians(), goalPose.getX());
+            
+        } else {
+            var state = m_swerveState.get();
+            var goalPose = POI.HUB_CENTER.get();
+            var pose = state.Pose;
+            var speeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, pose.getRotation());
+
+            m_shotProjector.solve(
+                pose.getX(),
+                pose.getY(),
+                pose.getRotation().getRadians(),
+                speeds.vxMetersPerSecond,
+                speeds.vyMetersPerSecond,
+                goalPose.getX(),
+                goalPose.getY(),
+                ShotConstants.kShotDelay
+            );
+        }
+        
+        
     }
 
     public Command requestIntakeActive() {
@@ -166,14 +192,14 @@ public class Superstructure extends SubsystemBase {
 
     /** Chooses PASSING or SCORING based on whether the robot is in the configurable passing zone. */
     private RobotState determineShootState() {
-        boolean inPassingZone = POI.PASSING_ZONE.get().contains(m_poseSupplier.get().getTranslation());
+        boolean inPassingZone = POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation());
         return inPassingZone ? RobotState.PASSING : RobotState.SCORING;
     }
 
     private void engageShootState(RobotState state) {
         switch (state) {
             case SCORING, PASSING -> {
-                m_turret.requestAimClosest();
+                m_turret.requestAimClosest();;
                 m_flywheel.requestActive();
                 m_hood.requestActive();
             }

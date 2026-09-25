@@ -16,7 +16,6 @@ import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.util.TurretFeedforward;
-import frc.robot.util.ShotController.ShooterTargetData;
 
 public class Turret extends SubsystemBase {
     public static class TurretConstants {
@@ -82,18 +81,16 @@ public class Turret extends SubsystemBase {
     private double commandedAngleDeg = 0;
 
     private TurretIO io;
-    private Supplier<ShooterTargetData> shotData;
+    private Supplier<Double> targetAngleDeg;
     
     private TurretIOInputs inputs = new TurretIOInputs();
 
     private final MechanismLigament2d turretLigament = new MechanismLigament2d("turret", Units.inchesToMeters(12), 0, 6,
         new Color8Bit(137, 52, 235));
 
-    public Turret(TurretIO io, Supplier<ShooterTargetData> shotData) {
+    public Turret(TurretIO io, Supplier<Double> targetAngleDeg) {
         this.io = io;
-        this.shotData = shotData;
-
-        
+        this.targetAngleDeg = targetAngleDeg;
 
         RobotVisualizer.addTurret(turretLigament);
     }
@@ -124,8 +121,8 @@ public class Turret extends SubsystemBase {
 
         switch (turretState) {
             case DISABLED -> io.disable();
-            case AIM_CENTRAL -> commandedAngleDeg = selectCentralAngle(shotData.get().turretAngleDeg());
-            case AIM_CLOSEST -> commandedAngleDeg = selectClosestAngle(shotData.get().turretAngleDeg());
+            case AIM_CENTRAL -> commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
+            case AIM_CLOSEST -> commandedAngleDeg = selectClosestAngle(targetAngleDeg.get());
             case MANUAL -> commandedAngleDeg = selectClosestAngle(requestedAngleDeg);
             case SAFE_SHOT -> commandedAngleDeg = selectClosestAngle(TurretConstants.kSafeShotAngleDeg);
         }
@@ -142,8 +139,20 @@ public class Turret extends SubsystemBase {
     }
 
     // just for testing in sim
-    public void setAngle(double angle) {
+    public void setAngleManual(double angle) {
         requestedAngleDeg = angle;
+
+        this.turretState = TurretState.MANUAL;
+    }
+
+    public void setClosestAngleManual(double angle) {
+        requestedAngleDeg = selectClosestAngle(angle);
+
+        this.turretState = TurretState.MANUAL;
+    }
+
+    public void setCentralAngleManual(double angle) {
+        requestedAngleDeg = selectCentralAngle(angle);
 
         this.turretState = TurretState.MANUAL;
     }
