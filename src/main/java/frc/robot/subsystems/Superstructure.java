@@ -19,9 +19,11 @@ import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIOSimTalonFX;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
+import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.subsystems.flywheel.Flywheel.FlywheelState;
 import frc.robot.subsystems.hood.Hood;
 import frc.robot.subsystems.hood.HoodIOTalonFX;
+import frc.robot.subsystems.hood.Hood.HoodConstants;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
@@ -59,8 +61,7 @@ public class Superstructure extends SubsystemBase {
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_swerveState = swerveState;
-        var placeholderREMOVEMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE = new double[1][1];
-        m_shotProjector = new ShotProjection(placeholderREMOVEMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE, placeholderREMOVEMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE, placeholderREMOVEMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE,placeholderREMOVEMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE,placeholderREMOVEMEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE);
+        m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData, FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIO() {});

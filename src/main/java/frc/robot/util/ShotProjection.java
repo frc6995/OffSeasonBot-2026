@@ -12,6 +12,11 @@ public final class ShotProjection {
     public static final class ShotConstants {
         /** The delay applied to the shot as a result of latency or other effects */
         public static final double kShotDelay = 0.02;
+        
+        public static final double[][] kTofData = {
+            {0.0, 1.0},
+            {10.0, 1.0}
+        };
     }
 
     /** Piecewise-linear lookup table over primitive arrays. Keys must be sorted ascending. */
