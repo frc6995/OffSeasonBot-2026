@@ -50,12 +50,9 @@ public class Flywheel extends SubsystemBase {
       {4.0, 2580},
       {4.5, 2660},
       {5.0, 2780},
-      {6.0, 3100},
-      {7.0, 3200},
-      {8.0, 3300},
-      {9.0, 3400},
-      {10, 3400},
-      {15.0, 3800}
+      {6.0, 3000},
+      {7.0, 3200}
+     
     };
 
     // distance from POI.PASSING_WALL
