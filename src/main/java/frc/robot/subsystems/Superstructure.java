@@ -6,6 +6,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -107,14 +108,18 @@ public class Superstructure extends SubsystemBase {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
             var pose = state.Pose;
-            var speeds = state.Speeds;
+            // state.Speeds is robot-relative (CTRE's SwerveDriveState), but solve() requires
+            // field-relative velocity -- see its javadoc. Left un-rotated, the compensation is
+            // only correct at 0 deg heading and rotates away from the field frame as the robot
+            // turns, which is why it only showed up while actually driving/turning.
+            var fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, pose.getRotation());
 
             m_shotProjector.solve(
                 pose.getX(),
                 pose.getY(),
                 pose.getRotation().getRadians(),
-                speeds.vxMetersPerSecond,
-                speeds.vyMetersPerSecond,
+                fieldRelativeSpeeds.vxMetersPerSecond,
+                fieldRelativeSpeeds.vyMetersPerSecond,
                 goalPose.getX(),
                 goalPose.getY(),
                 ShotConstants.kShotDelay

@@ -95,6 +95,10 @@ public class Intake extends SubsystemBase {
             
     private IntakeState intakeState = IntakeState.RETRACTED;
 
+    // The extension position actually sent to the IO this loop, used to drive the sim visualization
+    // (see simulationPeriodic()) instead of the simulated PID's actual position.
+    private double commandedExtensionMeters;
+
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
     private double agitateNearMeters = IntakeConstants.kAgitateNearMeters;
@@ -281,15 +285,18 @@ public class Intake extends SubsystemBase {
 
         io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
         io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-        io.setExtensionPosition(clampExtension(resolveExtensionTargetPosition(intakeState)));
+        commandedExtensionMeters = clampExtension(resolveExtensionTargetPosition(intakeState));
+        io.setExtensionPosition(commandedExtensionMeters);
     }
 
     @Override
     public void simulationPeriodic() {
+        // Driven from the commanded setpoint rather than the simulated PID's actual position: the
+        // sim PID doesn't track like the real robot's, so the simulated position lags/oscillates in
+        // a way that isn't representative.
         double retractedLengthMeters = Units.inchesToMeters(8.0);
-        double extensionMeters = inputs.extensionPositionMeters;
-        intakeLigament.setLength(retractedLengthMeters + extensionMeters);
-        RobotVisualizer.updateIntakeExtension(extensionMeters);
+        intakeLigament.setLength(retractedLengthMeters + commandedExtensionMeters);
+        RobotVisualizer.updateIntakeExtension(commandedExtensionMeters);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {

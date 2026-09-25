@@ -130,8 +130,11 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        turretLigament.setAngle(inputs.angle);
-        RobotVisualizer.updateTurret(Units.degreesToRadians(inputs.angle));
+        // Driven from the commanded setpoint rather than the simulated PID's actual angle: the sim
+        // PID doesn't track like the real robot's, so the simulated position lags/oscillates in a
+        // way that isn't representative. The setpoint is what was actually requested this loop.
+        turretLigament.setAngle(commandedAngleDeg);
+        RobotVisualizer.updateTurret(Units.degreesToRadians(commandedAngleDeg));
     }
 
     public void setState(TurretState state) {

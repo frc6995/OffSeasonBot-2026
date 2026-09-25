@@ -183,7 +183,9 @@ public class DyeRotor extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
-    RobotVisualizer.updateHook(inputs.spinVelocityRPM * 2 * Math.PI / 60.0 * 0.02);
+    // Driven from the commanded target velocity rather than the simulated PID's actual velocity:
+    // the sim PID doesn't track like the real robot's, so the simulated velocity isn't representative.
+    RobotVisualizer.updateHook(resolveSpinTargetRPM(spinState) * 2 * Math.PI / 60.0 * kLoopPeriodSecs);
   }
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {

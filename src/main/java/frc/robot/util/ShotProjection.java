@@ -14,8 +14,9 @@ public final class ShotProjection {
         public static final double kShotDelay = 0.02;
         
         public static final double[][] kTofData = {
-            {0.0, 1.0},
-            {10.0, 1.0}
+ {1.0, 0.987}, {1.5, 0.910}, {2.0, 0.970}, {2.5, 1.017}, {3.0, 1.034},
+    {3.5, 0.991}, {4.0, 0.944}, {4.5, 0.995}, {5.0, 1.040}, {5.5, 1.092},
+    {6.0, 1.134}
         };
     }
 
