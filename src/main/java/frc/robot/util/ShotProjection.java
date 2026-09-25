@@ -1,5 +1,8 @@
 package frc.robot.util;
 
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
 /**
  * Allocation-free shoot-on-the-move solver (virtual goal / pose projection).
  *
@@ -47,6 +50,8 @@ public final class ShotProjection {
     private static final int kMaxIterations = 5;
     private static final double kConvergedMeters = 1e-3;
 
+    private final DoublePublisher m_distancePublisher;
+
     private final Lut tofLut, hoodLut, rpmLut, passRPMLut,passHoodLut;
 
     // ---- Results of the last solve(); read these, don't recompute. ----
@@ -66,7 +71,9 @@ public final class ShotProjection {
         rpmLut = new Lut(rpmData);
         passRPMLut = new Lut(passRPMData);
         passHoodLut = new Lut(passHoodData);
-        }
+
+        m_distancePublisher = NetworkTableInstance.getDefault().getTable("ShotProjection").getDoubleTopic("Distance").publish();
+    }
 
     /**
      * @param rx, ry           robot (turret) position, field frame, meters
@@ -109,6 +116,8 @@ public final class ShotProjection {
         virtualGoalY = ty;
         releaseX = px;
         releaseY = py;
+
+        m_distancePublisher.accept(d);
     }
     public void solvePassing(double rx, double ry,double rtheta, double gx) {
         double dist = Math.abs(rx - gx);
