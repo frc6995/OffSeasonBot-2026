@@ -162,11 +162,13 @@ public class ATVision extends SubsystemBase {
         Rotation2d fieldYaw = state.Pose.getRotation();
         Rotation3d seedRotation = new Rotation3d(gyroRot.getX(), gyroRot.getY(), fieldYaw.getRadians());
 
+        now = Timer.getFPGATimestamp();
         chassisOmegaBuffer.addSample(now, state.Speeds.omegaRadiansPerSecond);
         rollBuffer.addSample(now, gyroRot.getX());
         pitchBuffer.addSample(now, gyroRot.getY());
 
         Rotation2d turretAngle = Rotation2d.fromDegrees(turretAngleSupplier.get());
+        now = Timer.getFPGATimestamp();
         turretAngleBuffer.addSample(now, turretAngle);
 
         Pose3d robotToCamera = solveRobotToCamera(turretAngle.getDegrees());
@@ -177,7 +179,7 @@ public class ATVision extends SubsystemBase {
         // turret was slewing. Flush here only for the turret camera so fixed cameras keep the
         // batched (cheap) path. Remove if testing shows no difference.
         LimelightHelpers.Flush();
-                now = Timer.getFPGATimestamp();
+        now = Timer.getFPGATimestamp();
                 
         pushedAngleBuffer.addSample(now, turretAngle);
         robotToCameraPublisher.accept(robotToCamera);
@@ -212,6 +214,7 @@ public class ATVision extends SubsystemBase {
 
         for (AprilTagEstimate estimate : limelightVision.getAllEstimates()) {
             boolean isTurretCam = limelightVision.isTurretCameraEstimate(estimate);
+            now = Timer.getFPGATimestamp();
 
             if (isTurretCam) {
                 lastAgeSeconds = now - estimate.timestampSeconds();
