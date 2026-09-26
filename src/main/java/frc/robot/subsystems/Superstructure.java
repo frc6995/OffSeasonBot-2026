@@ -143,6 +143,28 @@ public class Superstructure extends SubsystemBase {
         });
     }
 
+    public Command requestIntakeMiniAgitate() {
+        return Commands.runOnce(() -> m_intake.requestMiniAgitate());
+    }
+
+    public Command requestIntakeFullAgitate() {
+        return Commands.runOnce(() -> m_intake.requestFullAgitate());
+    }
+
+    /**
+     * Shoot+intake held together: mini-agitate (long extension only) while scoring, plain
+     * ACTIVE while passing -- passing shots don't want the extension sweeping.
+     */
+    public Command requestIntakeForShootAndIntake() {
+        return Commands.runOnce(() -> {
+            if (isInPassingZone()) {
+                m_intake.requestActive();
+            } else {
+                m_intake.requestMiniAgitate();
+            }
+        });
+    }
+
     // In actual use, Idle can mean slow roller velocity
     public Command requestIntakeIdle() {
         return Commands.runOnce(() -> m_intake.requestIdle());
@@ -198,8 +220,11 @@ public class Superstructure extends SubsystemBase {
 
     /** Chooses PASSING or SCORING based on whether the robot is in the configurable passing zone. */
     private RobotState determineShootState() {
-        boolean inPassingZone = POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation());
-        return inPassingZone ? RobotState.PASSING : RobotState.SCORING;
+        return isInPassingZone() ? RobotState.PASSING : RobotState.SCORING;
+    }
+
+    private boolean isInPassingZone() {
+        return POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation());
     }
 
     private void engageShootState(RobotState state) {

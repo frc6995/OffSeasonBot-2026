@@ -69,11 +69,12 @@ public class Intake extends SubsystemBase {
         public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
         public static final double kExtensionCruiseVelocityRotationsPerSec = 10.0;
 
-        // Extension sweeps between these two positions while agitating,
-        // swapping targets every kAgitateIntervalSeconds.
-        public static final double kFullAgitateNearMeters = 0.2;
+        // Full agitate sweeps down from 100% to 30% extension and holds once it arrives
+        // (shoot-only). Mini agitate oscillates between 70% and 100% every
+        // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
+        public static final double kFullAgitateNearMeters = 0.3 * kExtensionMaxMeters;
         public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kMiniAgitateNearMeters = 0.26;
+        public static final double kMiniAgitateNearMeters = 0.7 * kExtensionMaxMeters;
         public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
         public static final double kMiniAgitateIntervalSeconds = 0.3;
         public static final double kFullAgitateIntervalSeconds = 0.4;
