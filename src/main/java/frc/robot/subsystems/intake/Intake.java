@@ -72,7 +72,7 @@ public class Intake extends SubsystemBase {
         // Full agitate sweeps down from 100% to 30% extension and holds once it arrives
         // (shoot-only). Mini agitate oscillates between 70% and 100% every
         // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
-        public static final double kFullAgitateNearMeters = 0.3 * kExtensionMaxMeters;
+        public static final double kFullAgitateNearMeters = 0.5 * kExtensionMaxMeters;
         public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
         public static final double kMiniAgitateNearMeters = 0.7 * kExtensionMaxMeters;
         public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
@@ -100,6 +100,11 @@ public class Intake extends SubsystemBase {
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
+    // Agitating sweeps the extension regardless of caller, but the roller/kicker should only
+    // spin while intake is explicitly requested (left bumper held) -- e.g. shoot-only agitation
+    // (right bumper alone) sweeps with the rollers idle, while auto callers and the
+    // both-bumpers-held teleop case keep them spinning.
+    private boolean agitateRollersActive = true;
 
     public Intake() {
         this(new IntakeIO() {
@@ -137,10 +142,20 @@ public class Intake extends SubsystemBase {
     }
 
     public void requestMiniAgitate() {
+        requestMiniAgitate(true);
+    }
+
+    public void requestMiniAgitate(boolean spinRollers) {
+        agitateRollersActive = spinRollers;
         setState(IntakeState.MINI_AGITATE);
     }
 
     public void requestFullAgitate() {
+        requestFullAgitate(true);
+    }
+
+    public void requestFullAgitate(boolean spinRollers) {
+        agitateRollersActive = spinRollers;
         setState(IntakeState.FULL_AGITATE);
     }
 
@@ -318,25 +333,23 @@ public class Intake extends SubsystemBase {
                 IntakeConstants.kExtensionMaxMeters);
     }
 
-    private static double resolveRollerTargetVoltage(IntakeState state) {
+    private double resolveRollerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kRollerForwardVoltage;
-            case MINI_AGITATE -> IntakeConstants.kRollerForwardVoltage;
-            case FULL_AGITATE -> IntakeConstants.kRollerForwardVoltage;
+            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kRollerForwardVoltage : 0.0;
             case EJECTING -> IntakeConstants.kRollerEjectingVoltage;
 
         };
     }
 
-    private static double resolveKickerTargetVoltage(IntakeState state) {
+    private double resolveKickerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
-            case MINI_AGITATE -> IntakeConstants.kKickerForwardVoltage;
-            case FULL_AGITATE -> IntakeConstants.kKickerForwardVoltage;
+            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kKickerForwardVoltage : 0.0;
             case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };

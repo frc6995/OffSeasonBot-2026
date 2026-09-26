@@ -155,7 +155,7 @@ public class RobotContainer {
         joystick.a().onTrue(m_superstructure.requestIntakeToggle());
 
         joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
-       // joystick.leftTrigger().onFalse(m_superstructure.requestIntakeActive());
+        joystick.leftTrigger().onFalse(m_superstructure.requestIntakeIdle());
 
         // Right bumper = shoot only (flywheel/hood/turret + dye rotor); left bumper = intake
         // only. Holding both drives the intake's agitation, but only while scoring -- passing
@@ -170,12 +170,12 @@ public class RobotContainer {
 
         shootButton.onTrue(m_superstructure.requestRobotShooting());
         intakeOnly.onTrue(m_superstructure.requestIntakeActive());
-        intakeButton.onFalse(m_superstructure.requestIntakeIdle());
         shootOnly.onTrue(m_superstructure.requestIntakeFullAgitate());
         shootAndIntake.onTrue(m_superstructure.requestIntakeForShootAndIntake());
 
-        // Once neither bumper is held, the intake settles back to its default ACTIVE state.
-        shootButton.or(intakeButton).onFalse(m_superstructure.requestIntakeActive());
+        // Once neither bumper is held, the intake is no longer explicitly running -- park it
+        // at IDLE so the roller/kicker voltages go to 0.
+        shootButton.or(intakeButton).onFalse(m_superstructure.requestIntakeIdle());
 
         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 

@@ -143,17 +143,16 @@ public class Superstructure extends SubsystemBase {
         });
     }
 
-    public Command requestIntakeMiniAgitate() {
-        return Commands.runOnce(() -> m_intake.requestMiniAgitate());
-    }
-
+    // Shoot-only: sweep+hold the extension, but the rollers/kicker stay idle since the intake
+    // button isn't held.
     public Command requestIntakeFullAgitate() {
-        return Commands.runOnce(() -> m_intake.requestFullAgitate());
+        return Commands.runOnce(() -> m_intake.requestFullAgitate(false));
     }
 
     /**
      * Shoot+intake held together: mini-agitate (long extension only) while scoring, plain
-     * ACTIVE while passing -- passing shots don't want the extension sweeping.
+     * ACTIVE while passing -- passing shots don't want the extension sweeping. Intake button is
+     * held in both cases, so rollers/kicker stay spinning.
      */
     public Command requestIntakeForShootAndIntake() {
         return Commands.runOnce(() -> {
