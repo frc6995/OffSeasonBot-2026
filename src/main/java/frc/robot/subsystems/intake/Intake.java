@@ -2,7 +2,6 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.epilogue.Logged;
 import frc.robot.util.ArrayUtil;
-import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
@@ -36,7 +35,7 @@ public class Intake extends SubsystemBase {
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kKickerEjectingVoltage = -5.0;
+        public static final double kKickerEjectingVoltage = -4.0;
         public static final double kKickerForwardVoltage = 4.0;
 
         // // Roller PID Constants
@@ -72,16 +71,21 @@ public class Intake extends SubsystemBase {
 
         // Extension sweeps between these two positions while agitating,
         // swapping targets every kAgitateIntervalSeconds.
-        public static final double kAgitateNearMeters = 0.26;
-        public static final double kAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kAgitateIntervalSeconds = 0.3;
+        public static final double kFullAgitateNearMeters = 0.2;
+        public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kMiniAgitateNearMeters = 0.26;
+        public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kMiniAgitateIntervalSeconds = 0.3;
+        public static final double kFullAgitateIntervalSeconds = 0.4;
+        public static final double kAgitateToleranceMeters = 0.02;
     }
 
     public enum IntakeState {
         RETRACTED,
         ACTIVE,
         IDLE,
-        AGITATING,
+        MINI_AGITATE,
+        FULL_AGITATE,
         EJECTING
     }
 
@@ -95,9 +99,6 @@ public class Intake extends SubsystemBase {
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
-    private double agitateNearMeters = IntakeConstants.kAgitateNearMeters;
-    private double agitateFarMeters = IntakeConstants.kAgitateFarMeters;
-    private double agitateIntervalSeconds = IntakeConstants.kAgitateIntervalSeconds;
 
     public Intake() {
         this(new IntakeIO() {
@@ -115,7 +116,7 @@ public class Intake extends SubsystemBase {
     }
 
     public void setState(IntakeState state) {
-        if (state == IntakeState.AGITATING && intakeState != IntakeState.AGITATING) {
+        if ((state == IntakeState.MINI_AGITATE || state == IntakeState.FULL_AGITATE) && intakeState != IntakeState.MINI_AGITATE && intakeState != IntakeState.FULL_AGITATE) {
             agitateAtFarPosition = false;
             agitateTimer.restart();
         }
@@ -134,8 +135,12 @@ public class Intake extends SubsystemBase {
         setState(IntakeState.IDLE);
     }
 
-    public void requestAgitate() {
-        setState(IntakeState.AGITATING);
+    public void requestMiniAgitate() {
+        setState(IntakeState.MINI_AGITATE);
+    }
+
+    public void requestFullAgitate() {
+        setState(IntakeState.FULL_AGITATE);
     }
 
     public void requestEject() {
@@ -285,16 +290,24 @@ public class Intake extends SubsystemBase {
             case IDLE -> IntakeConstants.kExtensionMaxMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
             case ACTIVE -> IntakeConstants.kExtensionMaxMeters;
-            case AGITATING -> resolveAgitationTargetPosition();
+            case MINI_AGITATE -> resolveMiniAgitateTargetPosition();
+            case FULL_AGITATE -> resolveFullAgitateTargetPosition();
             case EJECTING -> IntakeConstants.kExtensionMaxMeters;
         };
     }
 
-    private double resolveAgitationTargetPosition() {
-        if (agitateTimer.advanceIfElapsed(agitateIntervalSeconds)) {
+    private double resolveMiniAgitateTargetPosition() {
+        if (agitateTimer.advanceIfElapsed(IntakeConstants.kMiniAgitateIntervalSeconds)) {
             agitateAtFarPosition = !agitateAtFarPosition;
         }
-        return agitateAtFarPosition ? agitateFarMeters : agitateNearMeters;
+        return agitateAtFarPosition ? IntakeConstants.kMiniAgitateNearMeters : IntakeConstants.kMiniAgitateFarMeters;
+    }
+
+    private double resolveFullAgitateTargetPosition() {
+        if (!MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters) && agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
+            agitateAtFarPosition = !agitateAtFarPosition;
+        }
+        return agitateAtFarPosition ? IntakeConstants.kFullAgitateNearMeters : IntakeConstants.kFullAgitateFarMeters;
     }
 
     private static double clampExtension(double positionMeters) {
@@ -309,7 +322,8 @@ public class Intake extends SubsystemBase {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kRollerForwardVoltage;
-            case AGITATING -> IntakeConstants.kRollerForwardVoltage;
+            case MINI_AGITATE -> IntakeConstants.kRollerForwardVoltage;
+            case FULL_AGITATE -> IntakeConstants.kRollerForwardVoltage;
             case EJECTING -> IntakeConstants.kRollerEjectingVoltage;
 
         };
@@ -320,7 +334,8 @@ public class Intake extends SubsystemBase {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
-            case AGITATING -> IntakeConstants.kKickerForwardVoltage;
+            case MINI_AGITATE -> IntakeConstants.kKickerForwardVoltage;
+            case FULL_AGITATE -> IntakeConstants.kKickerForwardVoltage;
             case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };

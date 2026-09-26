@@ -134,7 +134,13 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command requestIntakeAgitating() {
-        return Commands.runOnce(() -> m_intake.requestAgitate());
+        return Commands.runOnce(() -> {
+            if(m_intake.getState() == IntakeState.ACTIVE) {
+                m_intake.requestMiniAgitate();
+            } else {
+                m_intake.requestFullAgitate();
+            }
+        });
     }
 
     // In actual use, Idle can mean slow roller velocity

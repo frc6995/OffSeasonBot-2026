@@ -156,12 +156,12 @@ public class RobotContainer {
         joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
         joystick.leftTrigger().onFalse(m_superstructure.requestIntakeActive());
 
-        joystick.rightBumper().whileTrue(m_superstructure.requestRobotShooting());
+        joystick.rightTrigger().whileTrue(m_superstructure.requestRobotShooting());
 
         joystick.leftBumper().onTrue(m_superstructure.requestIntakeAgitating());
         joystick.leftBumper().onFalse(m_superstructure.requestIntakeActive());
 
-         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
+        joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
         //Safe Shot
         joystick.y().onTrue(
