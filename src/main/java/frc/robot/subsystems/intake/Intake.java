@@ -2,7 +2,6 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.epilogue.Logged;
 import frc.robot.util.ArrayUtil;
-import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
@@ -23,11 +22,11 @@ public class Intake extends SubsystemBase {
         public static final int kEXTENSION_LEAD_MOTOR_ID = 32;
         public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
 
-        // Kicker PID Constants
-        public static final double kKickerP = 0.2;
-        // Kicker Feedforward Constants
-        public static final double kKickerS = 0.25;
-        public static final double kKickerV = 0.164;
+        // // Kicker PID Constants
+        // public static final double kKickerP = 0.2;
+        // // Kicker Feedforward Constants
+        // public static final double kKickerS = 0.25;
+        // public static final double kKickerV = 0.164;
         // Kicker Config Constants
         public static final double kKickerSupplyCurrentLimitAmps = 40;
         public static final double kKickerStatorCurrentLimitAmps = 80;
@@ -36,15 +35,14 @@ public class Intake extends SubsystemBase {
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kKickerForwardVolts = 4.0;
-        public static final double kKickerEjectingRPM = -1000.0;
-        public static final double kKickerForwardRPM = 1000.0;
+        public static final double kKickerEjectingVoltage = -4.0;
+        public static final double kKickerForwardVoltage = 4.0;
 
-        // Roller PID Constants
-        public static final double kRollerP = 0.2;
-        // Roller Feedforward Constants
-        public static final double kRollerS = 0.25;
-        public static final double kRollerV = 0.396;
+        // // Roller PID Constants
+        // public static final double kRollerP = 0.2;
+        // // Roller Feedforward Constants
+        // public static final double kRollerS = 0.25;
+        // public static final double kRollerV = 0.396;
         // Roller Config Constants
         public static final double kRollerSupplyCurrentLimitAmps = 40;
         public static final double kRollerStatorCurrentLimitAmps = 80;
@@ -53,9 +51,8 @@ public class Intake extends SubsystemBase {
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kRollerForwardVolts = 4.0;
-        public static final double kRollerEjectingRPM = -1000.0;
-        public static final double kRollerForwardRPM = 1000.0;
+        public static final double kRollerEjectingVoltage = -5.0; // placeholder, needs to be tuned
+        public static final double kRollerForwardVoltage = 5.0; // placeholder, needs to be tuned
 
         // Extension PID Constants
         public static final double kExtensionP = 20;
@@ -72,18 +69,24 @@ public class Intake extends SubsystemBase {
         public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
         public static final double kExtensionCruiseVelocityRotationsPerSec = 10.0;
 
-        // Extension sweeps between these two positions while agitating,
-        // swapping targets every kAgitateIntervalSeconds.
-        public static final double kAgitateNearMeters = 0.26;
-        public static final double kAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kAgitateIntervalSeconds = 0.3;
+        // Full agitate sweeps down from 100% to 30% extension and holds once it arrives
+        // (shoot-only). Mini agitate oscillates between 70% and 100% every
+        // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
+        public static final double kFullAgitateNearMeters = 0.5 * kExtensionMaxMeters;
+        public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kMiniAgitateNearMeters = 0.7 * kExtensionMaxMeters;
+        public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kMiniAgitateIntervalSeconds = 0.3;
+        public static final double kFullAgitateIntervalSeconds = 0.4;
+        public static final double kAgitateToleranceMeters = 0.02;
     }
 
     public enum IntakeState {
         RETRACTED,
         ACTIVE,
         IDLE,
-        AGITATING,
+        MINI_AGITATE,
+        FULL_AGITATE,
         EJECTING
     }
 
@@ -101,9 +104,11 @@ public class Intake extends SubsystemBase {
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
-    private double agitateNearMeters = IntakeConstants.kAgitateNearMeters;
-    private double agitateFarMeters = IntakeConstants.kAgitateFarMeters;
-    private double agitateIntervalSeconds = IntakeConstants.kAgitateIntervalSeconds;
+    // Agitating sweeps the extension regardless of caller, but the roller/kicker should only
+    // spin while intake is explicitly requested (left bumper held) -- e.g. shoot-only agitation
+    // (right bumper alone) sweeps with the rollers idle, while auto callers and the
+    // both-bumpers-held teleop case keep them spinning.
+    private boolean agitateRollersActive = true;
 
     public Intake() {
         this(new IntakeIO() {
@@ -121,7 +126,7 @@ public class Intake extends SubsystemBase {
     }
 
     public void setState(IntakeState state) {
-        if (state == IntakeState.AGITATING && intakeState != IntakeState.AGITATING) {
+        if ((state == IntakeState.MINI_AGITATE || state == IntakeState.FULL_AGITATE) && intakeState != IntakeState.MINI_AGITATE && intakeState != IntakeState.FULL_AGITATE) {
             agitateAtFarPosition = false;
             agitateTimer.restart();
         }
@@ -140,8 +145,22 @@ public class Intake extends SubsystemBase {
         setState(IntakeState.IDLE);
     }
 
-    public void requestAgitate() {
-        setState(IntakeState.AGITATING);
+    public void requestMiniAgitate() {
+        requestMiniAgitate(true);
+    }
+
+    public void requestMiniAgitate(boolean spinRollers) {
+        agitateRollersActive = spinRollers;
+        setState(IntakeState.MINI_AGITATE);
+    }
+
+    public void requestFullAgitate() {
+        requestFullAgitate(true);
+    }
+
+    public void requestFullAgitate(boolean spinRollers) {
+        agitateRollersActive = spinRollers;
+        setState(IntakeState.FULL_AGITATE);
     }
 
     public void requestEject() {
@@ -163,16 +182,6 @@ public class Intake extends SubsystemBase {
     @Logged(name = "State", importance = Importance.CRITICAL)
     public IntakeState getState() {
         return intakeState;
-    }
-
-    @Logged(name = "Roller/Velocity", importance = Importance.INFO)
-    public double getRollerVelocityRPM() {
-        return inputs.rollerVelocityRPM;
-    }
-
-    @Logged(name = "Kicker/Velocity", importance = Importance.INFO)
-    public double getKickVelocityRPM() {
-        return inputs.kickerVelocityRPM;
     }
 
     @Logged(name = "Extension/Position", importance =  Importance.INFO)
@@ -283,10 +292,9 @@ public class Intake extends SubsystemBase {
 
         io.updateInputs(inputs);
 
-        io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
-        io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
-        commandedExtensionMeters = clampExtension(resolveExtensionTargetPosition(intakeState));
-        io.setExtensionPosition(commandedExtensionMeters);
+        io.setKickerVoltage(resolveKickerTargetVoltage(intakeState));
+        io.setRollerVoltage(resolveRollerTargetVoltage(intakeState));
+        io.setExtensionPosition(clampExtension(resolveExtensionTargetPosition(intakeState)));
     }
 
     @Override
@@ -304,16 +312,24 @@ public class Intake extends SubsystemBase {
             case IDLE -> IntakeConstants.kExtensionMaxMeters;
             case RETRACTED -> IntakeConstants.kExtensionMinMeters;
             case ACTIVE -> IntakeConstants.kExtensionMaxMeters;
-            case AGITATING -> resolveAgitationTargetPosition();
+            case MINI_AGITATE -> resolveMiniAgitateTargetPosition();
+            case FULL_AGITATE -> resolveFullAgitateTargetPosition();
             case EJECTING -> IntakeConstants.kExtensionMaxMeters;
         };
     }
 
-    private double resolveAgitationTargetPosition() {
-        if (agitateTimer.advanceIfElapsed(agitateIntervalSeconds)) {
+    private double resolveMiniAgitateTargetPosition() {
+        if (agitateTimer.advanceIfElapsed(IntakeConstants.kMiniAgitateIntervalSeconds)) {
             agitateAtFarPosition = !agitateAtFarPosition;
         }
-        return agitateAtFarPosition ? agitateFarMeters : agitateNearMeters;
+        return agitateAtFarPosition ? IntakeConstants.kMiniAgitateNearMeters : IntakeConstants.kMiniAgitateFarMeters;
+    }
+
+    private double resolveFullAgitateTargetPosition() {
+        if (!MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters) && agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
+            agitateAtFarPosition = !agitateAtFarPosition;
+        }
+        return agitateAtFarPosition ? IntakeConstants.kFullAgitateNearMeters : IntakeConstants.kFullAgitateFarMeters;
     }
 
     private static double clampExtension(double positionMeters) {
@@ -323,24 +339,24 @@ public class Intake extends SubsystemBase {
                 IntakeConstants.kExtensionMaxMeters);
     }
 
-    private static double resolveRollerTargetVelocity(IntakeState state) {
+    private double resolveRollerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case ACTIVE -> IntakeConstants.kRollerForwardRPM;
-            case AGITATING -> IntakeConstants.kRollerForwardRPM;
-            case EJECTING -> IntakeConstants.kRollerEjectingRPM;
+            case ACTIVE -> IntakeConstants.kRollerForwardVoltage;
+            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kRollerForwardVoltage : 0.0;
+            case EJECTING -> IntakeConstants.kRollerEjectingVoltage;
 
         };
     }
 
-    private static double resolveKickerTargetVelocity(IntakeState state) {
+    private double resolveKickerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case ACTIVE -> IntakeConstants.kKickerForwardRPM;
-            case AGITATING -> IntakeConstants.kKickerForwardRPM;
-            case EJECTING -> IntakeConstants.kKickerEjectingRPM;
+            case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
+            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kKickerForwardVoltage : 0.0;
+            case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };
     }

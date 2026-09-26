@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -154,23 +155,38 @@ public class RobotContainer {
         joystick.a().onTrue(m_superstructure.requestIntakeToggle());
 
         joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
-        joystick.leftTrigger().onFalse(m_superstructure.requestIntakeActive());
+        joystick.leftTrigger().onFalse(m_superstructure.requestIntakeIdle());
 
-        joystick.rightBumper().whileTrue(m_superstructure.requestRobotShooting());
+        // Right bumper = shoot only (flywheel/hood/turret + dye rotor); left bumper = intake
+        // only. Holding both drives the intake's agitation, but only while scoring -- passing
+        // shots keep the intake at plain ACTIVE. Each combination below is bound as its own
+        // onTrue edge so the final intake state is always set fresh by whichever exclusive
+        // trigger just became true, regardless of the order the two bumpers were pressed in.
+        Trigger shootButton = joystick.rightBumper();
+        Trigger intakeButton = joystick.leftBumper();
+        Trigger shootAndIntake = shootButton.and(intakeButton);
+        Trigger shootOnly = shootButton.and(intakeButton.negate());
+        Trigger intakeOnly = intakeButton.and(shootButton.negate());
 
-        joystick.leftBumper().onTrue(m_superstructure.requestIntakeAgitating());
-        joystick.leftBumper().onFalse(m_superstructure.requestIntakeActive());
+        shootButton.onTrue(m_superstructure.requestRobotShooting());
+        intakeOnly.onTrue(m_superstructure.requestIntakeActive());
+        shootOnly.onTrue(m_superstructure.requestIntakeFullAgitate());
+        shootAndIntake.onTrue(m_superstructure.requestIntakeForShootAndIntake());
 
-         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
+        // Once neither bumper is held, the intake is no longer explicitly running -- park it
+        // at IDLE so the roller/kicker voltages go to 0.
+        shootButton.or(intakeButton).onFalse(m_superstructure.requestIntakeIdle());
+
+        joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
         //Safe Shot
         joystick.y().onTrue(
             m_superstructure.requestRobotShootSafe());
 
-        // rightBumper (normal shoot) and y (safe shot) both drive the shared shooting state.
+        // shootButton (normal shoot) and y (safe shot) both drive the shared shooting state.
         // Only return to idle once BOTH are released -- separate onFalse handlers here would
         // let releasing one button cancel a shot still being held via the other.
-        joystick.rightBumper().or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
+        shootButton.or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
         // Snap the robot's heading to the nearest cardinal direction in place.
         joystick.b().whileTrue(Commands.defer(

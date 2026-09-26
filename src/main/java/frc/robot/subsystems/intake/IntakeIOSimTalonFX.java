@@ -101,7 +101,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         extensionState.setRawRotorPosition(metersToMotorRotations(extensionPositionMeters));
         extensionState.setRotorVelocity(metersToMotorRotations(extensionVelocityMetersPerSecond));
 
-        inputs.rollerVelocityRPM = rollerVelocityRPM;
         inputs.rollerAppliedVolts = rollerAppliedVolts;
         inputs.rollerStatorCurrentAmps = rollerState.getTorqueCurrent();
         inputs.rollerSupplyCurrentAmps = rollerState.getSupplyCurrent();
@@ -122,7 +121,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
         inputs.extensionMotorSupplyCurrentAmps[0] = inputs.extensionSupplyCurrentAmps;
         inputs.extensionMotorSupplyCurrentAmps[1] = inputs.extensionSupplyCurrentAmps;
 
-        inputs.kickerVelocityRPM = kickerVelocityRPM;
         inputs.kickerAppliedVolts = kickerAppliedVolts;
         inputs.kickerStatorCurrentAmps = kickerState.getTorqueCurrent();
         inputs.kickerSupplyCurrentAmps = kickerState.getSupplyCurrent();
