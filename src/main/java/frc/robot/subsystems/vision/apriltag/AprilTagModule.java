@@ -1,16 +1,20 @@
 package frc.robot.subsystems.vision.apriltag;
 
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleArrayEntry;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEvent;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.networktables.TimestampedDoubleArray;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.vision.ATVision;
@@ -40,6 +44,19 @@ public class AprilTagModule {
     private final StringPublisher modePublisher;
     private final StringPublisher defaultModePublisher;
 
+    private final DoublePublisher ntClockOffsetPublisher;
+
+    /**
+     * A botpose array plus the RIO FPGA time it arrived. Written from the NT listener thread.
+     *
+     * @param ntTimestampSeconds The timestamp the Limelight stamped on the value, i.e. its own
+     *                           estimate of RIO time. Only kept for the clock-offset diagnostic.
+     */
+    private record ReceivedPose(double[] value, double rioReceiveSeconds, double ntTimestampSeconds) {}
+
+    private final AtomicReference<ReceivedPose> latestMT1 = new AtomicReference<>();
+    private final AtomicReference<ReceivedPose> latestMT2 = new AtomicReference<>();
+
     private final EstimationMode defaultMode;
     private EstimationMode lastMode;
 
@@ -67,10 +84,36 @@ public class AprilTagModule {
         modePublisher = moduleSubTable.getStringTopic("LastEstimateMode").publish();
         defaultModePublisher = moduleSubTable.getStringTopic("DefaultEstimateMode").publish();
         isConnectedPublisher = moduleSubTable.getBooleanTopic("IsConnected").publish();
+        ntClockOffsetPublisher = moduleSubTable.getDoubleTopic("NTClockOffsetMs").publish();
+
+        listenForPoses("botpose_wpiblue", latestMT1);
+        listenForPoses("botpose_orb_wpiblue", latestMT2);
 
         applyConfig();
         updateOffset(offset);
         defaultModePublisher.setDefault(defaultMode.name());
+    }
+
+    /**
+     * Stamps each incoming botpose with the RIO's own clock the moment it arrives.
+     * <p>
+     * The NT timestamp on a Limelight value is the camera's guess at RIO time, derived from an NT
+     * clock sync it does when it connects. That guess can be off by tens of ms, stays fixed until
+     * the camera reconnects, and drifts as the two clocks diverge, so it can't be trusted for
+     * latency compensation. The time the RIO received the value can be. On the RIO (the NT server)
+     * {@code timestamp} and {@code serverTime} both hold the camera's value, which is why switching
+     * between them changed nothing.
+     */
+    private void listenForPoses(String key, AtomicReference<ReceivedPose> latest) {
+        DoubleArrayEntry entry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, key);
+        NetworkTableInstance.getDefault().addListener(
+            entry,
+            EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+            event -> {
+                double receivedAt = Timer.getFPGATimestamp();
+                var value = event.valueData.value;
+                latest.set(new ReceivedPose(value.getDoubleArray(), receivedAt, value.getTime() / 1e6));
+            });
     }
 
     /**
@@ -183,15 +226,12 @@ public class AprilTagModule {
      * @return The estimated pose if the Limelight has targets
      */
     private Optional<AprilTagEstimate> readPose(boolean isMegaTag2) {
-        DoubleArrayEntry poseEntry = LimelightHelpers.getLimelightDoubleArrayEntry(limelightID, isMegaTag2 ? "botpose_orb_wpiblue" : "botpose_wpiblue");
-        TimestampedDoubleArray tsValue = poseEntry.getAtomic();
-        double[] poseArray = tsValue.value;
-        long timestamp = tsValue.serverTime;
-
-        if (poseArray.length == 0 || tsValue.timestamp == 0) {
-            // Handle the case where no data is available
+        ReceivedPose received = (isMegaTag2 ? latestMT2 : latestMT1).get();
+        if (received == null || received.value().length == 0) {
+            // Nothing has arrived since robot code started
             return Optional.empty();
         }
+        double[] poseArray = received.value();
 
         double latencyMs = LimelightHelpers.extractArrayEntry(poseArray, 6);
         int tagCount = (int) LimelightHelpers.extractArrayEntry(poseArray, 7);
@@ -220,8 +260,12 @@ public class AprilTagModule {
 
         var pose = LimelightHelpers.toPose2D(poseArray);
 
-        // Convert server timestamp from microseconds to seconds and adjust for latency
-        double adjustedTimestampSeconds = (timestamp / 1000000.0) - (latencyMs / 1000.0);
+        // Latency (index 6) covers capture -> publish; the few ms of network transit after that
+        // is ignored, which puts the capture time slightly late but never after now.
+        double adjustedTimestampSeconds = received.rioReceiveSeconds() - (latencyMs / 1000.0);
+        // How far the camera's idea of RIO time is from the real thing. Positive = camera is ahead
+        // (the old code would have called its estimates "in the future").
+        ntClockOffsetPublisher.accept((received.ntTimestampSeconds() - received.rioReceiveSeconds()) * 1000.0);
 
         lastMode = isMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
         return Optional.of(new AprilTagEstimate(pose, adjustedTimestampSeconds, isMegaTag2, tagDistMeters, tagCount, avgAmbiguity, tagArea));
