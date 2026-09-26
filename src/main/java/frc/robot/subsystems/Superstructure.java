@@ -65,7 +65,7 @@ public class Superstructure extends SubsystemBase {
         m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData, FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
 
         if (Robot.isSimulation()) {
-            this.m_intake = new Intake(new IntakeIO() {});
+            this.m_intake = new Intake(new IntakeIOSimTalonFX());
             this.m_hood = new Hood(new HoodIOSimTalonFX(), () -> m_shotProjector.hoodDeg);
             this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), () -> m_shotProjector.rpm);
             this.m_turret = new Turret(new TurretIOSimTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));

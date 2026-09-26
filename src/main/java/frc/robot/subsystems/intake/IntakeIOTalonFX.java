@@ -12,6 +12,7 @@ import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -42,8 +43,8 @@ public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_kickerMotor
     = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
 
-    protected VelocityVoltage m_rollerVelocityRequest = new VelocityVoltage(0);
-    protected VelocityVoltage m_kickerVelocityRequest = new VelocityVoltage(0);
+    protected VoltageOut m_rollerVoltageRequest = new VoltageOut(0);
+    protected VoltageOut m_kickerVoltageRequest = new VoltageOut(0);
 
     protected final MotionMagicVoltage m_extensionRequest =
     new MotionMagicVoltage(0.0).withEnableFOC(true);
@@ -113,10 +114,6 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withSupplyCurrentLimit(IntakeConstants.kKickerSupplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
         kickConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kKickerReduction);
-        kickConfig.Slot0 = new Slot0Configs()
-            .withKP(IntakeConstants.kKickerP)
-            .withKS(IntakeConstants.kKickerS)
-            .withKV(IntakeConstants.kKickerV);
         kickConfig.Voltage = new VoltageConfigs()
             .withPeakForwardVoltage(IntakeConstants.kKickerMaxVolts)
             .withPeakReverseVoltage(IntakeConstants.kKickerMinVolts);
@@ -135,10 +132,6 @@ public class IntakeIOTalonFX implements IntakeIO {
             .withSupplyCurrentLimit(IntakeConstants.kRollerSupplyCurrentLimitAmps)
             .withSupplyCurrentLimitEnable(true);
         rollerConfig.Feedback = new FeedbackConfigs().withSensorToMechanismRatio(IntakeConstants.kRollerReduction);
-        rollerConfig.Slot0 = new Slot0Configs()
-            .withKP(IntakeConstants.kRollerP)
-            .withKS(IntakeConstants.kRollerS)
-            .withKV(IntakeConstants.kRollerV);
         rollerConfig.Voltage = new VoltageConfigs()
             .withPeakForwardVoltage(IntakeConstants.kRollerMaxVolts)
             .withPeakReverseVoltage(IntakeConstants.kRollerMinVolts);
@@ -206,7 +199,6 @@ public class IntakeIOTalonFX implements IntakeIO {
             m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
             m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
 
-        inputs.rollerVelocityRPM = m_rollerVelocity.getValueAsDouble() * 60;
         inputs.rollerAppliedVolts = m_rollerAppliedVoltage.getValueAsDouble();
         inputs.rollerStatorCurrentAmps = m_rollerStatorCurrent.getValueAsDouble();
         inputs.rollerSupplyCurrentAmps = m_rollerSupplyCurrent.getValueAsDouble();
@@ -224,20 +216,19 @@ public class IntakeIOTalonFX implements IntakeIO {
         inputs.extensionMotorSupplyCurrentAmps[0] = inputs.extensionSupplyCurrentAmps;
         inputs.extensionMotorSupplyCurrentAmps[1] = m_extensionFollowerSupplyCurrent.getValueAsDouble();
 
-        inputs.kickerVelocityRPM = m_kickerVelocity.getValueAsDouble() * 60;
         inputs.kickerAppliedVolts = m_kickerAppliedVoltage.getValueAsDouble();
         inputs.kickerStatorCurrentAmps = m_kickerStatorCurrent.getValueAsDouble();
         inputs.kickerSupplyCurrentAmps = m_kickerSupplyCurrent.getValueAsDouble();
     }
 
     @Override
-    public void setKickerVelocity(double velocityRPM) {
-        m_kickerMotor.setControl(m_kickerVelocityRequest.withVelocity(velocityRPM / 60.0));
+    public void setKickerVoltage(double voltage) {
+        m_kickerMotor.setControl(m_kickerVoltageRequest.withOutput(voltage));
     }
 
     @Override
-    public void setRollerVelocity(double velocityRPM) {
-        m_rollerLeadMotor.setControl(m_rollerVelocityRequest.withVelocity(velocityRPM / 60.0));
+    public void setRollerVoltage(double voltage) {
+        m_rollerLeadMotor.setControl(m_rollerVoltageRequest.withOutput(voltage));
     }
 
     @Override

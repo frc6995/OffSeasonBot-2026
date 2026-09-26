@@ -4,8 +4,8 @@ import edu.wpi.first.epilogue.Logged;
 
 public interface IntakeIO {
     default void updateInputs(IntakeInputs inputs) {}
-    default void setRollerVelocity(double velocityRPM) {}
-    default void setKickerVelocity(double velocityRPM) {}
+    default void setRollerVoltage(double voltage) {}
+    default void setKickerVoltage(double voltage) {}
     default void setExtensionPosition(double positionMeters) {}
 
     default void setRollerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {}
@@ -15,8 +15,8 @@ public interface IntakeIO {
     default void resetEncoder() {}
 
     default void stop() {
-        setRollerVelocity(0.0);
-        setKickerVelocity(0.0);
+        setRollerVoltage(0.0);
+        setKickerVoltage(0.0);
     }
 
     /*
@@ -30,7 +30,6 @@ public interface IntakeIO {
 
     class IntakeInputs {
         public double rollerAppliedVolts;
-        public double rollerVelocityRPM;
         /** Lead motor only; see {@link #rollerMotorSupplyCurrentAmps} for the pair. */
         public double rollerStatorCurrentAmps;
         /** Lead motor only; see {@link #rollerMotorSupplyCurrentAmps} for the pair. */
@@ -39,7 +38,6 @@ public interface IntakeIO {
         public double[] rollerMotorSupplyCurrentAmps = new double[kRollerMotorCount];
         public double[] rollerMotorStatorCurrentAmps = new double[kRollerMotorCount];
 
-        public double kickerVelocityRPM;
         public double kickerAppliedVolts;
         public double kickerStatorCurrentAmps;
         public double kickerSupplyCurrentAmps;

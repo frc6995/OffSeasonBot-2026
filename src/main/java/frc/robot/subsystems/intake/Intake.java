@@ -23,11 +23,11 @@ public class Intake extends SubsystemBase {
         public static final int kEXTENSION_LEAD_MOTOR_ID = 32;
         public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
 
-        // Kicker PID Constants
-        public static final double kKickerP = 0.2;
-        // Kicker Feedforward Constants
-        public static final double kKickerS = 0.25;
-        public static final double kKickerV = 0.164;
+        // // Kicker PID Constants
+        // public static final double kKickerP = 0.2;
+        // // Kicker Feedforward Constants
+        // public static final double kKickerS = 0.25;
+        // public static final double kKickerV = 0.164;
         // Kicker Config Constants
         public static final double kKickerSupplyCurrentLimitAmps = 40;
         public static final double kKickerStatorCurrentLimitAmps = 80;
@@ -36,15 +36,14 @@ public class Intake extends SubsystemBase {
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kKickerForwardVolts = 4.0;
-        public static final double kKickerEjectingRPM = -1000.0;
-        public static final double kKickerForwardRPM = 1000.0;
+        public static final double kKickerEjectingVoltage = -5.0;
+        public static final double kKickerForwardVoltage = 4.0;
 
-        // Roller PID Constants
-        public static final double kRollerP = 0.2;
-        // Roller Feedforward Constants
-        public static final double kRollerS = 0.25;
-        public static final double kRollerV = 0.396;
+        // // Roller PID Constants
+        // public static final double kRollerP = 0.2;
+        // // Roller Feedforward Constants
+        // public static final double kRollerS = 0.25;
+        // public static final double kRollerV = 0.396;
         // Roller Config Constants
         public static final double kRollerSupplyCurrentLimitAmps = 40;
         public static final double kRollerStatorCurrentLimitAmps = 80;
@@ -53,9 +52,8 @@ public class Intake extends SubsystemBase {
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kRollerForwardVolts = 4.0;
-        public static final double kRollerEjectingRPM = -1000.0;
-        public static final double kRollerForwardRPM = 1000.0;
+        public static final double kRollerEjectingVoltage = -5.0; // placeholder, needs to be tuned
+        public static final double kRollerForwardVoltage = 5.0; // placeholder, needs to be tuned
 
         // Extension PID Constants
         public static final double kExtensionP = 20;
@@ -159,16 +157,6 @@ public class Intake extends SubsystemBase {
     @Logged(name = "State", importance = Importance.CRITICAL)
     public IntakeState getState() {
         return intakeState;
-    }
-
-    @Logged(name = "Roller/Velocity", importance = Importance.INFO)
-    public double getRollerVelocityRPM() {
-        return inputs.rollerVelocityRPM;
-    }
-
-    @Logged(name = "Kicker/Velocity", importance = Importance.INFO)
-    public double getKickVelocityRPM() {
-        return inputs.kickerVelocityRPM;
     }
 
     @Logged(name = "Extension/Position", importance =  Importance.INFO)
@@ -279,8 +267,8 @@ public class Intake extends SubsystemBase {
 
         io.updateInputs(inputs);
 
-        io.setKickerVelocity(resolveKickerTargetVelocity(intakeState));
-        io.setRollerVelocity(resolveRollerTargetVelocity(intakeState));
+        io.setKickerVoltage(resolveKickerTargetVoltage(intakeState));
+        io.setRollerVoltage(resolveRollerTargetVoltage(intakeState));
         io.setExtensionPosition(clampExtension(resolveExtensionTargetPosition(intakeState)));
     }
 
@@ -316,24 +304,24 @@ public class Intake extends SubsystemBase {
                 IntakeConstants.kExtensionMaxMeters);
     }
 
-    private static double resolveRollerTargetVelocity(IntakeState state) {
+    private static double resolveRollerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case ACTIVE -> IntakeConstants.kRollerForwardRPM;
-            case AGITATING -> IntakeConstants.kRollerForwardRPM;
-            case EJECTING -> IntakeConstants.kRollerEjectingRPM;
+            case ACTIVE -> IntakeConstants.kRollerForwardVoltage;
+            case AGITATING -> IntakeConstants.kRollerForwardVoltage;
+            case EJECTING -> IntakeConstants.kRollerEjectingVoltage;
 
         };
     }
 
-    private static double resolveKickerTargetVelocity(IntakeState state) {
+    private static double resolveKickerTargetVoltage(IntakeState state) {
         return switch (state) {
             case IDLE -> 0.0;
             case RETRACTED -> 0.0;
-            case ACTIVE -> IntakeConstants.kKickerForwardRPM;
-            case AGITATING -> IntakeConstants.kKickerForwardRPM;
-            case EJECTING -> IntakeConstants.kKickerEjectingRPM;
+            case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
+            case AGITATING -> IntakeConstants.kKickerForwardVoltage;
+            case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };
     }
