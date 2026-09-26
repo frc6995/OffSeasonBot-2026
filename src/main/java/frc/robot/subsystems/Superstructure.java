@@ -65,7 +65,7 @@ public class Superstructure extends SubsystemBase {
         m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData, FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
 
         if (Robot.isSimulation()) {
-            this.m_intake = new Intake(new IntakeIO() {});
+            this.m_intake = new Intake(new IntakeIOSimTalonFX());
             this.m_hood = new Hood(new HoodIOSimTalonFX(), () -> m_shotProjector.hoodDeg);
             this.m_flywheel = new Flywheel(new FlywheelIOSimTalonFX(), () -> m_shotProjector.rpm);
             this.m_turret = new Turret(new TurretIOSimTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));
@@ -134,7 +134,34 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command requestIntakeAgitating() {
-        return Commands.runOnce(() -> m_intake.requestAgitate());
+        return Commands.runOnce(() -> {
+            if(m_intake.getState() == IntakeState.ACTIVE) {
+                m_intake.requestMiniAgitate();
+            } else {
+                m_intake.requestFullAgitate();
+            }
+        });
+    }
+
+    // Shoot-only: sweep+hold the extension, but the rollers/kicker stay idle since the intake
+    // button isn't held.
+    public Command requestIntakeFullAgitate() {
+        return Commands.runOnce(() -> m_intake.requestFullAgitate(false));
+    }
+
+    /**
+     * Shoot+intake held together: mini-agitate (long extension only) while scoring, plain
+     * ACTIVE while passing -- passing shots don't want the extension sweeping. Intake button is
+     * held in both cases, so rollers/kicker stay spinning.
+     */
+    public Command requestIntakeForShootAndIntake() {
+        return Commands.runOnce(() -> {
+            if (isInPassingZone()) {
+                m_intake.requestActive();
+            } else {
+                m_intake.requestMiniAgitate();
+            }
+        });
     }
 
     // In actual use, Idle can mean slow roller velocity
@@ -192,8 +219,11 @@ public class Superstructure extends SubsystemBase {
 
     /** Chooses PASSING or SCORING based on whether the robot is in the configurable passing zone. */
     private RobotState determineShootState() {
-        boolean inPassingZone = POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation());
-        return inPassingZone ? RobotState.PASSING : RobotState.SCORING;
+        return isInPassingZone() ? RobotState.PASSING : RobotState.SCORING;
+    }
+
+    private boolean isInPassingZone() {
+        return POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation());
     }
 
     private void engageShootState(RobotState state) {
