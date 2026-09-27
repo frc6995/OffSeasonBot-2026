@@ -39,9 +39,9 @@ have often already cut in, so the draw during understates the cause — but when
 on at the same instant the voltage drops, the lookback shows an idle robot and the draw during is
 the whole story.
 
-**An unaccounted-draw figure** — the PDP's total current minus the sum of the named subsystems.
-That gap is the roboRIO, radio, and Limelights. A gap much larger than that means something is
-drawing power that nothing in code accounts for.
+**Robot totals come from the sum of the subsystem supply currents**, not from the PDH (which is
+not on the CAN bus). So the "peak draw" figures leave out the roboRIO, radio, and Limelights —
+expect the battery to be delivering another 5–10 A on top.
 
 **A sample-rate warning** if any current channel never reaches a rate that can resolve a
 brownout. The robot asks for 50 Hz (`CtreUtil.kCurrentSignalFrequencyHz`); if this fires, that
@@ -61,14 +61,16 @@ each of the sags printed in full, so `--max-events` (default 10) caps these too.
 ## Where the data comes from
 
 The `Supply Current Total` getter on each subsystem, and
-`frc.robot.subsystems.power.PowerMonitor` for battery voltage, brownout state, and PDP totals.
+`frc.robot.subsystems.power.PowerMonitor` for battery voltage and brownout state (both read from
+the roboRIO, so nothing depends on the PDH being on CAN).
 Supply current, not stator: stator current is measured on the motor side of the controller and
 can be several times what is actually drawn from the battery, so a stator sum badly overstates
 the power budget.
 
-If the script exits with a list of missing channels, the log predates those getters, or
-`config.minimumImportance` in `Robot.java` is back above `DEBUG`. It refuses to run rather than
-charting zeros.
+If the script exits with a list of missing channels, the log was recorded with logging off
+(`Epilogue.bind(this)` / `DataLogManager.start()` in `Robot.java`), or `PowerMonitor` is not wired
+into `RobotContainer` and `RobotContainerLogger`. It refuses to run rather than charting zeros.
+All the required channels are `CRITICAL`, so `minimumImportance = CRITICAL` is enough.
 
 ## Feeding results back
 

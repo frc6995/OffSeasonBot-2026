@@ -10,9 +10,11 @@ before it.
     python3 tools/power_analysis/analyze_power.py <log> --out --csv
 
 The channels this reads are produced by the `Supply Current Total` getters on each subsystem and
-by frc.robot.subsystems.power.PowerMonitor. A log recorded before those existed will fail the
-channel check below with an explicit list of what is missing - that is the intended behaviour,
-not a bug: silently charting zeros would be worse than refusing to run.
+by frc.robot.subsystems.power.PowerMonitor (battery voltage and brownout state). The robot's total
+draw is the sum of those supply currents; nothing here needs a PDP/PDH on the CAN bus. A log
+recorded without those will fail the channel check below with an explicit list of what is
+missing - that is the intended behaviour, not a bug: silently charting zeros would be worse than
+refusing to run.
 
 Only the plotting is optional (matplotlib); the tables are pure standard library.
 """
@@ -69,8 +71,6 @@ SUBSYSTEMS = [
 BATTERY_VOLTAGE = "Power/Battery Voltage"
 BROWNED_OUT = "Power/Browned Out"
 BROWNOUT_VOLTAGE = "Power/Brownout Voltage"
-PDP_TOTAL_CURRENT = "Power/PDP/Total Current"
-PDP_CONNECTED = "Power/PDP/Connected"
 CAN_LOWER = "Power/CAN/LowerBus Utilization"
 CAN_UPPER = "Power/CAN/UpperBus Utilization"
 
@@ -454,8 +454,9 @@ def main() -> int:
         for name in missing:
             print(f"  - {PREFIX}{name}")
         print(
-            "\nMost likely the log predates the power-logging changes, or Epilogue's\n"
-            "minimumImportance is back above DEBUG in Robot.java. Channels present in this log:\n"
+            "\nMost likely the log was recorded with Epilogue logging off (Epilogue.bind in\n"
+            "Robot.java), or with PowerMonitor not wired into RobotContainer/RobotContainerLogger.\n"
+            "Channels present in this log:\n"
         )
         for name in log.names():
             print(f"  {name}")
@@ -553,39 +554,15 @@ def main() -> int:
             "  simulated motor rather than a measured one."
         )
 
-    # ---- PDP cross-check ----
+    # ---- robot total ----
+    # The sum of every subsystem's supply current. There is no PDP/PDH on the CAN bus to check it
+    # against, so loads with no motor controller behind them are simply not in it.
     total_current = [sum(series[s.name][i] for s in SUBSYSTEMS) for i in range(len(grid))]
-    pdp_channel = resolve(log, PDP_TOTAL_CURRENT)
-    pdp_total = resample(*log.series(pdp_channel), grid=grid) if pdp_channel else []
-    # A flat zero means nothing is answering on the bus - the PowerDistribution object constructs
-    # fine in simulation and reports zeros. Comparing against that would print a nonsense negative
-    # gap and read as though a load had gone missing.
-    pdp_reporting = any(value != 0.0 for value in pdp_total)
-
-    if pdp_reporting:
-        gaps = [p - t for p, t, m in zip(pdp_total, total_current, mask) if m]
-        if gaps:
-            gaps_sorted = sorted(gaps)
-            print(
-                f"\nUnaccounted draw (PDP total minus the sum of the rows above):"
-                f" mean {sum(gaps) / len(gaps):6.1f} A, p95 {percentile(gaps_sorted, 0.95):6.1f} A"
-            )
-            print(
-                "  This is the roboRIO, radio, Limelights, and anything else without a motor\n"
-                "  controller behind it. A large or growing gap means a load nothing accounts for."
-            )
-    elif pdp_channel:
-        print(
-            "\nNote: the PDP reported zero current for the whole log, so the sum above was not\n"
-            "      cross-checked against what the battery actually delivered. Expected in\n"
-            "      simulation; on the real robot it means nothing answered at the CAN ID in\n"
-            "      PowerMonitor.kPdpCanId."
-        )
-    else:
-        print(
-            "\nNote: no PDP total current channel in this log, so the sum above cannot be\n"
-            "      cross-checked against what the battery actually delivered."
-        )
+    print(
+        "\nTotals and 'peak draw' below are the sum of the subsystem supply currents. They leave\n"
+        "  out the roboRIO, radio, Limelights, and anything else without a motor controller behind\n"
+        "  it - typically another 5-10 A on top."
+    )
 
     # ---- CAN utilization ----
     for label, suffix in (("LowerBus (swerve)", CAN_LOWER), ("UpperBus (superstructure)", CAN_UPPER)):

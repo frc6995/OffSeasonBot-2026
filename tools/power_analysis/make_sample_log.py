@@ -89,7 +89,6 @@ def main() -> int:
     voltage_id = writer.start_entry(ap.PREFIX + ap.BATTERY_VOLTAGE, "double")
     brownout_flag_id = writer.start_entry(ap.PREFIX + ap.BROWNED_OUT, "boolean")
     brownout_v_id = writer.start_entry(ap.PREFIX + ap.BROWNOUT_VOLTAGE, "double")
-    pdp_total_id = writer.start_entry(ap.PREFIX + ap.PDP_TOTAL_CURRENT, "double")
     can_lower_id = writer.start_entry(ap.PREFIX + ap.CAN_LOWER, "double")
     can_upper_id = writer.start_entry(ap.PREFIX + ap.CAN_UPPER, "double")
     flywheel_state_id = writer.start_entry(ap.PREFIX + "Flywheel/State", "string")
@@ -156,14 +155,14 @@ def main() -> int:
             }
 
         motor_total = sum(currents.values())
-        # Non-motor loads: roboRIO, radio, two Limelights.
-        pdp_total = motor_total + 7.5 + random.uniform(-0.5, 0.5)
-        voltage = open_circuit_v - pdp_total * resistance
+        # Non-motor loads (roboRIO, radio, two Limelights) still sag the battery, even though no
+        # channel in the log accounts for them.
+        battery_total = motor_total + 7.5 + random.uniform(-0.5, 0.5)
+        voltage = open_circuit_v - battery_total * resistance
 
         for name, value in currents.items():
             writer.write_double(current_ids[name], timestamp_us, value)
         writer.write_double(voltage_id, timestamp_us, voltage)
-        writer.write_double(pdp_total_id, timestamp_us, pdp_total)
         writer.write_boolean(brownout_flag_id, timestamp_us, voltage < brownout_v)
 
         if step % 25 == 0:

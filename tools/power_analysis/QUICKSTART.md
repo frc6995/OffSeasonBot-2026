@@ -38,9 +38,9 @@ Charts need matplotlib once: `pip3 install -r tools/power_analysis/requirements.
 | **P90 / P99 (A)** columns | how spiky it is — spiky causes brownouts |
 | **`Name:STATE` rows** | e.g. `Drive:SCORING` vs `Drive` — proves `RobotCurrentLimits` fired |
 | **Sag list** (`during` vs `0.5s before`) | what was pulling when the voltage dropped |
-| **Unaccounted draw** | non-motor load (RIO, radio, cameras); expect ~5–10 A |
 
 Percentiles are over samples where the mechanism was *actually running*, not the whole match.
+Totals are the sum of motor supply currents (no PDH on CAN), so they exclude RIO/radio/cameras (~5–10 A).
 
 ## 4. Comparing two practice matches
 
@@ -65,13 +65,12 @@ does the same work more slowly and uses about the same energy either way.
 
 | Message | Fix |
 |---|---|
-| `does not contain the channels...` | log predates the power logging, or `minimumImportance` in `Robot.java` is above `DEBUG` |
+| `does not contain the channels...` | logging was off (`Epilogue.bind` in `Robot.java`), or `PowerMonitor` isn't wired into `RobotContainer` |
 | `command not found: python3` | Windows: use `py`. Otherwise install from python.org |
 | `can't open file ...analyze_power.py` | wrong folder — `cd` to the repo root |
 | `Skipping plots: matplotlib...` | not an error; install it if you want charts |
 | `robot was never enabled` | bench log — add `--all-time` |
 | `channels never reach a useful rate` | real problem: 50 Hz isn't reaching that motor (`CtreUtil.kCurrentSignalFrequencyHz`) |
-| `PDP reported zero current` | normal in simulation; on the robot check the PDP CAN wiring |
 
 ## Notes
 
