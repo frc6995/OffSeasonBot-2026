@@ -301,12 +301,10 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        // Driven from the commanded setpoint rather than the simulated PID's actual position: the
-        // sim PID doesn't track like the real robot's, so the simulated position lags/oscillates in
-        // a way that isn't representative.
         double retractedLengthMeters = Units.inchesToMeters(8.0);
-        intakeLigament.setLength(retractedLengthMeters + commandedExtensionMeters);
-        RobotVisualizer.updateIntakeExtension(commandedExtensionMeters);
+        double extensionMeters = inputs.extensionPositionMeters;
+        intakeLigament.setLength(retractedLengthMeters + extensionMeters);
+        RobotVisualizer.updateIntakeExtension(extensionMeters);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {
