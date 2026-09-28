@@ -106,11 +106,6 @@ public class Intake extends SubsystemBase {
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtFarPosition = false;
-    // Agitating sweeps the extension regardless of caller, but the roller/kicker should only
-    // spin while intake is explicitly requested (left bumper held) -- e.g. shoot-only agitation
-    // (right bumper alone) sweeps with the rollers idle, while auto callers and the
-    // both-bumpers-held teleop case keep them spinning.
-    private boolean agitateRollersActive = true;
 
     public Intake() {
         this(new IntakeIO() {
@@ -148,20 +143,10 @@ public class Intake extends SubsystemBase {
     }
 
     public void requestMiniAgitate() {
-        requestMiniAgitate(true);
-    }
-
-    public void requestMiniAgitate(boolean spinRollers) {
-        agitateRollersActive = spinRollers;
         setState(IntakeState.MINI_AGITATE);
     }
 
     public void requestFullAgitate() {
-        requestFullAgitate(true);
-    }
-
-    public void requestFullAgitate(boolean spinRollers) {
-        agitateRollersActive = spinRollers;
         setState(IntakeState.FULL_AGITATE);
     }
 
@@ -286,10 +271,8 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic() {
         if (DriverStation.isDisabled()) {
-            // A roller/kicker request must never survive a disable -- see Flywheel.periodic() for
-            // the full mechanism. RETRACTED rather than IDLE, because IDLE holds the extension at
-            // kExtensionMaxMeters: re-enabling should not fling the intake back out on its own.
-            setState(IntakeState.RETRACTED);
+            //Reset to idle 
+            setState(IntakeState.IDLE);
         }
 
         io.updateInputs(inputs);
@@ -344,7 +327,8 @@ public class Intake extends SubsystemBase {
             case IDLE -> IntakeConstants.kRollerIdleVolts;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kRollerForwardVoltage;
-            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kRollerForwardVoltage : IntakeConstants.kRollerIdleVolts;
+            case MINI_AGITATE -> IntakeConstants.kRollerForwardVoltage;
+            case FULL_AGITATE -> IntakeConstants.kRollerIdleVolts;
             case EJECTING -> IntakeConstants.kRollerEjectingVoltage;
 
         };
@@ -355,7 +339,8 @@ public class Intake extends SubsystemBase {
             case IDLE -> IntakeConstants.kKickerIdleVolts;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
-            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kKickerForwardVoltage : IntakeConstants.kKickerIdleVolts;
+            case MINI_AGITATE -> IntakeConstants.kKickerForwardVoltage;
+            case FULL_AGITATE -> IntakeConstants.kKickerIdleVolts;
             case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };

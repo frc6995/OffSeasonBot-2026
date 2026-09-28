@@ -152,8 +152,6 @@ public class RobotContainer {
         *
         */
 
-        joystick.a().onTrue(m_superstructure.requestIntakeToggle());
-
         joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
         joystick.leftTrigger().onFalse(m_superstructure.requestIntakeIdle());
 
@@ -188,15 +186,6 @@ public class RobotContainer {
         // let releasing one button cancel a shot still being held via the other.
         shootButton.or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
-        // Snap the robot's heading to the nearest cardinal direction in place.
-        joystick.b().whileTrue(Commands.defer(
-                () -> new AutoAlignFixedHeading(
-                        m_drivetrain.getPose(),
-                        m_drivetrain,
-                        true,
-                        RotationControlMode.VELOCITY_LIMITED_PROFILE),
-                Set.of(m_drivetrain)));
-        
         joystick.x().whileTrue(Commands.defer(
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));

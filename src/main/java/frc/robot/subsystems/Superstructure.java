@@ -152,10 +152,10 @@ public class Superstructure extends SubsystemBase {
         });
     }
 
-    // Shoot-only: sweep+hold the extension, but the rollers/kicker stay idle since the intake
-    // button isn't held.
+    // Shoot-only: sweep+hold the extension; requestFullAgitate() always keeps the rollers/kicker
+    // idle.
     public Command requestIntakeFullAgitate() {
-        return Commands.runOnce(() -> m_intake.requestFullAgitate(false));
+        return Commands.runOnce(() -> m_intake.requestFullAgitate());
     }
 
     /**
@@ -180,16 +180,6 @@ public class Superstructure extends SubsystemBase {
 
     public Command requestIntakeEject() {
         return Commands.runOnce(() -> m_intake.requestEject());
-    }
-
-    public Command requestIntakeToggle() {
-        return Commands.runOnce(() -> {
-            if(m_intake.isDeployed()) {
-                m_intake.requestRetract();
-            } else {
-                m_intake.requestIdle();
-            }
-        });
     }
 
     public Command requestFlywheelActive() {
