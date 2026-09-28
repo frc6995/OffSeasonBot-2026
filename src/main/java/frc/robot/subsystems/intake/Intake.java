@@ -37,6 +37,7 @@ public class Intake extends SubsystemBase {
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
         public static final double kKickerEjectingVoltage = -4.0;
         public static final double kKickerForwardVoltage = 4.0;
+        public static final double kKickerIdleVolts = 2.0;
 
         // // Roller PID Constants
         // public static final double kRollerP = 0.2;
@@ -53,6 +54,7 @@ public class Intake extends SubsystemBase {
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
         public static final double kRollerEjectingVoltage = -5.0; // placeholder, needs to be tuned
         public static final double kRollerForwardVoltage = 5.0; // placeholder, needs to be tuned
+        public static final double kRollerIdleVolts = 2.0;
 
         // Extension PID Constants
         public static final double kExtensionP = 20;
@@ -341,10 +343,10 @@ public class Intake extends SubsystemBase {
 
     private double resolveRollerTargetVoltage(IntakeState state) {
         return switch (state) {
-            case IDLE -> 0.0;
+            case IDLE -> IntakeConstants.kRollerIdleVolts;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kRollerForwardVoltage;
-            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kRollerForwardVoltage : 0.0;
+            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kRollerForwardVoltage : IntakeConstants.kRollerIdleVolts;
             case EJECTING -> IntakeConstants.kRollerEjectingVoltage;
 
         };
@@ -352,10 +354,10 @@ public class Intake extends SubsystemBase {
 
     private double resolveKickerTargetVoltage(IntakeState state) {
         return switch (state) {
-            case IDLE -> 0.0;
+            case IDLE -> IntakeConstants.kKickerIdleVolts;
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
-            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kKickerForwardVoltage : 0.0;
+            case MINI_AGITATE, FULL_AGITATE -> agitateRollersActive ? IntakeConstants.kKickerForwardVoltage : IntakeConstants.kKickerIdleVolts;
             case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };

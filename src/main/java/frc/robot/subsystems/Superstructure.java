@@ -187,7 +187,7 @@ public class Superstructure extends SubsystemBase {
             if(m_intake.isDeployed()) {
                 m_intake.requestRetract();
             } else {
-                m_intake.requestActive();
+                m_intake.requestIdle();
             }
         });
     }
