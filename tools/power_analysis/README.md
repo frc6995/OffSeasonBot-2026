@@ -5,16 +5,13 @@ Where a match's current went, for tracking down brownouts.
 Power data is recorded by CTRE's hoot logger, not by robot code. Phoenix writes every Talon FX's
 supply current and supply voltage into a `.hoot` file as the frames arrive on the CAN bus, in its
 own thread, so logging costs the robot loop nothing. The robot code's only jobs are keeping those
-two signals on the bus at 20 Hz (`CtreUtil.setPowerSignalFrequency`) and switching logging on and
-off (`HootLogging`).
+two signals on the bus at 20 Hz (`CtreUtil.setPowerSignalFrequency`) and starting the logger
+(`HootLogging`).
 
-## 1. Turn logging on
+## 1. Logging on or off
 
-`HootLogging` puts a toggle at `/SmartDashboard/Hoot Logging/Enabled`. Set it to true in Elastic.
-It is a persistent NetworkTables value, so it survives reboots and redeploys until you change it.
-`Hoot Logging/Active` shows whether a log is actually being written.
-
-The default for a roboRIO that has never had it set is `HootLogging.kEnabledByDefault` (false).
+`HootLogging.kEnabled` in the robot code. When true, logging starts with the robot program and
+runs until it exits. Change it and redeploy to turn logging off.
 
 ## 2. Get the files
 
@@ -65,9 +62,9 @@ the wiring changes.
 
 ## A/B testing loop time
 
-With the toggle, you can compare loop timing with logging on and off without redeploying. Keep
-Phoenix Tuner X closed for both runs (it adds its own CAN and CPU load), run the same routine
-twice, and compare `LoopTiming/maxMs` and `LoopTiming/overrunCount`.
+Deploy with `HootLogging.kEnabled = false`, run a routine, then deploy with it true and run the
+same routine again. Keep Phoenix Tuner X closed for both runs (it adds its own CAN and CPU load),
+and compare `LoopTiming/maxMs` and `LoopTiming/overrunCount`.
 
 ## Files
 

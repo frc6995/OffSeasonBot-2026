@@ -4,28 +4,20 @@ import java.io.File;
 
 import com.ctre.phoenix6.SignalLogger;
 
-import edu.wpi.first.networktables.BooleanEntry;
-import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.CtreUtil;
 
 /**
- * Turns CTRE's hoot signal logging on and off from the dashboard, and adds the handful of values
- * the power dashboard needs that no CTRE device reports.
+ * Starts CTRE's hoot signal logging when {@link #kEnabled} is set, and adds the handful of values the
+ * power dashboard needs that no CTRE device reports.
  *
  * <p>This is the whole on-robot side of power logging. Phoenix records every motor's supply current
  * and supply voltage into the hoot file as the frames arrive on the bus, in its own thread, so the
  * robot loop never reads or writes a current value (see {@link CtreUtil#setPowerSignalFrequency}).
  * What this class adds per loop is a few cheap reads and comparisons; a hoot write happens only when
  * one of those values actually changes, a few dozen times a match.
- *
- * <p>The toggle is {@code /SmartDashboard/Hoot Logging/Enabled}, so it shows up in Elastic without
- * setup. It is a persistent NetworkTables value: set it once and it survives reboots and redeploys,
- * which is what an A/B test of loop timing across several power cycles needs.
- * {@code /SmartDashboard/Hoot Logging/Active} reports whether a log is actually being written.
  *
  * <p>Phoenix already logs {@code RobotMode} and {@code RobotEnable} itself. Custom signals written
  * here (names as they appear after export):
@@ -38,21 +30,18 @@ import frc.robot.util.CtreUtil;
  */
 public final class HootLogging {
     /**
-     * What the toggle starts at on a roboRIO that has never had it set. After that the persisted
-     * NetworkTables value wins, so changing this constant does not override a value already set.
+     * Whether hoot logging runs. Logging starts at robot program start and runs until the program
+     * exits, one folder of .hoot files per start. Set false for the baseline run of a loop-timing
+     * A/B test, then redeploy.
      */
-    public static final boolean kEnabledByDefault = false;
+    public static final boolean kEnabled = true;
 
     /** Only on the real robot, and only if a USB stick is plugged in; see the constructor. */
     private static final String kUsbLogPath = "/u/logs";
 
     private final Superstructure m_superstructure;
 
-    private final BooleanEntry m_enabled;
-    private final BooleanPublisher m_active;
-    private boolean m_logging = false;
-
-    // Last value written of each custom signal. null/false forces a write on the next check.
+    // Last value written of each custom signal. null forces a write on the first loop.
     private Enum<?> m_lastRobotState;
     private Enum<?> m_lastFlywheelState;
     private Enum<?> m_lastIntakeState;
@@ -61,35 +50,26 @@ public final class HootLogging {
     public HootLogging(Superstructure superstructure) {
         m_superstructure = superstructure;
 
-        // This class decides when logging runs; Phoenix's own auto-start would defeat the toggle.
+        // This class decides whether logging runs; Phoenix's own auto-start would ignore kEnabled.
         SignalLogger.enableAutoLogging(false);
+        if (!kEnabled) {
+            return;
+        }
 
         // The roboRIO's internal flash is small and slow to write; CTRE stops logging below 5 MB
         // free. A USB stick avoids both. Without one, Phoenix's default location is used.
         if (RobotBase.isReal() && new File("/u").isDirectory()) {
             CtreUtil.reportIfNotOk("hoot set path", SignalLogger.setPath(kUsbLogPath));
         }
+        CtreUtil.reportIfNotOk("hoot logging start", SignalLogger.start());
 
-        var table = NetworkTableInstance.getDefault().getTable("SmartDashboard/Hoot Logging");
-        var enabledTopic = table.getBooleanTopic("Enabled");
-        m_enabled = enabledTopic.getEntry(kEnabledByDefault);
-        m_enabled.setDefault(kEnabledByDefault);
-        enabledTopic.setPersistent(true);
-        m_active = table.getBooleanTopic("Active").publish();
-        m_active.set(false);
+        m_lastBrownedOut = RobotController.isBrownedOut();
+        SignalLogger.writeBoolean("BrownedOut", m_lastBrownedOut);
     }
 
     /** Call once per loop, from robotPeriodic. */
     public void periodic() {
-        boolean wanted = m_enabled.get();
-        if (wanted != m_logging) {
-            if (wanted) {
-                start();
-            } else {
-                stop();
-            }
-        }
-        if (!m_logging) {
+        if (!kEnabled) {
             return;
         }
 
@@ -115,23 +95,5 @@ public final class HootLogging {
             SignalLogger.writeString("Intake/State", intakeState.name());
             m_lastIntakeState = intakeState;
         }
-    }
-
-    private void start() {
-        CtreUtil.reportIfNotOk("hoot logging start", SignalLogger.start());
-        m_logging = true;
-        m_active.set(true);
-        // A new log starts empty, so every custom signal needs its current value written again.
-        m_lastRobotState = null;
-        m_lastFlywheelState = null;
-        m_lastIntakeState = null;
-        SignalLogger.writeBoolean("BrownedOut", RobotController.isBrownedOut());
-        m_lastBrownedOut = RobotController.isBrownedOut();
-    }
-
-    private void stop() {
-        CtreUtil.reportIfNotOk("hoot logging stop", SignalLogger.stop());
-        m_logging = false;
-        m_active.set(false);
     }
 }

@@ -256,7 +256,7 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
     <summary>How to get the log files off the robot</summary>
     <div class="body">
       <ol>
-        <li>Turn logging on: set <code>Hoot Logging/Enabled</code> to true in Elastic (SmartDashboard table). It stays set across reboots. <code>Hoot Logging/Active</code> shows it is writing.</li>
+        <li>Make sure logging is on: <code>HootLogging.kEnabled</code> is true in the robot code that was deployed. It logs from robot program start until the program exits.</li>
         <li>After the match, copy the newest folder of <code>.hoot</code> files from the roboRIO. They are on the USB stick in <code>/u/logs</code>, or in <code>/home/lvuser/logs</code> without one. There is one file per CAN bus.</li>
         <li>Convert each file with owlet, which ships with Phoenix Tuner X and AdvantageScope. <code>-e 5</code> keeps only the enabled part of the log plus 5 s either side, which makes the files much smaller.
           <div class="cmd"><code id="owlet-cmd">owlet UpperBus.hoot UpperBus.wpilog -f wpilog -e 5</code><button class="btn" type="button" data-copy="owlet-cmd">Copy</button></div>

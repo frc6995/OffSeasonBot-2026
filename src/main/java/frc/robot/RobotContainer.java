@@ -83,7 +83,7 @@ public class RobotContainer {
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
-    /** Hoot signal logging, switchable from the dashboard. See HootLogging. */
+    /** Hoot signal logging; on/off is HootLogging.kEnabled. */
     public final HootLogging hootLogging = new HootLogging(m_superstructure);
 
     public RobotContainer() {
