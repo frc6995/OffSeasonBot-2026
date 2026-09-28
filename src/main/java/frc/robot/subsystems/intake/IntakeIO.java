@@ -19,37 +19,26 @@ public interface IntakeIO {
         setKickerVoltage(0.0);
     }
 
-    /*
-     * Motor counts per mechanism. Roller and extension are lead/follower pairs whose followers
-     * previously had no current signal at all - only getMotorVoltage() - so half of each pair's
-     * draw was missing from the power budget.
-     */
+    /* Motor counts per mechanism. Roller and extension are lead/follower pairs. */
     int kRollerMotorCount = 2;
     int kExtensionMotorCount = 2;
     int kKickerMotorCount = 1;
 
     class IntakeInputs {
         public double rollerAppliedVolts;
-        /** Lead motor only; see {@link #rollerMotorSupplyCurrentAmps} for the pair. */
+        /** Lead motor only; see {@link #rollerMotorStatorCurrentAmps} for the pair. */
         public double rollerStatorCurrentAmps;
-        /** Lead motor only; see {@link #rollerMotorSupplyCurrentAmps} for the pair. */
-        public double rollerSupplyCurrentAmps;
-        /** Per-motor supply current, indexed [lead, follower]. */
-        public double[] rollerMotorSupplyCurrentAmps = new double[kRollerMotorCount];
+        /** Per-motor stator current, indexed [lead, follower]. */
         public double[] rollerMotorStatorCurrentAmps = new double[kRollerMotorCount];
 
         public double kickerAppliedVolts;
         public double kickerStatorCurrentAmps;
-        public double kickerSupplyCurrentAmps;
 
         public double extensionPositionMeters;
         public double extensionAppliedVolts;
-        /** Lead motor only; see {@link #extensionMotorSupplyCurrentAmps} for the pair. */
+        /** Lead motor only; see {@link #extensionMotorStatorCurrentAmps} for the pair. */
         public double extensionStatorCurrentAmps;
-        /** Lead motor only; see {@link #extensionMotorSupplyCurrentAmps} for the pair. */
-        public double extensionSupplyCurrentAmps;
-        /** Per-motor supply current, indexed [lead, follower]. */
-        public double[] extensionMotorSupplyCurrentAmps = new double[kExtensionMotorCount];
+        /** Per-motor stator current, indexed [lead, follower]. */
         public double[] extensionMotorStatorCurrentAmps = new double[kExtensionMotorCount];
     }
 }

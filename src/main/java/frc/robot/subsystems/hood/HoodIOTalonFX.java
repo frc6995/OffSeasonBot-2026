@@ -31,14 +31,14 @@ public class HoodIOTalonFX implements HoodIO {
     protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
     protected final StatusSignal<Voltage> voltSignal = m_hoodMotor.getMotorVoltage();
     protected final StatusSignal<Current> statorCurrentSignal = m_hoodMotor.getStatorCurrent();
-    protected final StatusSignal<Current> supplyCurrentSignal = m_hoodMotor.getSupplyCurrent();
 
     public HoodIOTalonFX() {
         configMotor();
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
-        // CtreUtil.kCurrentSignalFrequencyHz.
-        CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+        CtreUtil.setCurrentSignalFrequency(statorCurrentSignal);
+        CtreUtil.setPowerSignalFrequency(m_hoodMotor);
 
         // Must come before the optimize below, and must cover every signal updateInputs()
         // refreshes - anything left out silently drops to 4 Hz.
@@ -99,12 +99,11 @@ public class HoodIOTalonFX implements HoodIO {
 
     @Override
     public void updateInputs(HoodIOInputs inputs) {
-        BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
+        BaseStatusSignal.refreshAll(angleSignal, voltSignal, statorCurrentSignal);
 
         inputs.angle = mechanismRotationsToAngle(angleSignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
-        inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
     }
 
     @Override

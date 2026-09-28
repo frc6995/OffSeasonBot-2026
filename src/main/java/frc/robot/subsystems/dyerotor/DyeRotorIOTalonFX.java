@@ -37,26 +37,21 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
 
   final StatusSignal<AngularVelocity> m_spinVelocity = m_spinMotor.getVelocity();
   final StatusSignal<Voltage> m_spinVoltage = m_spinMotor.getMotorVoltage();
-  final StatusSignal<Current> m_spinSupCurrent = m_spinMotor.getSupplyCurrent();
   final StatusSignal<Current> m_spinStatCurrent = m_spinMotor.getStatorCurrent();
 
   final StatusSignal<AngularVelocity> m_indexVelocity = m_indexerLead.getVelocity();
   final StatusSignal<Voltage> m_indexVoltage = m_indexerLead.getMotorVoltage();
-  final StatusSignal<Current> m_indexSupCurrent = m_indexerLead.getSupplyCurrent();
   final StatusSignal<Current> m_indexStatCurrent = m_indexerLead.getStatorCurrent();
 
-  final StatusSignal<Current> m_indexFollowerSupCurrent = m_indexerFollow.getSupplyCurrent();
   final StatusSignal<Current> m_indexFollowerStatCurrent = m_indexerFollow.getStatorCurrent();
 
   public DyeRotorIOTalonFX() {
     configureMotors();
     // Current signals are published at an explicit rate rather than Phoenix's default,
     // which is not guaranteed fast enough to resolve a brownout. See
-    // CtreUtil.kCurrentSignalFrequencyHz.
-    CtreUtil.setCurrentSignalFrequency(
-        m_spinSupCurrent, m_spinStatCurrent,
-        m_indexSupCurrent, m_indexStatCurrent,
-        m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
+    // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+    CtreUtil.setCurrentSignalFrequency(m_spinStatCurrent, m_indexStatCurrent, m_indexFollowerStatCurrent);
+    CtreUtil.setPowerSignalFrequency(m_spinMotor, m_indexerLead, m_indexerFollow);
 
     // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
     // anything left out silently drops to 4 Hz. The index follower publishes nothing this code
@@ -133,23 +128,19 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
   @Override
   public void updateInputs(DyeRotorInputs inputs) {
     BaseStatusSignal.refreshAll(
-        m_spinVelocity, m_spinVoltage, m_spinSupCurrent, m_spinStatCurrent,
-        m_indexVelocity, m_indexVoltage, m_indexSupCurrent, m_indexStatCurrent,
-        m_indexFollowerSupCurrent, m_indexFollowerStatCurrent);
+        m_spinVelocity, m_spinVoltage, m_spinStatCurrent,
+        m_indexVelocity, m_indexVoltage, m_indexStatCurrent,
+        m_indexFollowerStatCurrent);
 
     inputs.spinVelocityRPM = m_spinVelocity.getValueAsDouble() * 60.0;
     inputs.spinAppliedVolts = m_spinVoltage.getValueAsDouble();
     inputs.spinStatorCurrentAmps = m_spinStatCurrent.getValueAsDouble();
-    inputs.spinSupplyCurrentAmps = m_spinSupCurrent.getValueAsDouble();
 
     inputs.indexVelocityRPM = m_indexVelocity.getValueAsDouble() * 60.0;
     inputs.indexAppliedVolts = m_indexVoltage.getValueAsDouble();
     inputs.indexStatorCurrentAmps = m_indexStatCurrent.getValueAsDouble();
-    inputs.indexSupplyCurrentAmps = m_indexSupCurrent.getValueAsDouble();
     inputs.indexMotorStatorCurrentAmps[0] = inputs.indexStatorCurrentAmps;
     inputs.indexMotorStatorCurrentAmps[1] = m_indexFollowerStatCurrent.getValueAsDouble();
-    inputs.indexMotorSupplyCurrentAmps[0] = inputs.indexSupplyCurrentAmps;
-    inputs.indexMotorSupplyCurrentAmps[1] = m_indexFollowerSupCurrent.getValueAsDouble();
   }
 
   @Override

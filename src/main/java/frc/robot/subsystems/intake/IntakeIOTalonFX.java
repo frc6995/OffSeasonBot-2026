@@ -52,33 +52,30 @@ public class IntakeIOTalonFX implements IntakeIO {
     private final StatusSignal<AngularVelocity> m_rollerVelocity = m_rollerLeadMotor.getVelocity();
     private final StatusSignal<Voltage> m_rollerAppliedVoltage = m_rollerLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_rollerStatorCurrent = m_rollerLeadMotor.getStatorCurrent();
-    private final StatusSignal<Current> m_rollerSupplyCurrent = m_rollerLeadMotor.getSupplyCurrent();
     private final StatusSignal<Current> m_rollerFollowerStatorCurrent = m_rollerFollowerMotor.getStatorCurrent();
-    private final StatusSignal<Current> m_rollerFollowerSupplyCurrent = m_rollerFollowerMotor.getSupplyCurrent();
 
     private final StatusSignal<Angle> m_extensionPosition = m_extensionLeadMotor.getPosition();
     private final StatusSignal<Voltage> m_extensionAppliedVoltage = m_extensionLeadMotor.getMotorVoltage();
     private final StatusSignal<Current> m_extensionStatorCurrent = m_extensionLeadMotor.getStatorCurrent();
-    private final StatusSignal<Current> m_extensionSupplyCurrent = m_extensionLeadMotor.getSupplyCurrent();
     private final StatusSignal<Current> m_extensionFollowerStatorCurrent = m_extensionFollowerMotor.getStatorCurrent();
-    private final StatusSignal<Current> m_extensionFollowerSupplyCurrent = m_extensionFollowerMotor.getSupplyCurrent();
 
     private final StatusSignal<AngularVelocity> m_kickerVelocity = m_kickerMotor.getVelocity();
     private final StatusSignal<Voltage> m_kickerAppliedVoltage = m_kickerMotor.getMotorVoltage();
     private final StatusSignal<Current> m_kickerStatorCurrent = m_kickerMotor.getStatorCurrent();
-    private final StatusSignal<Current> m_kickerSupplyCurrent = m_kickerMotor.getSupplyCurrent();
 
     public IntakeIOTalonFX() {
         configureMotors();
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
-        // CtreUtil.kCurrentSignalFrequencyHz.
+        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
         CtreUtil.setCurrentSignalFrequency(
-            m_rollerStatorCurrent, m_rollerSupplyCurrent,
-            m_rollerFollowerStatorCurrent, m_rollerFollowerSupplyCurrent,
-            m_extensionStatorCurrent, m_extensionSupplyCurrent,
-            m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
-            m_kickerStatorCurrent, m_kickerSupplyCurrent);
+            m_rollerStatorCurrent, m_rollerFollowerStatorCurrent,
+            m_extensionStatorCurrent, m_extensionFollowerStatorCurrent,
+            m_kickerStatorCurrent);
+        CtreUtil.setPowerSignalFrequency(
+            m_rollerLeadMotor, m_rollerFollowerMotor,
+            m_extensionLeadMotor, m_extensionFollowerMotor,
+            m_kickerMotor);
 
         // Must come before the optimize below, and must cover every signal updateInputs()
         // refreshes - anything left out silently drops to 4 Hz.
@@ -193,32 +190,24 @@ public class IntakeIOTalonFX implements IntakeIO {
 
         // Batched into a single CAN round trip instead of one refreshAll() per motor.
         BaseStatusSignal.refreshAll(
-            m_rollerVelocity, m_rollerAppliedVoltage, m_rollerStatorCurrent, m_rollerSupplyCurrent,
-            m_rollerFollowerStatorCurrent, m_rollerFollowerSupplyCurrent,
-            m_extensionPosition, m_extensionAppliedVoltage, m_extensionStatorCurrent, m_extensionSupplyCurrent,
-            m_extensionFollowerStatorCurrent, m_extensionFollowerSupplyCurrent,
-            m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent, m_kickerSupplyCurrent);
+            m_rollerVelocity, m_rollerAppliedVoltage, m_rollerStatorCurrent, m_rollerFollowerStatorCurrent,
+            m_extensionPosition, m_extensionAppliedVoltage, m_extensionStatorCurrent,
+            m_extensionFollowerStatorCurrent,
+            m_kickerVelocity, m_kickerAppliedVoltage, m_kickerStatorCurrent);
 
         inputs.rollerAppliedVolts = m_rollerAppliedVoltage.getValueAsDouble();
         inputs.rollerStatorCurrentAmps = m_rollerStatorCurrent.getValueAsDouble();
-        inputs.rollerSupplyCurrentAmps = m_rollerSupplyCurrent.getValueAsDouble();
         inputs.rollerMotorStatorCurrentAmps[0] = inputs.rollerStatorCurrentAmps;
         inputs.rollerMotorStatorCurrentAmps[1] = m_rollerFollowerStatorCurrent.getValueAsDouble();
-        inputs.rollerMotorSupplyCurrentAmps[0] = inputs.rollerSupplyCurrentAmps;
-        inputs.rollerMotorSupplyCurrentAmps[1] = m_rollerFollowerSupplyCurrent.getValueAsDouble();
 
         inputs.extensionPositionMeters = mechanismRotationsToMeters(m_extensionPosition.getValueAsDouble());
         inputs.extensionAppliedVolts = m_extensionAppliedVoltage.getValueAsDouble();
         inputs.extensionStatorCurrentAmps = m_extensionStatorCurrent.getValueAsDouble();
-        inputs.extensionSupplyCurrentAmps = m_extensionSupplyCurrent.getValueAsDouble();
         inputs.extensionMotorStatorCurrentAmps[0] = inputs.extensionStatorCurrentAmps;
         inputs.extensionMotorStatorCurrentAmps[1] = m_extensionFollowerStatorCurrent.getValueAsDouble();
-        inputs.extensionMotorSupplyCurrentAmps[0] = inputs.extensionSupplyCurrentAmps;
-        inputs.extensionMotorSupplyCurrentAmps[1] = m_extensionFollowerSupplyCurrent.getValueAsDouble();
 
         inputs.kickerAppliedVolts = m_kickerAppliedVoltage.getValueAsDouble();
         inputs.kickerStatorCurrentAmps = m_kickerStatorCurrent.getValueAsDouble();
-        inputs.kickerSupplyCurrentAmps = m_kickerSupplyCurrent.getValueAsDouble();
     }
 
     @Override

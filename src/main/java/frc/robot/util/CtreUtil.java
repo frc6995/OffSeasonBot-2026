@@ -2,6 +2,7 @@ package frc.robot.util;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
@@ -12,24 +13,25 @@ public final class CtreUtil {
     private CtreUtil() {}
 
     /**
-     * Rate at which supply/stator current signals are published by the motors, in Hz.
+     * Rate at which current and supply voltage signals are published by the motors, in Hz.
      *
      * <p>Set explicitly rather than left to Phoenix's defaults, which vary by signal and by bus
      * type and are not guaranteed to be fast enough for this. Brownout work needs a rate that
      * resolves the event: a voltage sag lasts a couple of hundred milliseconds, so a signal
      * published even a handful of times per second can miss one entirely between two samples.
-     * This is the rate the offline power analysis in {@code tools/power_analysis} assumes.
+     * This is the rate the power dashboard in {@code tools/power_analysis} assumes.
      *
      * <p>Verify with {@code getAppliedUpdateFrequency()} on a signal, or read the effective rate
-     * off a log - the analysis reports it per channel and warns when one is too slow.
+     * off a log - the dashboard reports it per motor and warns when one is too slow.
      *
      * <p>Every motor on this robot is on a CANivore ({@link frc.robot.Constants.CANBuses}), which
      * has the headroom for it - roughly 22 motors x 50 Hz of extra status frames, and Phoenix
      * packs supply current, stator current, and torque current into a single frame so raising all
      * three costs one frame per motor. This would not be safe on the roboRIO's native CAN bus.
      *
-     * <p>If bus utilization (logged as {@code Power/CAN/*}) turns out too high, 20 Hz still
-     * resolves a brownout event - drop this constant rather than removing the calls.
+     * <p>The hoot log records each signal at exactly this rate, and costs the robot loop nothing
+     * either way, so raising it is purely a CAN bandwidth question (check bus utilization in
+     * Tuner X). 20 Hz resolves a brownout event.
      */
     public static final double kCurrentSignalFrequencyHz = 20.0;
 
@@ -56,6 +58,27 @@ public final class CtreUtil {
     public static void setCurrentSignalFrequency(BaseStatusSignal... signals) {
         reportIfNotOk(
                 "set current signal update frequency",
+                BaseStatusSignal.setUpdateFrequencyForAll(kCurrentSignalFrequencyHz, signals));
+    }
+
+    /**
+     * Publishes each motor's supply current and supply voltage at {@link #kCurrentSignalFrequencyHz}
+     * so the hoot log captures them for the power dashboard. Call once from an IO layer's
+     * constructor with every motor it owns, before any {@code optimizeBusUtilization} call.
+     *
+     * <p>Nothing in robot code reads these signals. The hoot logger records them as they arrive on
+     * the bus, in its own thread, so there is deliberately no per-loop refresh anywhere - that is
+     * what keeps power logging off the loop-time budget. Without this call the bus optimizer would
+     * drop both to 4 Hz, too slow to see a brownout.
+     */
+    public static void setPowerSignalFrequency(TalonFX... motors) {
+        BaseStatusSignal[] signals = new BaseStatusSignal[motors.length * 2];
+        for (int i = 0; i < motors.length; i++) {
+            signals[2 * i] = motors[i].getSupplyCurrent(false);
+            signals[2 * i + 1] = motors[i].getSupplyVoltage(false);
+        }
+        reportIfNotOk(
+                "set power signal update frequency",
                 BaseStatusSignal.setUpdateFrequencyForAll(kCurrentSignalFrequencyHz, signals));
     }
 

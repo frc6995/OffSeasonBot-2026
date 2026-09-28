@@ -11,7 +11,6 @@ public interface TurretIO {
         public double velocity;
         public double appliedVolts;
         public double statorCurrent;
-        public double supplyCurrent;
     }
 
 }

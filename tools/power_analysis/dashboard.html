@@ -1,0 +1,1102 @@
+<meta charset="utf-8">
+<title>NOMAD Power Budget</title>
+<meta name="description" content="Per-subsystem power and brownout breakdown from CTRE hoot logs exported to .wpilog.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --page: #f3f4f1;
+  --surface: #fcfcfb;
+  --surface-2: #eceee9;
+  --ink: #101312;
+  --ink-2: #4a504c;
+  --muted: #737a74;
+  --grid: #e1e3dd;
+  --axis: #c3c6bf;
+  --border: rgba(16, 19, 18, 0.12);
+  --accent: #1d6b52;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe4;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+  --good: #0ca30c; --good-ink: #006300;
+  --warn: #fab219; --warn-ink: #8a5a00;
+  --serious: #ec835a; --serious-ink: #a4441c;
+  --critical: #d03b3b; --critical-ink: #b02a2a;
+  --sag-fill: rgba(208, 59, 59, 0.11);
+  --auto-band: rgba(29, 107, 82, 0.07);
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0e100f; --surface: #171a18; --surface-2: #202421;
+    --ink: #f3f5f2; --ink-2: #c3c7c0; --muted: #8b918b;
+    --grid: #2a2e2b; --axis: #3b403c; --border: rgba(255, 255, 255, 0.1);
+    --accent: #4fb08c; --accent-ink: #08130e; --accent-soft: #1c3a2f;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --good-ink: #3cc13c; --warn-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ef6b6b;
+    --sag-fill: rgba(230, 103, 103, 0.16);
+    --auto-band: rgba(79, 176, 140, 0.08);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0e100f; --surface: #171a18; --surface-2: #202421;
+  --ink: #f3f5f2; --ink-2: #c3c7c0; --muted: #8b918b;
+  --grid: #2a2e2b; --axis: #3b403c; --border: rgba(255, 255, 255, 0.1);
+  --accent: #4fb08c; --accent-ink: #08130e; --accent-soft: #1c3a2f;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  --good-ink: #3cc13c; --warn-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ef6b6b;
+  --sag-fill: rgba(230, 103, 103, 0.16);
+  --auto-band: rgba(79, 176, 140, 0.08);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 0 16px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
+h2 { font-size: 22px; }
+h3 { font-size: 17px; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- top bar ---------- */
+.top {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  padding-block: 18px 4px;
+}
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand h1 { font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.brand .tag {
+  font-family: var(--mono); font-size: 12px; color: var(--ink-2);
+  border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); border-radius: 6px;
+  padding: 7px 12px; font-weight: 500;
+}
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- drop / status ---------- */
+.drop {
+  border: 1.5px dashed var(--axis); border-radius: 10px; background: var(--surface);
+  padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; justify-content: space-between;
+  transition: border-color .15s, background .15s;
+}
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop .lead { font-weight: 500; }
+.drop .sub { color: var(--ink-2); font-size: 13px; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 1px 9px 1px 7px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.02em; border: 1px solid currentColor; white-space: nowrap;
+}
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.chip.good { color: var(--good-ink); }
+.chip.warn { color: var(--warn-ink); }
+.chip.serious { color: var(--serious-ink); }
+.chip.critical { color: var(--critical-ink); }
+.chip.info { color: var(--accent); }
+details.howto { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+details.howto summary { cursor: pointer; padding: 10px 16px; font-weight: 500; }
+details.howto .body { padding: 0 16px 14px; display: grid; gap: 10px; max-width: 78ch; }
+details.howto ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.cmd {
+  display: flex; gap: 8px; align-items: center; background: var(--surface-2); border-radius: 6px;
+  padding: 6px 6px 6px 10px; overflow-x: auto;
+}
+.cmd code { white-space: nowrap; flex: 1; }
+.cmd button { flex: none; font-size: 12px; padding: 3px 8px; }
+
+/* ---------- tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tiles .tile:last-child { grid-column: 1 / -1; } }
+@media (max-width: 380px) { .tiles { grid-template-columns: minmax(0, 1fr); } }
+.tile {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.tile .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.tile .value { font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1.1; }
+.tile .value small { font-size: 18px; font-weight: 500; color: var(--ink-2); margin-left: 3px; }
+.tile .foot { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* ---------- controls ---------- */
+.controls {
+  display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: end;
+  padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+}
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.field input, .field select {
+  border: 1px solid var(--border); background: var(--page); border-radius: 6px; padding: 5px 8px; min-width: 0;
+}
+.field input { width: 90px; }
+.controls .spacer { flex: 1; }
+
+/* ---------- tabs ---------- */
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.tab {
+  border: 0; background: none; padding: 9px 14px; cursor: pointer; font-weight: 500; color: var(--ink-2);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+}
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .count { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-left: 4px; }
+.panel { display: flex; flex-direction: column; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.card-head .note { color: var(--muted); font-size: 12.5px; }
+.two { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; }
+@media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- bars ---------- */
+.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 7px 10px; align-items: center; }
+.bars .name { display: flex; align-items: center; gap: 7px; font-weight: 500; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.track { height: 16px; background: var(--surface-2); border-radius: 0 4px 4px 0; position: relative; }
+.fill { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.bars .val { font-variant-numeric: tabular-nums; color: var(--ink-2); text-align: right; font-size: 13px; }
+.bars .val b { color: var(--ink); font-weight: 600; }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+th:first-child, td:first-child { text-align: left; }
+tr.sub td:first-child { padding-left: 30px; color: var(--ink-2); }
+tr.sub td { color: var(--ink-2); font-size: 13px; }
+tr.group td { font-weight: 500; }
+tr.missing td { color: var(--muted); }
+td .name { display: inline-flex; align-items: center; gap: 7px; }
+
+/* ---------- timeline ---------- */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.chart { position: relative; width: 100%; user-select: none; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: var(--body); }
+.chart .axis-title { fill: var(--ink-2); font-size: 11.5px; font-weight: 600; }
+.chart .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px; min-width: 190px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14); display: grid; gap: 2px; z-index: 5;
+}
+.tip .row { display: flex; align-items: center; gap: 7px; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.tip .row .l { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.tip .head { font-weight: 600; margin-bottom: 3px; }
+.tip hr { border: 0; border-top: 1px solid var(--grid); margin: 3px 0; width: 100%; }
+.zoom-note { font-size: 12.5px; color: var(--muted); }
+
+/* ---------- sags ---------- */
+.sag-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+@media (max-width: 420px) { .sag-list { grid-template-columns: minmax(0, 1fr); } }
+.sag { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; }
+.sag .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.sag .meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.attr { display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1fr); gap: 4px 10px; align-items: center; font-size: 12.5px; }
+.attr .h { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.mini { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.mini .t { flex: 1; height: 8px; background: var(--surface-2); border-radius: 0 3px 3px 0; }
+.mini .f { height: 100%; border-radius: 0 3px 3px 0; }
+.mini .n { width: 52px; text-align: right; }
+.empty { color: var(--ink-2); padding: 20px 0; }
+
+.warnings { display: grid; gap: 8px; }
+.warnings .w { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; }
+.foot-note { color: var(--muted); font-size: 12.5px; max-width: 80ch; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Power Budget</h1>
+      <span class="tag">6995 NOMAD · hoot logs</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="copy-summary" type="button">Copy summary</button>
+      <label class="btn primary" for="file-input">Open .wpilog files</label>
+      <input id="file-input" type="file" multiple accept=".wpilog,.hoot" hidden>
+    </div>
+  </header>
+
+  <section class="drop" id="drop">
+    <div>
+      <p class="lead">Drop a match's exported .wpilog files here — one per CAN bus, all at once.</p>
+      <p class="sub">Files are read in this browser tab. Nothing is uploaded anywhere.</p>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <details class="howto" id="howto">
+    <summary>How to get the log files off the robot</summary>
+    <div class="body">
+      <ol>
+        <li>Turn logging on: set <code>Hoot Logging/Enabled</code> to true in Elastic (SmartDashboard table). It stays set across reboots. <code>Hoot Logging/Active</code> shows it is writing.</li>
+        <li>After the match, copy the newest folder of <code>.hoot</code> files from the roboRIO. They are on the USB stick in <code>/u/logs</code>, or in <code>/home/lvuser/logs</code> without one. There is one file per CAN bus.</li>
+        <li>Convert each file with owlet, which ships with Phoenix Tuner X and AdvantageScope. <code>-e 5</code> keeps only the enabled part of the log plus 5 s either side, which makes the files much smaller.
+          <div class="cmd"><code id="owlet-cmd">owlet UpperBus.hoot UpperBus.wpilog -f wpilog -e 5</code><button class="btn" type="button" data-copy="owlet-cmd">Copy</button></div>
+        </li>
+        <li>Drop every converted <code>.wpilog</code> from that match onto this page together.</li>
+      </ol>
+      <p class="foot-note">The robot code only logs supply current and supply voltage for each Talon FX (Phoenix does this in its own thread, off the robot loop), plus the robot, flywheel and intake states when they change. Totals leave out the roboRIO, radio and cameras, typically another 5–10 A.</p>
+    </div>
+  </details>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="controls" aria-label="Analysis settings">
+    <div class="field">
+      <label for="opt-sag">Sag below (V)</label>
+      <input id="opt-sag" type="number" step="0.1" min="4" max="12" value="7.5">
+    </div>
+    <div class="field">
+      <label for="opt-brownout">Brownout at (V)</label>
+      <input id="opt-brownout" type="number" step="0.05" min="4" max="10" value="6.75">
+    </div>
+    <div class="field">
+      <label for="opt-on">Running above (A)</label>
+      <input id="opt-on" type="number" step="0.5" min="0" max="50" value="1">
+    </div>
+    <div class="field">
+      <label for="opt-window">Window</label>
+      <select id="opt-window">
+        <option value="enabled">Enabled only</option>
+        <option value="all">Whole log</option>
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <p class="foot-note" id="window-note"></p>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" id="tab-summary" aria-controls="panel-summary" aria-selected="true" type="button">Summary</button>
+    <button class="tab" role="tab" id="tab-timeline" aria-controls="panel-timeline" aria-selected="false" type="button">Timeline</button>
+    <button class="tab" role="tab" id="tab-sags" aria-controls="panel-sags" aria-selected="false" type="button">Sags<span class="count" id="sag-count"></span></button>
+    <button class="tab" role="tab" id="tab-motors" aria-controls="panel-motors" aria-selected="false" type="button">Motors<span class="count" id="warn-count"></span></button>
+  </nav>
+
+  <section class="panel" id="panel-summary" role="tabpanel" aria-labelledby="tab-summary">
+    <div class="two">
+      <div class="card">
+        <div class="card-head"><h2>Energy by subsystem</h2><span class="note">Wh drawn from the battery</span></div>
+        <div class="bars" id="energy-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Draw while running</h2><span class="note">percentiles over samples above the running threshold</span></div>
+        <div class="table-wrap"><table id="draw-table"></table></div>
+      </div>
+    </div>
+    <p class="foot-note">Rows split by state (for example <b>Drive · SCORING</b>) show whether a rule in <code>RobotCurrentLimits</code> actually took effect. Compare sag count and the P90/P99 columns between matches; total Wh barely moves with current limits, because a limit slows the work down rather than skipping it.</p>
+  </section>
+
+  <section class="panel" id="panel-timeline" role="tabpanel" aria-labelledby="tab-timeline" hidden>
+    <div class="card">
+      <div class="card-head">
+        <h2>Voltage and draw over time</h2>
+        <div class="btn-row"><span class="zoom-note" id="zoom-note">Drag across the chart to zoom. Double-click to reset.</span><button class="btn" type="button" id="zoom-reset" hidden>Reset zoom</button></div>
+      </div>
+      <div class="legend" id="timeline-legend"></div>
+      <div class="chart" id="timeline"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-sags" role="tabpanel" aria-labelledby="tab-sags" hidden>
+    <p class="foot-note">Worst first. <b>During</b> is the mean draw while the voltage was low; <b>before</b> is the half second leading into it. At the bottom of a deep sag the current limiters have often already cut in, so the lookback can be the more honest column. When a mechanism slams on at the same instant, <b>during</b> tells the story.</p>
+    <div class="sag-list" id="sag-list"></div>
+  </section>
+
+  <section class="panel" id="panel-motors" role="tabpanel" aria-labelledby="tab-motors" hidden>
+    <div class="card" id="warnings-card">
+      <div class="card-head"><h2>Log health</h2></div>
+      <div class="warnings" id="warnings"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Every motor</h2><span class="note">CAN IDs from the robot code; supply current and voltage from each Talon FX</span></div>
+      <div class="table-wrap"><table id="motor-table"></table></div>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------------------------
+// Robot wiring. CAN IDs match the robot code (TunerConstants, *Constants in each subsystem).
+// Group order is the color order: slots are assigned once, in this order, never re-ranked.
+// ---------------------------------------------------------------------------------------------
+const GROUPS = [
+  { key: "drive", name: "Drive", slot: 1 },
+  { key: "steer", name: "Steer", slot: 2 },
+  { key: "flywheel", name: "Flywheel", slot: 3 },
+  { key: "intake", name: "Intake", slot: 4 },
+  { key: "kicker", name: "Kicker", slot: 5 },
+  { key: "dye", name: "Dye Rotor", slot: 6 },
+  { key: "aim", name: "Turret & Hood", slot: 7 },
+  { key: "other", name: "Unmapped", slot: 8 },
+];
+const MOTORS = [
+  [15, "Drive FL", "drive", "LowerBus"], [16, "Drive FR", "drive", "LowerBus"],
+  [17, "Drive BL", "drive", "LowerBus"], [18, "Drive BR", "drive", "LowerBus"],
+  [11, "Steer FL", "steer", "LowerBus"], [12, "Steer FR", "steer", "LowerBus"],
+  [13, "Steer BL", "steer", "LowerBus"], [14, "Steer BR", "steer", "LowerBus"],
+  [40, "Flywheel lead", "flywheel", "UpperBus"], [41, "Flywheel follower 1", "flywheel", "UpperBus"],
+  [42, "Flywheel follower 2", "flywheel", "UpperBus"], [43, "Flywheel follower 3", "flywheel", "UpperBus"],
+  [30, "Roller lead", "intake", "UpperBus"], [31, "Roller follower", "intake", "UpperBus"],
+  [32, "Extension lead", "intake", "UpperBus"], [33, "Extension follower", "intake", "UpperBus"],
+  [34, "Kicker", "kicker", "UpperBus"],
+  [21, "Index lead", "dye", "UpperBus"], [22, "Index follower", "dye", "UpperBus"], [23, "Spin", "dye", "UpperBus"],
+  [45, "Turret", "aim", "UpperBus"], [44, "Hood", "aim", "UpperBus"],
+].map(([id, name, group, bus]) => ({ id, name, group, bus }));
+// Custom signals written by HootLogging.java; the state rows split a group's draw by these.
+const STATE_SPLITS = [
+  { group: "drive", channel: "Robot State" },
+  { group: "flywheel", channel: "Flywheel/State" },
+  { group: "intake", channel: "Intake/State" },
+];
+const DT = 0.02;               // analysis grid, s - one robot loop
+const MIN_RATE_HZ = 15;        // below this a 200 ms brownout can fall between samples
+const LOOKBACK_S = 0.5;
+const MIN_SAG_S = 0.04;
+const MERGE_GAP_S = 0.25;
+
+const groupByKey = Object.fromEntries(GROUPS.map(g => [g.key, g]));
+const color = g => `var(--s${g.slot})`;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, d = 1) => (Number.isFinite(v) ? v.toFixed(d) : "–");
+
+// ---------------------------------------------------------------------------------------------
+// WPILOG reader. Only decodes the entries `want` accepts, so a full owlet export (thousands of
+// signals, hundreds of MB) costs one pass over the record headers and little memory.
+// ---------------------------------------------------------------------------------------------
+function wantSignal(name) {
+  return /(?:^|\/)TalonFX-\d+\/(?:SupplyCurrent|SupplyVoltage)$/.test(name)
+    || name === "RobotEnable" || name === "RobotMode" || name === "BrownedOut"
+    || STATE_SPLITS.some(s => s.channel === name);
+}
+
+async function parseWpilog(buffer, onProgress) {
+  const u8 = new Uint8Array(buffer);
+  const dv = new DataView(buffer);
+  const len = u8.length;
+  const magic = String.fromCharCode(...u8.subarray(0, 6));
+  if (len < 12 || magic !== "WPILOG") {
+    const hootish = String.fromCharCode(...u8.subarray(0, 4));
+    throw new Error(hootish.toLowerCase().includes("hoot") || buffer.byteLength > 0 && !magic.startsWith("WPI")
+      ? "is not a .wpilog file. Convert .hoot files with owlet first (see “How to get the log files”)."
+      : "is not a valid .wpilog file.");
+  }
+  let pos = 6 + 2;
+  const extra = dv.getUint32(pos, true);
+  pos += 4 + extra;
+  const td = new TextDecoder();
+  const live = new Map();   // entry id -> series
+  const out = new Map();    // name -> series
+  let truncated = false, records = 0;
+  const readUint = (p, n) => { let v = 0; for (let i = 0; i < n; i++) v += u8[p + i] * 2 ** (8 * i); return v; };
+
+  while (pos < len) {
+    const h = u8[pos];
+    const idLen = (h & 3) + 1, sizeLen = ((h >> 2) & 3) + 1, tsLen = ((h >> 4) & 7) + 1;
+    let p = pos + 1;
+    if (p + idLen + sizeLen + tsLen > len) { truncated = true; break; }
+    const id = readUint(p, idLen); p += idLen;
+    const size = readUint(p, sizeLen); p += sizeLen;
+    const ts = readUint(p, tsLen); p += tsLen;
+    if (p + size > len) { truncated = true; break; }
+
+    if (id === 0) {
+      if (u8[p] === 0 && size >= 17) {
+        const eid = dv.getUint32(p + 1, true);
+        const nlen = dv.getUint32(p + 5, true);
+        const name = td.decode(u8.subarray(p + 9, p + 9 + nlen));
+        const tl = dv.getUint32(p + 9 + nlen, true);
+        const type = td.decode(u8.subarray(p + 13 + nlen, p + 13 + nlen + tl));
+        if (wantSignal(name)) {
+          let s = out.get(name);
+          if (!s) { s = { name, type, t: [], v: [] }; out.set(name, s); }
+          live.set(eid, s);
+        } else {
+          live.delete(eid);
+        }
+      } else if (u8[p] === 1) {
+        live.delete(dv.getUint32(p + 1, true));
+      }
+    } else {
+      const s = live.get(id);
+      if (s) {
+        let v;
+        switch (s.type) {
+          case "double": v = size >= 8 ? dv.getFloat64(p, true) : NaN; break;
+          case "float": v = size >= 4 ? dv.getFloat32(p, true) : NaN; break;
+          case "int64": v = size >= 8 ? Number(dv.getBigInt64(p, true)) : NaN; break;
+          case "boolean": v = u8[p] !== 0; break;
+          case "string": v = td.decode(u8.subarray(p, p + size)); break;
+          default: v = undefined;
+        }
+        if (v !== undefined) { s.t.push(ts / 1e6); s.v.push(v); }
+      }
+    }
+    pos = p + size;
+    if (++records % 400000 === 0) {
+      onProgress?.(pos / len);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  return { series: out, truncated, records };
+}
+
+/** Several files (one per bus) into one map; same-named series are merged in time order. */
+function mergeSeries(parsed) {
+  const out = new Map();
+  for (const { series } of parsed) {
+    for (const [name, s] of series) {
+      const prev = out.get(name);
+      if (!prev) { out.set(name, s); continue; }
+      const idx = prev.t.map((t, i) => [t, prev.v[i]]).concat(s.t.map((t, i) => [t, s.v[i]]));
+      idx.sort((a, b) => a[0] - b[0]);
+      out.set(name, { name, type: s.type, t: idx.map(x => x[0]), v: idx.map(x => x[1]) });
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Model: every signal onto one 20 ms grid. Currents and voltages are averaged per bin (hoot logs
+// every frame, so this keeps energy honest at any signal rate); states are held.
+// ---------------------------------------------------------------------------------------------
+function binMean(s, t0, n, empty) {
+  const sum = new Float64Array(n), cnt = new Uint32Array(n);
+  for (let k = 0; k < s.t.length; k++) {
+    const v = s.v[k];
+    if (!Number.isFinite(v)) continue;
+    let i = Math.floor((s.t[k] - t0) / DT);
+    if (i < 0) i = 0; else if (i >= n) i = n - 1;
+    sum[i] += v; cnt[i]++;
+  }
+  const out = new Float64Array(n);
+  let last = empty;
+  for (let i = 0; i < n; i++) {
+    if (cnt[i]) last = sum[i] / cnt[i];
+    out[i] = last;
+  }
+  return out;
+}
+
+function hold(s, t0, n, dflt) {
+  const out = new Array(n);
+  let k = 0, cur = dflt;
+  for (let i = 0; i < n; i++) {
+    const t = t0 + i * DT + DT;
+    while (k < s.t.length && s.t[k] < t) { cur = s.v[k]; k++; }
+    out[i] = cur;
+  }
+  return out;
+}
+
+function median(arr) {
+  if (!arr.length) return NaN;
+  const a = arr.slice().sort((x, y) => x - y);
+  const m = a.length >> 1;
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+}
+
+function buildModel(raw, sources) {
+  const re = /(?:^|\/)TalonFX-(\d+)\/(SupplyCurrent|SupplyVoltage)$/;
+  const byId = new Map();
+  for (const [name, s] of raw) {
+    const m = name.match(re);
+    if (!m || !s.t.length) continue;
+    const o = byId.get(+m[1]) || {};
+    o[m[2] === "SupplyCurrent" ? "cur" : "volt"] = s;
+    byId.set(+m[1], o);
+  }
+  let t0 = Infinity, t1 = -Infinity;
+  for (const o of byId.values()) for (const s of [o.cur, o.volt]) if (s) { t0 = Math.min(t0, s.t[0]); t1 = Math.max(t1, s.t[s.t.length - 1]); }
+  if (!Number.isFinite(t0)) {
+    throw new Error("No Talon FX SupplyCurrent/SupplyVoltage signals found. Was hoot logging on, and are these owlet exports?");
+  }
+  const n = Math.max(2, Math.floor((t1 - t0) / DT) + 1);
+
+  const defs = MOTORS.slice();
+  for (const id of byId.keys()) {
+    if (!defs.some(d => d.id === id)) defs.push({ id, name: `Talon FX ${id}`, group: "other", bus: "?" });
+  }
+  const motors = defs.map(def => {
+    const o = byId.get(def.id) || {};
+    const rate = o.cur && o.cur.t.length > 2 ? (o.cur.t.length - 1) / Math.max(1e-6, o.cur.t[o.cur.t.length - 1] - o.cur.t[0]) : 0;
+    return {
+      ...def,
+      present: !!o.cur,
+      cur: o.cur ? binMean(o.cur, t0, n, 0) : null,
+      volt: o.volt ? binMean(o.volt, t0, n, NaN) : null,
+      rateHz: rate,
+    };
+  });
+
+  // Battery: the median of what every Talon sees at its own input. Robust to one motor's long
+  // wire run, and it is what the motors actually had to work with.
+  const battery = new Float64Array(n);
+  const vs = motors.filter(m => m.volt);
+  const tmp = [];
+  for (let i = 0; i < n; i++) {
+    tmp.length = 0;
+    for (const m of vs) { const v = m.volt[i]; if (v > 1) tmp.push(v); }
+    battery[i] = tmp.length ? median(tmp) : NaN;
+  }
+  for (let i = 0; i < n; i++) if (!Number.isFinite(battery[i])) battery[i] = i ? battery[i - 1] : 12;
+
+  const enableS = raw.get("RobotEnable"), modeS = raw.get("RobotMode");
+  const mode = modeS ? hold(modeS, t0, n, "Disabled") : null;
+  let enabled;
+  if (enableS && enableS.type === "boolean") enabled = hold(enableS, t0, n, false).map(Boolean);
+  else if (mode) enabled = mode.map(m => !/disabled/i.test(String(m)));
+  else enabled = null;
+  const auto = mode ? mode.map(m => /auto/i.test(String(m))) : new Array(n).fill(false);
+  const brownS = raw.get("BrownedOut");
+  const browned = brownS ? hold(brownS, t0, n, false).map(Boolean) : new Array(n).fill(false);
+  const states = {};
+  for (const sp of STATE_SPLITS) { const s = raw.get(sp.channel); if (s) states[sp.channel] = hold(s, t0, n, ""); }
+
+  return { t0, n, motors, battery, enabled, auto, browned, states, sources };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Analysis
+// ---------------------------------------------------------------------------------------------
+function percentile(sorted, f) {
+  if (!sorted.length) return 0;
+  const p = (sorted.length - 1) * f, lo = Math.floor(p), hi = Math.ceil(p);
+  return lo === hi ? sorted[lo] : sorted[lo] * (hi - p) + sorted[hi] * (p - lo);
+}
+
+function rowStats(name, cur, volt, battery, mask, onA, enabledS) {
+  let joules = 0, peak = 0;
+  const active = [];
+  for (let i = 0; i < cur.length; i++) {
+    if (!mask[i]) continue;
+    const c = cur[i];
+    const v = volt && Number.isFinite(volt[i]) ? volt[i] : battery[i];
+    joules += v * c * DT;
+    if (c > peak) peak = c;
+    if (c > onA) active.push(c);
+  }
+  active.sort((a, b) => a - b);
+  const onS = active.length * DT;
+  return {
+    name, wh: joules / 3600, onS, onFrac: enabledS > 0 ? onS / enabledS : 0,
+    p50: percentile(active, 0.5), p90: percentile(active, 0.9), p99: percentile(active, 0.99), peak,
+  };
+}
+
+function analyze(model, opt) {
+  const { n, motors, battery } = model;
+  const allTime = opt.window === "all" || !model.enabled;
+  const mask = allTime ? new Array(n).fill(true) : model.enabled;
+  let windowS = 0, autoS = 0;
+  for (let i = 0; i < n; i++) if (mask[i]) { windowS += DT; if (model.auto[i]) autoS += DT; }
+
+  const present = motors.filter(m => m.present);
+  const groups = GROUPS.map(g => {
+    const ms = present.filter(m => m.group === g.key);
+    if (!ms.length) return null;
+    const cur = new Float64Array(n);
+    // Energy per motor at that motor's own voltage, then summed; the group current for charts.
+    let wh = 0;
+    for (const m of ms) {
+      for (let i = 0; i < n; i++) cur[i] += m.cur[i];
+      m.stats = rowStats(m.name, m.cur, m.volt, battery, mask, opt.onA, windowS);
+      wh += m.stats.wh;
+    }
+    const stats = rowStats(g.name, cur, null, battery, mask, opt.onA, windowS);
+    stats.wh = wh;
+    return { ...g, motors: ms, cur, stats };
+  }).filter(Boolean);
+
+  // Per-state rows.
+  const stateRows = {};
+  for (const sp of STATE_SPLITS) {
+    const g = groups.find(x => x.key === sp.group);
+    const st = model.states[sp.channel];
+    if (!g || !st) continue;
+    const values = [...new Set(st.filter((s, i) => s && mask[i]))].sort();
+    stateRows[g.key] = values.map(val => {
+      const m2 = mask.map((m, i) => m && st[i] === val);
+      const r = rowStats(val, g.cur, null, battery, m2, opt.onA, windowS);
+      // energy at each motor's own voltage, for consistency with the group row
+      r.wh = g.motors.reduce((a, m) => a + rowStats("", m.cur, m.volt, battery, m2, opt.onA, windowS).wh, 0);
+      return r;
+    }).filter(r => r.onS > 0 || r.wh > 0.0005);
+  }
+
+  const total = new Float64Array(n);
+  for (const g of groups) for (let i = 0; i < n; i++) total[i] += g.cur[i];
+
+  // Sags
+  const spans = [];
+  let start = -1;
+  for (let i = 0; i <= n; i++) {
+    const low = i < n && (battery[i] < opt.sagV || model.browned[i]);
+    if (low && start < 0) start = i;
+    else if (!low && start >= 0) { if ((i - start) * DT >= MIN_SAG_S) spans.push([start, i]); start = -1; }
+  }
+  const merged = [];
+  for (const s of spans) {
+    const last = merged[merged.length - 1];
+    if (last && (s[0] - last[1]) * DT <= MERGE_GAP_S) last[1] = s[1]; else merged.push([s[0], s[1]]);
+  }
+  const lb = Math.max(1, Math.round(LOOKBACK_S / DT));
+  const sags = merged.filter(([a, b]) => mask.slice(a, b).some(Boolean)).map(([a, b]) => {
+    let minV = Infinity, peak = 0, flagged = false;
+    for (let i = a; i < b; i++) { minV = Math.min(minV, battery[i]); peak = Math.max(peak, total[i]); flagged ||= model.browned[i]; }
+    const b0 = Math.max(0, a - lb);
+    const attribution = groups.map(g => {
+      let d = 0, bf = 0;
+      for (let i = a; i < b; i++) d += g.cur[i];
+      for (let i = b0; i < a; i++) bf += g.cur[i];
+      return { g, during: d / (b - a), before: a > b0 ? bf / (a - b0) : 0 };
+    }).sort((x, y) => Math.max(y.during, y.before) - Math.max(x.during, x.before));
+    return {
+      a, b, t: a * DT, dur: (b - a) * DT, minV, peak, flagged,
+      brownout: flagged || minV < opt.brownoutV, attribution,
+    };
+  });
+
+  let minV = Infinity, peakTotal = 0, peakAt = 0;
+  for (let i = 0; i < n; i++) if (mask[i]) {
+    if (battery[i] < minV) minV = battery[i];
+    if (total[i] > peakTotal) { peakTotal = total[i]; peakAt = i * DT; }
+  }
+
+  // Health
+  const warnings = [];
+  const missing = motors.filter(m => !m.present);
+  if (missing.length) warnings.push({ level: "serious", text: `${missing.length} motor${missing.length > 1 ? "s" : ""} not in these files: ${missing.map(m => `${m.name} (${m.id})`).join(", ")}. If a whole CAN bus is missing, drop that bus's .wpilog in too.` });
+  const slow = present.filter(m => m.rateHz > 0 && m.rateHz < MIN_RATE_HZ);
+  if (slow.length) warnings.push({ level: "warn", text: `Slow supply current signal on ${slow.map(m => `${m.name} (${m.rateHz.toFixed(1)} Hz)`).join(", ")}. A brownout can fall between samples; check CtreUtil.setPowerSignalFrequency is called for that motor.` });
+  if (!model.enabled) warnings.push({ level: "warn", text: "No RobotEnable or RobotMode signal, so the whole log is analyzed." });
+  else if (windowS === 0) warnings.push({ level: "warn", text: "The robot was never enabled in this log. Switch Window to “Whole log” to analyze it anyway." });
+  const noStates = STATE_SPLITS.filter(s => !model.states[s.channel]).map(s => s.channel);
+  if (noStates.length) warnings.push({ level: "info", text: `No ${noStates.join(", ")} signal, so those per-state rows are skipped. They are written by HootLogging.java.` });
+  const others = present.filter(m => m.group === "other");
+  if (others.length) warnings.push({ level: "info", text: `Talon FX IDs not in this page's wiring map: ${others.map(m => m.id).join(", ")}. They are counted under “Unmapped”.` });
+  if (!warnings.length) warnings.push({ level: "good", text: `All ${present.length} motors present, every supply current signal at ${MIN_RATE_HZ} Hz or faster.` });
+
+  return { mask, allTime, windowS, autoS, groups, stateRows, total, sags, minV, peakTotal, peakAt, warnings, totalWh: groups.reduce((a, g) => a + g.stats.wh, 0) };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sample match. Invented numbers, generated in the same shape owlet produces so the same code
+// path runs. Never read these as measurements.
+// ---------------------------------------------------------------------------------------------
+function sampleSeries() {
+  let seed = 6995;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const u = (a, b) => a + (b - a) * rnd();
+  const raw = new Map();
+  const add = (name, type) => { const s = { name, type, t: [], v: [] }; raw.set(name, s); return s; };
+  const cur = {}, volt = {};
+  for (const m of MOTORS) { cur[m.id] = add(`Phoenix6/TalonFX-${m.id}/SupplyCurrent`, "double"); volt[m.id] = add(`Phoenix6/TalonFX-${m.id}/SupplyVoltage`, "double"); }
+  const enable = add("RobotEnable", "boolean"), mode = add("RobotMode", "string");
+  const rs = add("Robot State", "string"), fs = add("Flywheel/State", "string"), is = add("Intake/State", "string"), bo = add("BrownedOut", "boolean");
+  const push = (s, t, v) => { s.t.push(t); s.v.push(v); };
+  const hz = 50, total = 163, autoStart = 5, autoEnd = 20, teleStart = 23;
+  let last = {};
+  const change = (s, key, t, v) => { if (last[key] !== v) { push(s, t, v); last[key] = v; } };
+  let vPrev = 12.6;
+  for (let k = 0; k < total * hz; k++) {
+    const t = k / hz;
+    const inAuto = t >= autoStart && t < autoEnd, inTele = t >= teleStart;
+    const en = inAuto || inTele;
+    change(enable, "en", t, en);
+    change(mode, "mode", t, inAuto ? "Autonomous" : inTele ? "Teleop" : "Disabled");
+    const shooting = en && (t % 17) < 4.5;
+    const spinup = shooting && (t % 17) < 1.1;
+    const intaking = en && (t % 11) < 5;
+    const burst = en && Math.sin(t * 1.7) > 0.55 ? 1 : 0;
+    const rState = !en ? "IDLE" : shooting ? "SCORING" : intaking ? "INTAKING" : "IDLE";
+    change(rs, "rs", t, rState); change(fs, "fs", t, !en ? "DISABLED" : shooting ? "ACTIVE" : "IDLE"); change(is, "is", t, intaking ? "ACTIVE" : "RETRACTED");
+    const scoringCut = rState === "SCORING" ? 0.45 : 1;   // RobotCurrentLimits cuts drive while scoring
+    const c = {};
+    for (const id of [15, 16, 17, 18]) c[id] = en ? (4.5 + burst * 34 * scoringCut) * u(0.85, 1.15) : 0;
+    for (const id of [11, 12, 13, 14]) c[id] = en ? (1.2 + burst * 6) * u(0.7, 1.3) : 0;
+    for (const id of [40, 41, 42, 43]) c[id] = en ? (spinup ? 52 : shooting ? 24 : 2.6) * u(0.9, 1.1) : 0;
+    c[30] = c[31] = 0; if (intaking) { c[30] = 13 * u(0.8, 1.2); c[31] = 12.5 * u(0.8, 1.2); }
+    const ext = en && (t % 11) < 0.6 ? 4.5 : 0.15; c[32] = ext * u(0.9, 1.1); c[33] = ext * u(0.9, 1.1);
+    c[34] = shooting ? 15 * u(0.85, 1.15) : 0;
+    c[21] = c[22] = shooting ? 6 * u(0.9, 1.1) : 0.1; c[23] = intaking ? 8 * u(0.9, 1.1) : 0.1;
+    c[45] = en ? 1.5 + 3 * Math.abs(Math.sin(t * 0.9)) : 0; c[44] = en && (t % 17) < 0.4 ? 1.5 : 0.05;
+    const sum = Object.values(c).reduce((a, b) => a + b, 0) + 7.5;
+    const vTarget = 12.6 - sum * 0.0185;
+    vPrev += (vTarget - vPrev) * 0.6;
+    for (const m of MOTORS) {
+      push(cur[m.id], t, Math.max(0, c[m.id]));
+      push(volt[m.id], t, vPrev - c[m.id] * 0.004 - (m.bus === "LowerBus" ? 0.05 : 0.12) + u(-0.03, 0.03));
+    }
+    change(bo, "bo", t, vPrev < 6.75);
+  }
+  return raw;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------------------------
+let MODEL = null, RESULT = null, VIEW = null;
+const opts = () => ({
+  sagV: parseFloat($("opt-sag").value) || 7.5,
+  brownoutV: parseFloat($("opt-brownout").value) || 6.75,
+  onA: parseFloat($("opt-on").value) || 0,
+  window: $("opt-window").value,
+});
+
+function voltChip(minV, o, anyFlag) {
+  if (anyFlag || minV < o.brownoutV) return `<span class="chip critical">Brownout</span>`;
+  if (minV < o.sagV) return `<span class="chip serious">Sagged</span>`;
+  return `<span class="chip good">Held up</span>`;
+}
+
+function renderTiles(m, r, o) {
+  const brown = r.sags.filter(s => s.brownout).length;
+  const anyFlag = r.sags.some(s => s.flagged);
+  const tiles = [
+    { label: r.allTime ? "Analyzed" : "Enabled", value: `${fmt(r.windowS, 1)}<small>s</small>`,
+      foot: r.allTime ? "whole log" : `auto ${fmt(r.autoS, 1)} s · teleop ${fmt(r.windowS - r.autoS, 1)} s` },
+    { label: "Energy used", value: `${fmt(r.totalWh, 2)}<small>Wh</small>`, foot: "motors only, at each motor's voltage" },
+    { label: "Lowest voltage", value: `${fmt(r.minV, 2)}<small>V</small>`, foot: voltChip(r.minV, o, anyFlag) + `<span>median across Talons</span>` },
+    { label: "Sags", value: `${r.sags.length}`, foot: brown ? `<span class="chip critical">${brown} brownout${brown > 1 ? "s" : ""}</span>` : `<span class="chip good">no brownouts</span>` },
+    { label: "Peak draw", value: `${fmt(r.peakTotal, 0)}<small>A</small>`, foot: `at t = ${fmt(r.peakAt, 1)} s, 20 ms average` },
+  ];
+  $("tiles").innerHTML = tiles.map(t => `<div class="tile"><span class="label">${t.label}</span><span class="value num">${t.value}</span><span class="foot">${t.foot}</span></div>`).join("");
+  $("sag-count").textContent = r.sags.length ? String(r.sags.length) : "";
+  const issues = r.warnings.filter(w => w.level === "serious" || w.level === "warn").length;
+  $("warn-count").textContent = issues ? `${issues} !` : "";
+  $("window-note").textContent = !m.enabled ? "No enable signal in these files; showing the whole log." : "";
+}
+
+function renderSummary(r) {
+  const sorted = r.groups.slice().sort((a, b) => b.stats.wh - a.stats.wh);
+  const max = Math.max(1e-9, ...sorted.map(g => g.stats.wh));
+  const total = Math.max(1e-9, r.totalWh);
+  $("energy-bars").innerHTML = sorted.map(g => `
+    <span class="name"><span class="sw" style="background:${color(g)}"></span>${esc(g.name)}</span>
+    <span class="track"><span class="fill" style="display:block;width:${(g.stats.wh / max * 100).toFixed(1)}%;background:${color(g)}"></span></span>
+    <span class="val"><b>${fmt(g.stats.wh, 2)}</b> Wh · ${fmt(g.stats.wh / total * 100, 0)}%</span>`).join("");
+
+  const head = `<thead><tr><th>Subsystem</th><th>On %</th><th>P50 A</th><th>P90 A</th><th>P99 A</th><th>Peak A</th><th>Wh</th></tr></thead>`;
+  const line = (s, cls, sw) => `<tr class="${cls}"><td><span class="name">${sw || ""}${esc(s.name)}</span></td><td>${fmt(s.onFrac * 100, 0)}%</td><td>${fmt(s.p50)}</td><td>${fmt(s.p90)}</td><td>${fmt(s.p99)}</td><td>${fmt(s.peak)}</td><td>${fmt(s.wh, 2)}</td></tr>`;
+  let body = "";
+  for (const g of sorted) {
+    body += line(g.stats, "group", `<span class="sw" style="background:${color(g)}"></span>`);
+    for (const s of r.stateRows[g.key] || []) body += line({ ...s, name: `${g.name} · ${s.name}` }, "sub");
+  }
+  $("draw-table").innerHTML = head + `<tbody>${body}</tbody>`;
+}
+
+function renderMotors(m, r) {
+  $("warnings").innerHTML = r.warnings.map(w => `<div class="w"><span class="chip ${w.level}">${{ good: "OK", warn: "Check", serious: "Missing", info: "Note" }[w.level]}</span><span>${esc(w.text)}</span></div>`).join("");
+  const head = `<thead><tr><th>Motor</th><th>CAN ID</th><th>Bus</th><th>Wh</th><th>P90 A</th><th>Peak A</th><th>Min V</th><th>Rate Hz</th></tr></thead>`;
+  const rows = GROUPS.flatMap(g => m.motors.filter(x => x.group === g.key).map(x => {
+    if (!x.present) return `<tr class="missing"><td><span class="name"><span class="sw" style="background:${color(g)}"></span>${esc(x.name)}</span></td><td class="mono">${x.id}</td><td>${x.bus}</td><td colspan="5">not in these files</td></tr>`;
+    let minV = Infinity;
+    if (x.volt) for (let i = 0; i < m.n; i++) if (r.mask[i] && x.volt[i] < minV) minV = x.volt[i];
+    const rate = x.rateHz < MIN_RATE_HZ ? `<span class="chip warn">${fmt(x.rateHz, 1)}</span>` : fmt(x.rateHz, 0);
+    return `<tr><td><span class="name"><span class="sw" style="background:${color(g)}"></span>${esc(x.name)}</span></td><td class="mono">${x.id}</td><td>${x.bus}</td><td>${fmt(x.stats.wh, 3)}</td><td>${fmt(x.stats.p90)}</td><td>${fmt(x.stats.peak)}</td><td>${fmt(minV, 2)}</td><td>${rate}</td></tr>`;
+  }));
+  $("motor-table").innerHTML = head + `<tbody>${rows.join("")}</tbody>`;
+}
+
+function renderSags(r, o) {
+  const list = $("sag-list");
+  if (!r.sags.length) {
+    list.innerHTML = `<p class="empty">No sags below ${fmt(o.sagV, 1)} V in this window. Either the battery held up or the robot was not under load.</p>`;
+    return;
+  }
+  const shown = r.sags.slice().sort((a, b) => a.minV - b.minV);
+  list.innerHTML = shown.map((s, k) => {
+    const top = s.attribution.filter(x => Math.max(x.during, x.before) >= 0.5).slice(0, 5);
+    const mx = Math.max(1, ...top.map(x => Math.max(x.during, x.before)));
+    const bar = (v, g) => `<span class="mini"><span class="t"><span class="f" style="display:block;width:${(v / mx * 100).toFixed(1)}%;background:${color(g)}"></span></span><span class="n">${fmt(v)} A</span></span>`;
+    return `<article class="sag">
+      <div class="card-head"><h3>#${k + 1} at ${fmt(s.t, 2)} s</h3>${s.brownout ? `<span class="chip critical">Brownout${s.flagged ? " · roboRIO flagged" : ""}</span>` : `<span class="chip serious">Sag</span>`}</div>
+      <div class="meta"><span>min <b>${fmt(s.minV, 2)} V</b></span><span>lasted <b>${fmt(s.dur, 2)} s</b></span><span>peak draw <b>${fmt(s.peak, 0)} A</b></span></div>
+      <div class="attr"><span class="h">Subsystem</span><span class="h">During</span><span class="h">${LOOKBACK_S} s before</span>
+        ${top.map(x => `<span class="name" style="display:flex;align-items:center;gap:6px"><span class="sw" style="background:${color(x.g)}"></span>${esc(x.g.name)}</span>${bar(x.during, x.g)}${bar(x.before, x.g)}`).join("")}
+      </div>
+      <div><button class="btn" type="button" data-zoom="${s.a},${s.b}">Show on timeline</button></div>
+    </article>`;
+  }).join("");
+}
+
+// ---------- timeline ----------
+function niceStep(range, target) {
+  const raw = range / target, p = 10 ** Math.floor(Math.log10(raw)), f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+
+function renderTimeline() {
+  const m = MODEL, r = RESULT, o = opts();
+  const host = $("timeline");
+  const W = Math.max(320, host.clientWidth || 900);
+  const narrow = W < 560;
+  const ml = 44, mr = 10, vH = narrow ? 120 : 150, gap = 26, iH = narrow ? 190 : 250, mt = 8, xAxisH = 22;
+  const H = mt + vH + gap + iH + xAxisH;
+  const i0 = VIEW ? VIEW[0] : 0, i1 = VIEW ? VIEW[1] : m.n;
+  const pw = W - ml - mr;
+  const tx = i => ml + ((i - i0) / Math.max(1, i1 - i0)) * pw;
+
+  const buckets = Math.min(i1 - i0, Math.floor(pw));
+  const per = (i1 - i0) / buckets;
+  const bx = [], bv = [], bstack = r.groups.map(() => []);
+  let maxTot = 1;
+  for (let b = 0; b < buckets; b++) {
+    const a = Math.floor(i0 + b * per), e = Math.max(a + 1, Math.floor(i0 + (b + 1) * per));
+    let vmin = Infinity;
+    for (let i = a; i < e; i++) vmin = Math.min(vmin, m.battery[i]);
+    bv.push(vmin);
+    let acc = 0;
+    r.groups.forEach((g, gi) => {
+      let s = 0; for (let i = a; i < e; i++) s += g.cur[i];
+      acc += s / (e - a);
+      bstack[gi].push(acc);
+    });
+    maxTot = Math.max(maxTot, acc);
+    bx.push(tx((a + e) / 2));
+  }
+  const vLo = Math.min(6, Math.floor(Math.min(...bv))), vHi = 13;
+  const vy = v => mt + vH - ((v - vLo) / (vHi - vLo)) * vH;
+  const iTop = mt + vH + gap;
+  const iStep = niceStep(maxTot, narrow ? 3 : 5), iMax = Math.ceil(maxTot / iStep) * iStep;
+  const iy = a => iTop + iH - (a / iMax) * iH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Battery voltage and stacked supply current by subsystem over time">`;
+  // enabled/auto bands and sags
+  const band = (a, b, fill) => `<rect x="${tx(a).toFixed(1)}" y="${mt}" width="${Math.max(1, tx(b) - tx(a)).toFixed(1)}" height="${iTop + iH - mt}" fill="${fill}"/>`;
+  let s0 = -1;
+  for (let i = i0; i <= i1; i++) {
+    const on = i < i1 && m.auto[i] && (m.enabled ? m.enabled[i] : true);
+    if (on && s0 < 0) s0 = i; else if (!on && s0 >= 0) { svg += band(s0, i, "var(--auto-band)"); s0 = -1; }
+  }
+  for (const s of r.sags) if (s.b > i0 && s.a < i1) svg += band(Math.max(s.a, i0), Math.min(s.b, i1), "var(--sag-fill)");
+  // voltage grid
+  for (let v = Math.ceil(vLo); v <= vHi; v += (vHi - vLo > 5 ? 2 : 1)) {
+    svg += `<line x1="${ml}" x2="${W - mr}" y1="${vy(v)}" y2="${vy(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${ml - 6}" y="${vy(v) + 4}" text-anchor="end">${v}</text>`;
+  }
+  svg += `<path d="${bx.map((x, k) => `${k ? "L" : "M"}${x.toFixed(1)},${vy(bv[k]).toFixed(1)}`).join("")}" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"/>`;
+  for (const [v, lab] of [[o.sagV, "sag"], [o.brownoutV, "brownout"]]) {
+    svg += `<line x1="${ml}" x2="${W - mr}" y1="${vy(v)}" y2="${vy(v)}" stroke="var(--critical-ink)" stroke-width="1" stroke-dasharray="4 4" opacity="${lab === "sag" ? 0.55 : 0.9}"/><text x="${W - mr - 2}" y="${vy(v) - 4}" text-anchor="end" dy="${lab === "sag" ? 0 : 15}" class="halo" style="fill:var(--critical-ink)">${lab} ${fmt(v, 2)} V</text>`;
+  }
+  svg += `<text class="axis-title halo" x="${ml}" y="${mt + 11}" dx="4">Battery V (lowest per pixel)</text>`;
+  // current grid + stack
+  for (let a = 0; a <= iMax + 1e-9; a += iStep) {
+    svg += `<line x1="${ml}" x2="${W - mr}" y1="${iy(a)}" y2="${iy(a)}" stroke="${a === 0 ? "var(--axis)" : "var(--grid)"}" stroke-width="1"/><text x="${ml - 6}" y="${iy(a) + 4}" text-anchor="end">${Math.round(a)}</text>`;
+  }
+  for (let gi = r.groups.length - 1; gi >= 0; gi--) {
+    const top = bstack[gi], bot = gi ? bstack[gi - 1] : null;
+    let d = bx.map((x, k) => `${k ? "L" : "M"}${x.toFixed(1)},${iy(top[k]).toFixed(1)}`).join("");
+    for (let k = bx.length - 1; k >= 0; k--) d += `L${bx[k].toFixed(1)},${iy(bot ? bot[k] : 0).toFixed(1)}`;
+    svg += `<path d="${d}Z" fill="${color(r.groups[gi])}" stroke="var(--surface)" stroke-width="0.75"/>`;
+  }
+  svg += `<text class="axis-title" x="${ml}" y="${iTop + 11}" dx="4">Supply current A, stacked</text>`;
+  // x axis
+  const tStep = niceStep((i1 - i0) * DT, narrow ? 4 : 8);
+  for (let t = Math.ceil(i0 * DT / tStep) * tStep; t <= i1 * DT; t += tStep) {
+    const x = tx(t / DT);
+    svg += `<line x1="${x}" x2="${x}" y1="${iTop + iH}" y2="${iTop + iH + 4}" stroke="var(--axis)"/><text x="${x}" y="${iTop + iH + 16}" text-anchor="middle">${+t.toFixed(2)} s</text>`;
+  }
+  svg += `<line id="cross" x1="0" x2="0" y1="${mt}" y2="${iTop + iH}" stroke="var(--ink-2)" stroke-width="1" visibility="hidden"/>`;
+  svg += `<rect id="brush" x="0" y="${mt}" width="0" height="${iTop + iH - mt}" fill="var(--accent)" opacity="0.15" visibility="hidden"/>`;
+  svg += `<rect id="hit" x="${ml}" y="${mt}" width="${pw}" height="${iTop + iH - mt}" fill="transparent" style="cursor:crosshair"/>`;
+  svg += `</svg><div class="tip" id="tip" hidden></div>`;
+  host.innerHTML = svg;
+
+  $("timeline-legend").innerHTML = r.groups.map(g => `<span><span class="sw" style="background:${color(g)}"></span>${esc(g.name)}</span>`).join("")
+    + `<span><span class="sw" style="background:var(--sag-fill);outline:1px solid var(--critical-ink)"></span>sag</span><span><span class="sw" style="background:var(--auto-band);outline:1px solid var(--accent)"></span>autonomous</span>`;
+  $("zoom-reset").hidden = !VIEW;
+
+  const hit = host.querySelector("#hit"), cross = host.querySelector("#cross"), brush = host.querySelector("#brush"), tip = $("tip");
+  const toIndex = ev => {
+    const rect = hit.getBoundingClientRect();
+    const x = (ev.clientX - rect.left) / rect.width;
+    return Math.max(i0, Math.min(i1 - 1, Math.round(i0 + x * (i1 - i0))));
+  };
+  let drag = null;
+  hit.addEventListener("pointermove", ev => {
+    const i = toIndex(ev), x = tx(i);
+    cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
+    if (drag !== null) {
+      const a = Math.min(tx(drag), x), b = Math.max(tx(drag), x);
+      brush.setAttribute("x", a); brush.setAttribute("width", b - a); brush.setAttribute("visibility", "visible");
+    }
+    let tot = 0;
+    const rows = r.groups.map(g => { tot += g.cur[i]; return g; }).slice().reverse().map(g =>
+      `<div class="row"><span class="l"><span class="sw" style="background:${color(g)}"></span>${esc(g.name)}</span><span>${fmt(g.cur[i])} A</span></div>`).join("");
+    const st = STATE_SPLITS.map(sp => m.states[sp.channel] ? `${sp.channel.replace("/State", "")}: ${m.states[sp.channel][i] || "–"}` : "").filter(Boolean).join(" · ");
+    tip.innerHTML = `<div class="head">t = ${fmt(i * DT, 2)} s · ${fmt(m.battery[i], 2)} V</div>${rows}<hr><div class="row"><span class="l">Total</span><b>${fmt(tot)} A</b></div>${st ? `<div class="row"><span class="l">${esc(st)}</span></div>` : ""}`;
+    tip.hidden = false;
+    const hostRect = host.getBoundingClientRect();
+    const px = ev.clientX - hostRect.left;
+    const left = px + 16 + tip.offsetWidth > hostRect.width ? px - 16 - tip.offsetWidth : px + 16;
+    tip.style.left = `${Math.max(0, left)}px`;
+    tip.style.top = `${Math.max(0, ev.clientY - hostRect.top - tip.offsetHeight / 2)}px`;
+  });
+  hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); tip.hidden = true; });
+  hit.addEventListener("pointerdown", ev => { drag = toIndex(ev); hit.setPointerCapture(ev.pointerId); });
+  hit.addEventListener("pointerup", ev => {
+    if (drag === null) return;
+    const a = Math.min(drag, toIndex(ev)), b = Math.max(drag, toIndex(ev));
+    drag = null; brush.setAttribute("visibility", "hidden");
+    if (b - a >= 10) { VIEW = [a, b + 1]; renderTimeline(); }
+  });
+  hit.addEventListener("dblclick", () => { VIEW = null; renderTimeline(); });
+}
+
+function renderAll() {
+  if (!MODEL) return;
+  const o = opts();
+  RESULT = analyze(MODEL, o);
+  renderTiles(MODEL, RESULT, o);
+  renderSummary(RESULT);
+  renderSags(RESULT, o);
+  renderMotors(MODEL, RESULT);
+  if (!$("panel-timeline").hidden) renderTimeline();
+}
+
+function summaryText() {
+  if (!RESULT) return "";
+  const r = RESULT, o = opts();
+  const pad = (s, n) => String(s).padEnd(n), lp = (s, n) => String(s).padStart(n);
+  let t = `Power Budget — ${MODEL.sources.join(", ")}\n`;
+  t += `${r.allTime ? "Analyzed" : "Enabled"} ${fmt(r.windowS, 1)} s · ${fmt(r.totalWh, 2)} Wh · min ${fmt(r.minV, 2)} V · peak ${fmt(r.peakTotal, 0)} A · ${r.sags.length} sags < ${o.sagV} V (${r.sags.filter(s => s.brownout).length} brownouts)\n\n`;
+  t += pad("Subsystem", 26) + ["Wh", "On%", "P50", "P90", "P99", "Peak"].map(h => lp(h, 8)).join("") + "\n";
+  for (const g of r.groups.slice().sort((a, b) => b.stats.wh - a.stats.wh)) {
+    const rows = [[g.name, g.stats], ...(r.stateRows[g.key] || []).map(s => [`  ${g.name} · ${s.name}`, s])];
+    for (const [n, s] of rows) t += pad(n, 26) + [fmt(s.wh, 2), fmt(s.onFrac * 100, 0), fmt(s.p50), fmt(s.p90), fmt(s.p99), fmt(s.peak)].map(v => lp(v, 8)).join("") + "\n";
+  }
+  return t;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------------------------
+function setStatus(html) { $("status").innerHTML = html; }
+
+async function loadFiles(files) {
+  files = [...files];
+  if (!files.length) return;
+  const hoots = files.filter(f => /\.hoot$/i.test(f.name));
+  if (hoots.length === files.length) {
+    setStatus(`<span class="chip serious">Not converted</span><span>${esc(hoots.map(f => f.name).join(", "))} ${hoots.length > 1 ? "are" : "is a"} .hoot. Convert with owlet first; the steps are below.</span>`);
+    $("howto").open = true;
+    return;
+  }
+  const parsed = [];
+  const errors = [];
+  for (const [k, f] of files.entries()) {
+    if (/\.hoot$/i.test(f.name)) { errors.push(`${f.name}: .hoot, convert with owlet first`); continue; }
+    try {
+      setStatus(`<span class="chip info">Reading</span><span>${esc(f.name)} (${k + 1} of ${files.length}, ${(f.size / 1e6).toFixed(0)} MB)…</span>`);
+      const buf = await f.arrayBuffer();
+      const res = await parseWpilog(buf, p => setStatus(`<span class="chip info">Reading</span><span>${esc(f.name)} ${Math.round(p * 100)}%</span>`));
+      res.file = f.name;
+      parsed.push(res);
+    } catch (e) {
+      errors.push(`${f.name} ${e.message}`);
+    }
+  }
+  try {
+    if (!parsed.length) throw new Error(errors.join(" · ") || "No readable files.");
+    MODEL = buildModel(mergeSeries(parsed), parsed.map(p => p.file));
+    VIEW = null;
+    renderAll();
+    const torn = parsed.filter(p => p.truncated).map(p => p.file);
+    setStatus(`<span class="chip good">Loaded</span><span>${esc(parsed.map(p => p.file).join(", "))}</span>`
+      + (torn.length ? `<span class="chip warn">Ends mid-record</span><span>${esc(torn.join(", "))} (everything before is still used)</span>` : "")
+      + (errors.length ? `<span class="chip serious">Skipped</span><span>${esc(errors.join(" · "))}</span>` : ""));
+  } catch (e) {
+    setStatus(`<span class="chip critical">Could not analyze</span><span>${esc(e.message)}</span>`);
+  }
+}
+
+function loadSample() {
+  MODEL = buildModel(sampleSeries(), ["sample match"]);
+  renderAll();
+  setStatus(`<span class="chip warn">Sample data</span><span>An invented match so you can see the layout. These numbers are not measurements. Open your own files to replace it.</span>`);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Wiring
+// ---------------------------------------------------------------------------------------------
+const TABS = ["summary", "timeline", "sags", "motors"];
+function selectTab(name) {
+  for (const t of TABS) {
+    $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
+    $(`panel-${t}`).hidden = t !== name;
+  }
+  try { localStorage.setItem("power-budget-tab", name); } catch (e) {}
+  if (name === "timeline" && MODEL) renderTimeline();
+}
+for (const t of TABS) $(`tab-${t}`).addEventListener("click", () => selectTab(t));
+
+$("file-input").addEventListener("change", e => loadFiles(e.target.files));
+const drop = document.body;
+drop.addEventListener("dragover", e => { e.preventDefault(); $("drop").classList.add("over"); });
+drop.addEventListener("dragleave", e => { if (e.target === document.body || !e.relatedTarget) $("drop").classList.remove("over"); });
+drop.addEventListener("drop", e => { e.preventDefault(); $("drop").classList.remove("over"); loadFiles(e.dataTransfer.files); });
+
+for (const id of ["opt-sag", "opt-brownout", "opt-on", "opt-window"]) $(id).addEventListener("change", renderAll);
+$("zoom-reset").addEventListener("click", () => { VIEW = null; renderTimeline(); });
+$("sag-list").addEventListener("click", e => {
+  const b = e.target.closest("[data-zoom]");
+  if (!b) return;
+  const [a, z] = b.dataset.zoom.split(",").map(Number);
+  const pad = Math.round(2.5 / DT);
+  VIEW = [Math.max(0, a - pad), Math.min(MODEL.n, z + pad)];
+  selectTab("timeline");
+});
+
+async function copyText(text, btn) {
+  const orig = btn.textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {}
+    ta.remove();
+    btn.textContent = ok ? "Copied" : "Select and copy manually";
+  }
+  setTimeout(() => { btn.textContent = orig; }, 1600);
+}
+$("copy-summary").addEventListener("click", e => copyText(summaryText(), e.currentTarget));
+document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copyText($(b.dataset.copy).textContent, b)));
+
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (!$("panel-timeline").hidden) renderTimeline(); }, 120); });
+
+loadSample();
+try { const t = localStorage.getItem("power-budget-tab"); if (TABS.includes(t)) selectTab(t); } catch (e) {}
+</script>

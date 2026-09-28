@@ -1,89 +1,76 @@
 # Power analysis
 
-Offline breakdown of where a match's current went, for tracking down brownouts.
+Where a match's current went, for tracking down brownouts.
 
-**In a hurry?** [QUICKSTART.md](QUICKSTART.md) has the commands and nothing else.
+Power data is recorded by CTRE's hoot logger, not by robot code. Phoenix writes every Talon FX's
+supply current and supply voltage into a `.hoot` file as the frames arrive on the CAN bus, in its
+own thread, so logging costs the robot loop nothing. The robot code's only jobs are keeping those
+two signals on the bus at 20 Hz (`CtreUtil.setPowerSignalFrequency`) and switching logging on and
+off (`HootLogging`).
 
-```
-python3 tools/power_analysis/analyze_power.py logs/FRC_20260101_120000.wpilog
-python3 tools/power_analysis/analyze_power.py <log> --out --csv
-```
+## 1. Turn logging on
 
-With no `--out`, it prints to the terminal and writes nothing. A bare `--out` derives a
-directory from the log's name — `logs/FRC_20260101_120000.wpilog` becomes
-`reports/FRC_20260101_120000/` — so analysing a second match never overwrites the first. Pass
-`--out somewhere/else` to choose the directory yourself. (`--csv` implies `--out` if you don't
-give one, since it has to write somewhere.)
+`HootLogging` puts a toggle at `/SmartDashboard/Hoot Logging/Enabled`. Set it to true in Elastic.
+It is a persistent NetworkTables value, so it survives reboots and redeploys until you change it.
+`Hoot Logging/Active` shows whether a log is actually being written.
 
-Reusing a directory *does* overwrite it, which is what you want when re-running the same log.
+The default for a roboRIO that has never had it set is `HootLogging.kEnabledByDefault` (false).
 
-No install needed for the tables. Plots want matplotlib:
-`pip install -r tools/power_analysis/requirements.txt`
+## 2. Get the files
 
-## What it tells you
+Logs go to a USB stick at `/u/logs` if one is plugged in, otherwise to `/home/lvuser/logs`. Each
+robot program start makes a dated folder with one `.hoot` file per CAN bus (LowerBus, UpperBus).
 
-**A per-subsystem table**, sorted by energy, with percentiles taken over the samples where the
-mechanism was actually drawing current — a percentile over the whole match is dominated by idle
-time and tells you nothing. Subsystems with a state channel also get a row per state, so
-`Flywheel:ACTIVE` is separated from `Flywheel:IDLE`.
+## 3. Convert with owlet
 
-```
-Subsystem               Energy (Wh)   On Samples  On Time (s)  On % Enabled   P50 (A) ...
-Drive                       20.9375         7499      149.980       100.00%     19.78 ...
-Flywheel:ACTIVE             10.0188         1950       39.000        26.00%     97.30 ...
+The dashboard reads `.wpilog`, so convert each `.hoot` with CTRE's owlet. It ships inside Phoenix
+Tuner X and AdvantageScope (on macOS, `~/Library/Application Support/AdvantageScope/owlet/`; use
+the version that matches Phoenix, currently 26.3.0).
+
+```bash
+owlet UpperBus.hoot UpperBus.wpilog -f wpilog -e 5
 ```
 
-**Every voltage sag**, worst first, with what each subsystem was drawing *during* the sag and in
-the half-second *before* it. Both windows matter: at the bottom of a deep sag the current limiters
-have often already cut in, so the draw during understates the cause — but when a mechanism slams
-on at the same instant the voltage drops, the lookback shows an idle robot and the draw during is
-the whole story.
+`-e 5` keeps only the enabled part of the log plus 5 s either side. Without it the export holds
+every signal from power-on, which gets large.
 
-**An unaccounted-draw figure** — the PDP's total current minus the sum of the named subsystems.
-That gap is the roboRIO, radio, and Limelights. A gap much larger than that means something is
-drawing power that nothing in code accounts for.
+## 4. Open the dashboard
 
-**A sample-rate warning** if any current channel never reaches a rate that can resolve a
-brownout. The robot asks for 50 Hz (`CtreUtil.kCurrentSignalFrequencyHz`); if this fires, that
-rate is not reaching the logged channel, and a 200 ms event would fall between samples.
+Open [`dashboard.html`](dashboard.html) in a browser (double-click works; nothing is uploaded) or
+use the published copy: https://claude.ai/artifact/97BbKZKZ2U4QkkPaQfgfBe
 
-The check uses the rate a channel reaches *while changing*, not its mean. Epilogue's backend is
-lazy — it only writes a value when it changes — so a channel that sat constant for ten seconds
-logs a low mean rate while being perfectly capable of 50 Hz. Only a channel that never gets fast
-is actually mis-configured.
+Drop all of a match's `.wpilog` files onto it at once. It shows:
 
-Files written to the report directory: `summary.txt` (the table above, plain text so `diff`
-works across matches), and with plots available, `overview.png` (voltage and total draw, auto/teleop bands, *every* sag
-marked), `stack.png` (stacked draw by subsystem), and `events/event_NN.png` — a ±2 s zoom for
-each of the sags printed in full, so `--max-events` (default 10) caps these too. Raise it or pass
-`--max-events 0` to plot every sag.
+- **Summary**: energy per subsystem, and P50/P90/P99/peak current while each one was running.
+  Drive, Flywheel and Intake get extra rows per state (from the `Robot State`, `Flywheel/State` and
+  `Intake/State` signals `HootLogging` writes), so `Drive · SCORING` shows whether the rule in
+  `RobotCurrentLimits` actually cut drive current.
+- **Timeline**: battery voltage over stacked current by subsystem, sags shaded. Drag to zoom.
+- **Sags**: every dip below the sag threshold, worst first, with what each subsystem drew during it
+  and in the half second before.
+- **Motors**: every Talon by CAN ID, with a check for missing motors and slow signals.
 
-## Where the data comes from
+**Copy summary** puts a plain-text table on the clipboard for comparing matches.
 
-The `Supply Current Total` getter on each subsystem, and
-`frc.robot.subsystems.power.PowerMonitor` for battery voltage, brownout state, and PDP totals.
-Supply current, not stator: stator current is measured on the motor side of the controller and
-can be several times what is actually drawn from the battery, so a stator sum badly overstates
-the power budget.
+The motor-to-subsystem map (CAN IDs) is at the top of the dashboard's script. Update it there if
+the wiring changes.
 
-If the script exits with a list of missing channels, the log predates those getters, or
-`config.minimumImportance` in `Robot.java` is back above `DEBUG`. It refuses to run rather than
-charting zeros.
+## Reading it
 
-## Feeding results back
+- Battery voltage is the median of what every Talon reports at its input. It is what the motors
+  had to work with, and it includes wiring drop, so it reads a little below the roboRIO's figure.
+- Totals are motor supply current only. The roboRIO, radio and cameras add roughly 5-10 A.
+- To compare two matches, look at sag count and depth and the P90/P99 columns. Total Wh barely
+  moves with current limits: a limit slows the work down rather than skipping it.
 
-The state-bucketed rows show whether the rules in `RobotCurrentLimits.java` are actually taking
-effect — `Drive:SCORING` should be visibly cheaper than `Drive` overall. (Those rows exist
-because `Drive` declares `Robot State` as its `state_channel` in `SUBSYSTEMS`; add one to any
-other subsystem you want split the same way.) The P90/P99 columns show how much of each
-configured limit is really being used. Note that `CurrentLimitManager` is disabled during
-autonomous (`Robot.autonomousInit`), which the auto/teleop split makes visible.
+## A/B testing loop time
+
+With the toggle, you can compare loop timing with logging on and off without redeploying. Keep
+Phoenix Tuner X closed for both runs (it adds its own CAN and CPU load), run the same routine
+twice, and compare `LoopTiming/maxMs` and `LoopTiming/overrunCount`.
 
 ## Files
 
 | File | |
 |---|---|
-| `analyze_power.py` | the analysis; `SUBSYSTEMS` at the top maps subsystem → log channel |
-| `wpilog.py` | dependency-free WPILOG reader |
-| `requirements.txt` | matplotlib, for the plots only |
-| `make_sample_log.py` | writes a synthetic match log so the analysis can be developed without a robot. **Its numbers are invented** — never read them as measurements |
+| `dashboard.html` | the analysis, in one self-contained page |

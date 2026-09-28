@@ -50,7 +50,6 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
     inputs.angle = turretPosition;
     inputs.velocity = turretVelocity;
     inputs.appliedVolts = appliedVolts;
-    inputs.supplyCurrent = simState.getSupplyCurrent();
     inputs.statorCurrent = simState.getTorqueCurrent();
   }
 }

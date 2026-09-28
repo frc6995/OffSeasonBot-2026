@@ -41,7 +41,6 @@ public class TurretIOTalonFX implements TurretIO {
     protected StatusSignal<AngularVelocity> velocitySignal;
     protected StatusSignal<Voltage> voltSignal;
     protected StatusSignal<Current> statorCurrentSignal;
-    protected StatusSignal<Current> supplyCurrentSignal;
 
     protected double cachedAngle = 0;
 
@@ -53,7 +52,6 @@ public class TurretIOTalonFX implements TurretIO {
         voltSignal = m_turretMotor.getMotorVoltage();
 
         statorCurrentSignal = m_turretMotor.getStatorCurrent();
-        supplyCurrentSignal = m_turretMotor.getSupplyCurrent();
 
         m_feedforward = new TurretFeedforward(
             TurretConstants.kSpringForceN,
@@ -65,8 +63,9 @@ public class TurretIOTalonFX implements TurretIO {
 
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
-        // CtreUtil.kCurrentSignalFrequencyHz.
-        CtreUtil.setCurrentSignalFrequency(statorCurrentSignal, supplyCurrentSignal);
+        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+        CtreUtil.setCurrentSignalFrequency(statorCurrentSignal);
+        CtreUtil.setPowerSignalFrequency(m_turretMotor);
 
         // Must come before the optimize below, and must cover every signal updateInputs()
         // refreshes - anything left out silently drops to 4 Hz. For this motor that would mean
@@ -141,7 +140,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        BaseStatusSignal.refreshAll(angleSignal, velocitySignal, voltSignal, statorCurrentSignal, supplyCurrentSignal);
+        BaseStatusSignal.refreshAll(angleSignal, velocitySignal, voltSignal, statorCurrentSignal);
 
         cachedAngle = angleSignal.getValueAsDouble();
 
@@ -150,7 +149,6 @@ public class TurretIOTalonFX implements TurretIO {
         inputs.velocity = mechanismToAngleDegrees(velocitySignal.getValueAsDouble());
         inputs.appliedVolts = voltSignal.getValueAsDouble();
         inputs.statorCurrent = statorCurrentSignal.getValueAsDouble();
-        inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
     }
 
     @Override

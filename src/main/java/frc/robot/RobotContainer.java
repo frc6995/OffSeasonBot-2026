@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -25,11 +24,11 @@ import frc.robot.autos.Autos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.power.PowerMonitor;
 import frc.robot.subsystems.vision.ATVision;
 import frc.robot.subsystems.vision.apriltag.NoneATLimelightVision;
 import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
+import frc.robot.util.logging.HootLogging;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Elastic;
@@ -84,7 +83,8 @@ public class RobotContainer {
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
-   // public final PowerMonitor m_power = new PowerMonitor();
+    /** Hoot signal logging, switchable from the dashboard. See HootLogging. */
+    public final HootLogging hootLogging = new HootLogging(m_superstructure);
 
     public RobotContainer() {
         VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
@@ -95,7 +95,6 @@ public class RobotContainer {
         RobotCurrentLimits.configure(currentLimitManager, m_superstructure, m_drivetrain);
 
         configureBindings();
-        SignalLogger.enableAutoLogging(false);
         RobotVisualizer.setupVisualizer();
         warmUpAutoAlignCommands();
         warmUpElastic();

@@ -29,9 +29,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     configureMotors();
     // Current signals are published at an explicit rate rather than Phoenix's default,
     // which is not guaranteed fast enough to resolve a brownout. See
-    // CtreUtil.kCurrentSignalFrequencyHz.
-    CtreUtil.setCurrentSignalFrequency(
-        ArrayUtil.concat(m_supplyCurrentSignals, m_statorCurrentSignals));
+    // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+    CtreUtil.setCurrentSignalFrequency(m_statorCurrentSignals);
+    CtreUtil.setPowerSignalFrequency(
+        m_flywheelLeadMotor, m_flywheelFollowMotor1, m_flywheelFollowMotor2, m_flywheelFollowMotor3);
 
     // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
     // anything left out silently drops to 4 Hz. Only the lead motor's velocity and voltage are
@@ -58,32 +59,17 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   final StatusSignal<AngularVelocity> m_FlywheelVelocity = m_flywheelLeadMotor.getVelocity();
   final StatusSignal<Voltage> m_FlywheelVoltage = m_flywheelLeadMotor.getMotorVoltage();
-  final StatusSignal<Current> m_FlywheelSupCurrent = m_flywheelLeadMotor.getSupplyCurrent();
   final StatusSignal<Current> m_FlywheelStatCurrent = m_flywheelLeadMotor.getStatorCurrent();
 
   /*
    * Per-motor current, indexed to match FlywheelInputs: [lead, follower1, follower2, follower3].
-   * The followers draw the bulk of the flywheel's current and were previously unmeasured; see
-   * FlywheelInputs.motorSupplyCurrentAmps.
    */
-  private final StatusSignal<Current>[] m_supplyCurrentSignals = supplyCurrentSignals();
   private final StatusSignal<Current>[] m_statorCurrentSignals = statorCurrentSignals();
 
   /* Every signal updateInputs() refreshes, flattened once here rather than rebuilt at 50 Hz. */
   private final BaseStatusSignal[] m_allSignals = ArrayUtil.concat(
       new BaseStatusSignal[] {m_FlywheelVelocity, m_FlywheelVoltage},
-      m_supplyCurrentSignals,
       m_statorCurrentSignals);
-
-  @SuppressWarnings("unchecked")
-  private StatusSignal<Current>[] supplyCurrentSignals() {
-    return new StatusSignal[] {
-        m_FlywheelSupCurrent,
-        m_flywheelFollowMotor1.getSupplyCurrent(),
-        m_flywheelFollowMotor2.getSupplyCurrent(),
-        m_flywheelFollowMotor3.getSupplyCurrent()
-    };
-  }
 
   @SuppressWarnings("unchecked")
   private StatusSignal<Current>[] statorCurrentSignals() {
@@ -128,14 +114,12 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelInputs inputs) {
-    // One batched CAN round trip for the mechanism signals and all eight current signals.
+    // One batched CAN round trip for the mechanism signals and all four stator currents.
     BaseStatusSignal.refreshAll(m_allSignals);
     inputs.velocityRPM = m_FlywheelVelocity.getValueAsDouble() * 60;
     inputs.appliedVolts = m_FlywheelVoltage.getValueAsDouble();
     inputs.statorCurrentAmps = m_FlywheelStatCurrent.getValueAsDouble();
-    inputs.supplyCurrentAmps = m_FlywheelSupCurrent.getValueAsDouble();
     for (int i = 0; i < FlywheelIO.kMotorCount; i++) {
-      inputs.motorSupplyCurrentAmps[i] = m_supplyCurrentSignals[i].getValueAsDouble();
       inputs.motorStatorCurrentAmps[i] = m_statorCurrentSignals[i].getValueAsDouble();
     }
   }

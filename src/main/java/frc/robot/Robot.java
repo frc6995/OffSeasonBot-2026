@@ -58,13 +58,8 @@ public class Robot extends TimedRobot {
                 config.errorHandler = ErrorHandler.crashOnError();
             }
 
-            // DEBUG, not CRITICAL: the per-motor current and voltage getters throughout the
-            // subsystems are annotated at DEBUG/INFO, so a CRITICAL floor silently dropped every
-            // one of them - logs contained no current or voltage data at all, which made offline
-            // brownout analysis impossible. See tools/power_analysis.
-            //
-            // This costs log file size, not field bandwidth: NT4 only transmits topics a client
-            // has subscribed to, and DataLogManager's NT recording runs on the roboRIO itself.
+            // Power data does not come from Epilogue - it is in the hoot log (see HootLogging) -
+            // so this floor has no effect on tools/power_analysis.
             config.minimumImportance = Logged.Importance.CRITICAL;
             // Only write a value to the backend when it actually changes, to save
             // bandwidth/log file size.
@@ -91,6 +86,7 @@ public class Robot extends TimedRobot {
         // work + log spam this runbook tells you to hunt for elsewhere - removed rather than left
         // as a self-inflicted false lead. See tools/loop_overrun/README.md.
         CommandScheduler.getInstance().run();
+        m_robotContainer.hootLogging.periodic();
 
         LoopTiming.getInstance().end();
        // SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());

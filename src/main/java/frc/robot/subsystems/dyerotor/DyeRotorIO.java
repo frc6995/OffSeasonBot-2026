@@ -17,20 +17,13 @@ public interface DyeRotorIO {
     public double spinVelocityRPM;
     public double spinAppliedVolts;
     public double spinStatorCurrentAmps;
-    public double spinSupplyCurrentAmps;
 
     public double indexPositionRotations;
     public double indexVelocityRPM;
     public double indexAppliedVolts;
-    /** Lead motor only; see {@link #indexMotorSupplyCurrentAmps} for the pair. */
+    /** Lead motor only; see {@link #indexMotorStatorCurrentAmps} for the pair. */
     public double indexStatorCurrentAmps;
-    /** Lead motor only; see {@link #indexMotorSupplyCurrentAmps} for the pair. */
-    public double indexSupplyCurrentAmps;
-    /**
-     * Per-motor supply current, indexed [lead, follower]. The follower previously had no current
-     * signal at all, so half the indexer's draw was missing from the power budget.
-     */
-    public double[] indexMotorSupplyCurrentAmps = new double[kIndexMotorCount];
+    /** Per-motor stator current, indexed [lead, follower]. */
     public double[] indexMotorStatorCurrentAmps = new double[kIndexMotorCount];
   }
 }

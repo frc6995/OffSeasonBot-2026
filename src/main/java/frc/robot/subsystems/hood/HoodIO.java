@@ -11,6 +11,5 @@ public interface HoodIO {
         public double angle;
         public double appliedVolts;
         public double statorCurrent;
-        public double supplyCurrent;
     }
 }

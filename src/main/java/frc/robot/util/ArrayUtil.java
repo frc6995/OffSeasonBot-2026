@@ -5,10 +5,8 @@ import com.ctre.phoenix6.BaseStatusSignal;
 /**
  * Small array helpers used by the IO layers to batch status signals.
  *
- * <p>{@link BaseStatusSignal#refreshAll} and
- * {@link CtreUtil#setCurrentSignalFrequency} both take varargs, and each IO layer keeps its
- * current signals in per-motor arrays so they can be indexed alongside the inputs arrays they
- * populate. These exist to bridge the two without writing the same loop in five IO classes.
+ * <p>{@link BaseStatusSignal#refreshAll} takes varargs, and IO layers keep per-motor signals in
+ * arrays so they can be indexed alongside the inputs arrays they populate.
  */
 public final class ArrayUtil {
     private ArrayUtil() {}
@@ -30,14 +28,5 @@ public final class ArrayUtil {
             offset += array.length;
         }
         return combined;
-    }
-
-    /** Sum of every element, used to roll per-motor currents up into a subsystem total. */
-    public static double sum(double[] values) {
-        double total = 0.0;
-        for (double value : values) {
-            total += value;
-        }
-        return total;
     }
 }
