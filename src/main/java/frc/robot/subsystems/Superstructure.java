@@ -62,7 +62,8 @@ public class Superstructure extends SubsystemBase {
 
     public Superstructure(Supplier<SwerveDriveState> swerveState) {
         this.m_swerveState = swerveState;
-        m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData, FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
+        m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData,
+                FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
@@ -72,7 +73,8 @@ public class Superstructure extends SubsystemBase {
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            this.m_intake = new Intake(new IntakeIO(){});
+            this.m_intake = new Intake(new IntakeIO() {
+            });
             this.m_hood = new Hood(new HoodIOTalonFX(), () -> m_shotProjector.hoodDeg);
             this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), () -> m_shotProjector.rpm);
             this.m_turret = new Turret(new TurretIOTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));
@@ -81,57 +83,65 @@ public class Superstructure extends SubsystemBase {
 
     }
 
-
     @Override
     public void periodic() {
         if (DriverStation.isDisabled()) {
-            // robotState must not survive a disable, for the same reason the mechanism states
-            // can't (see Flywheel.periodic): requestRobotIdle() is bound to the shoot button's
-            // onFalse edge and to an end-of-auto marker, and neither can run while disabled.
+            // robotState must not survive a disable, for the same reason the mechanism
+            // states
+            // can't (see Flywheel.periodic): requestRobotIdle() is bound to the shoot
+            // button's
+            // onFalse edge and to an end-of-auto marker, and neither can run while
+            // disabled.
             //
-            // Unlike the mechanisms, the damage here is not a mechanism that restarts itself --
-            // it is that RobotCurrentLimits throttles the drivetrain to 1A whenever this reads
-            // SCORING or PASSING. An auto that ends before its stopScoring marker would carry
-            // that state through the disable, and teleopInit() re-enables the limit manager, so
-            // teleop would start with a near-immobile drivetrain until the driver pressed and
+            // Unlike the mechanisms, the damage here is not a mechanism that restarts
+            // itself --
+            // it is that RobotCurrentLimits throttles the drivetrain to 1A whenever this
+            // reads
+            // SCORING or PASSING. An auto that ends before its stopScoring marker would
+            // carry
+            // that state through the disable, and teleopInit() re-enables the limit
+            // manager, so
+            // teleop would start with a near-immobile drivetrain until the driver pressed
+            // and
             // released the shoot button.
             robotState = RobotState.IDLE;
         }
 
-        if(robotState == RobotState.PASSING) {
+        if (robotState == RobotState.PASSING) {
             var state = m_swerveState.get();
-             var pose = state.Pose;
-             var goalPose = POI.PASSING_WALL_START.get();
+            var pose = state.Pose;
+            var goalPose = POI.PASSING_WALL_START.get();
             m_shotProjector.solvePassing(
-                pose.getX(),
-                pose.getY(),
-                pose.getRotation().getRadians(),
-                goalPose.getX(),
-                POI.PASSING_ANGLE.get().getRadians());
+                    pose.getX(),
+                    pose.getY(),
+                    pose.getRotation().getRadians(),
+                    goalPose.getX(),
+                    POI.PASSING_ANGLE.get().getRadians());
 
         } else {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
             var pose = state.Pose;
-            // state.Speeds is robot-relative (CTRE's SwerveDriveState), but solve() requires
-            // field-relative velocity -- see its javadoc. Left un-rotated, the compensation is
-            // only correct at 0 deg heading and rotates away from the field frame as the robot
+            // state.Speeds is robot-relative (CTRE's SwerveDriveState), but solve()
+            // requires
+            // field-relative velocity -- see its javadoc. Left un-rotated, the compensation
+            // is
+            // only correct at 0 deg heading and rotates away from the field frame as the
+            // robot
             // turns, which is why it only showed up while actually driving/turning.
             var fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, pose.getRotation());
 
             m_shotProjector.solve(
-                pose.getX(),
-                pose.getY(),
-                pose.getRotation().getRadians(),
-                fieldRelativeSpeeds.vxMetersPerSecond,
-                fieldRelativeSpeeds.vyMetersPerSecond,
-                goalPose.getX(),
-                goalPose.getY(),
-                ShotConstants.kShotDelay
-            );
+                    pose.getX(),
+                    pose.getY(),
+                    pose.getRotation().getRadians(),
+                    fieldRelativeSpeeds.vxMetersPerSecond,
+                    fieldRelativeSpeeds.vyMetersPerSecond,
+                    goalPose.getX(),
+                    goalPose.getY(),
+                    ShotConstants.kShotDelay);
         }
-        
-        
+
     }
 
     public Command requestIntakeActive() {
@@ -142,25 +152,22 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.requestRetract());
     }
 
-    public Command requestIntakeAgitating() {
-        return Commands.runOnce(() -> {
-            if(m_intake.getState() == IntakeState.ACTIVE) {
-                m_intake.requestMiniAgitate();
-            } else {
-                m_intake.requestFullAgitate();
-            }
-        });
+
+    public Command requestIntakeMiniAgitate() {
+        return Commands.runOnce(() -> m_intake.requestMiniAgitate());
     }
 
-    // Shoot-only: sweep+hold the extension; requestFullAgitate() always keeps the rollers/kicker
-    // idle.
+    // Shoot-only: sweep+hold the extension; requestFullAgitate() always keeps the
+    // rollers/kicker idle.
     public Command requestIntakeFullAgitate() {
         return Commands.runOnce(() -> m_intake.requestFullAgitate());
     }
 
     /**
-     * Shoot+intake held together: mini-agitate (long extension only) while scoring, plain
-     * ACTIVE while passing -- passing shots don't want the extension sweeping. Intake button is
+     * Shoot+intake held together: mini-agitate (long extension only) while scoring,
+     * plain
+     * ACTIVE while passing -- passing shots don't want the extension sweeping.
+     * Intake button is
      * held in both cases, so rollers/kicker stay spinning.
      */
     public Command requestIntakeForShootAndIntake() {
@@ -204,7 +211,8 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> engageShootState(RobotState.PASSING));
     }
 
-    //This one automatically chooses PASSING or SCORING based on whether the robot is in the passing zone.
+    // This one automatically chooses PASSING or SCORING based on whether the robot
+    // is in the passing zone.
     public Command requestRobotShooting() {
         return Commands.runOnce(() -> {
             RobotState targetState = determineShootState();
@@ -212,11 +220,16 @@ public class Superstructure extends SubsystemBase {
         });
     }
 
-    public Command requestRobotShootSafe(){
-        return Commands.runOnce(()->{engageShootState(RobotState.SAFE_SHOT);});
+    public Command requestRobotShootSafe() {
+        return Commands.runOnce(() -> {
+            engageShootState(RobotState.SAFE_SHOT);
+        });
     }
 
-    /** Chooses PASSING or SCORING based on whether the robot is in the configurable passing zone. */
+    /**
+     * Chooses PASSING or SCORING based on whether the robot is in the configurable
+     * passing zone.
+     */
     private RobotState determineShootState() {
         return isInPassingZone() ? RobotState.PASSING : RobotState.SCORING;
     }
@@ -228,7 +241,8 @@ public class Superstructure extends SubsystemBase {
     private void engageShootState(RobotState state) {
         switch (state) {
             case SCORING, PASSING -> {
-                m_turret.requestAimClosest();;
+                m_turret.requestAimClosest();
+                ;
                 m_flywheel.requestActive();
                 m_hood.requestActive();
             }
@@ -237,7 +251,7 @@ public class Superstructure extends SubsystemBase {
                 m_flywheel.setState(FlywheelState.SAFE_SHOT);
                 m_hood.setState(HoodState.SAFE_SHOT);
             }
-            
+
         }
         robotState = state;
         m_dyeRotor.requestSpin();

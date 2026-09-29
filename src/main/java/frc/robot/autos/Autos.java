@@ -57,7 +57,7 @@ public class Autos {
         FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
                 m_superstructure.requestRobotScoring()));
-        FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeAgitating());
+        FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeMiniAgitate());
         FollowPath.registerEventTrigger("stopScoring",
                 Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
 
@@ -65,7 +65,7 @@ public class Autos {
         FollowPath.registerEventTrigger("leftBumpStopIntake", m_superstructure.requestIntakeIdle());
         FollowPath.registerEventTrigger("leftBumpStartShooter", m_superstructure.requestFlywheelActive());
         FollowPath.registerEventTrigger("leftBumpStartShooting", m_superstructure.requestRobotScoring());
-        FollowPath.registerEventTrigger("leftBumpStartAgitating", m_superstructure.requestIntakeAgitating());
+        FollowPath.registerEventTrigger("leftBumpStartAgitating", m_superstructure.requestIntakeMiniAgitate());
         FollowPath.registerEventTrigger("leftBumpStopAgitating", m_superstructure.requestIntakeIdle());
         FollowPath.registerEventTrigger("leftBumpStopShooting", m_superstructure.requestRobotIdle());
 
@@ -73,7 +73,7 @@ public class Autos {
         FollowPath.registerEventTrigger("leftBumpStopIntakeAgain", m_superstructure.requestIntakeIdle());
         FollowPath.registerEventTrigger("leftBumpStartShooterAgain", m_superstructure.requestFlywheelActive());
         FollowPath.registerEventTrigger("leftBumpStartShootingAgain", m_superstructure.requestRobotScoring());
-        FollowPath.registerEventTrigger("leftBumpStartAgitatingAgain", m_superstructure.requestIntakeAgitating());
+        FollowPath.registerEventTrigger("leftBumpStartAgitatingAgain", m_superstructure.requestIntakeMiniAgitate());
 
         // ===== BLINE PATH FOLLOWING CONFIGURATION =====
         pathBuilder = new FollowPath.Builder(

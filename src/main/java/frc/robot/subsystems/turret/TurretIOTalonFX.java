@@ -23,17 +23,13 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
-import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.util.CtreUtil;
-import frc.robot.util.TurretFeedforward;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
 public class TurretIOTalonFX implements TurretIO {
     //need to specify upper or lower CAN bus
     protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus);
-
-    private final TurretFeedforward m_feedforward;
 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
 
@@ -54,14 +50,6 @@ public class TurretIOTalonFX implements TurretIO {
 
         statorCurrentSignal = m_turretMotor.getStatorCurrent();
         supplyCurrentSignal = m_turretMotor.getSupplyCurrent();
-
-        m_feedforward = new TurretFeedforward(
-            TurretConstants.kSpringForceN,
-            TurretConstants.kEChainBaseWidth / 2.0,
-            TurretConstants.kEChainBaseLength / 2.0,
-            TurretConstants.kNMPerVolt,
-            -135.612
-        );
 
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See

@@ -13,9 +13,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
-import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
-import frc.robot.util.TurretFeedforward;
 
 public class Turret extends SubsystemBase {
     public static class TurretConstants {
