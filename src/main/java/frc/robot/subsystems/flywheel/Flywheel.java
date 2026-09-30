@@ -5,12 +5,8 @@ import java.util.function.Supplier;
 import edu.wpi.first.epilogue.Logged;
 import frc.robot.util.ArrayUtil;
 import edu.wpi.first.epilogue.Logged.Importance;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotVisualizer;
-
-// import frc.robot.util.CtreUtil;
 
 public class Flywheel extends SubsystemBase {
   public static class FlywheelConstants {
@@ -34,9 +30,7 @@ public class Flywheel extends SubsystemBase {
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
 
     public static final double kSafeShotRPM = 2700;
-    // Sim Constants
-    // public static final double kDiameter = 2;
-    // public static final double kMass = 4.15;
+
     public static final double [][] kShooterData = {
       {0.0, 2100},
       {1.0, 2100},
@@ -144,13 +138,6 @@ public class Flywheel extends SubsystemBase {
   public void periodic() {
 
     if (DriverStation.isDisabled()) {
-      // An ACTIVE request must never survive a disable. The request itself is legitimate, but the
-      // thing that would normally clear it can't run: requestRobotIdle() is bound to the shoot
-      // button's onFalse edge, and CommandScheduler refuses to schedule a non-runsWhenDisabled
-      // command while the robot is disabled - so releasing the button after a disable does
-      // nothing. Auto has the same hole: the scheduler cancels the running auto command at the end
-      // of the period, so a later "stop shooting" event trigger never fires. Either way the wheel
-      // would spin up the instant the robot is re-enabled, with nobody touching the controller.
       setState(FlywheelState.DISABLED);
     }
 

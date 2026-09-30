@@ -15,10 +15,6 @@ public class IntakeIOSimTalonFX extends IntakeIOTalonFX {
     private static final double kSimLoopPeriodSeconds = 0.02;
      public static final double kExtensionMOI = 0.07;
     private static final double kExtensionCarriageMassKg = 2.0;
-    // Derived from the real IO's directly-measured drum circumference (IntakeConstants
-    // .kDrumCircumferenceMeters) rather than a separately-estimated radius, so the ElevatorSim's
-    // physics and the sensor conversion below always agree with real hardware by construction -
-    // no more maintaining two numbers for the same physical drum.
     private static final double kExtensionDrumRadiusMeters =
             IntakeConstants.kDrumCircumferenceMeters / (2.0 * Math.PI);
 

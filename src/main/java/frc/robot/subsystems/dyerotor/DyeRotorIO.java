@@ -1,7 +1,5 @@
 package frc.robot.subsystems.dyerotor;
 
-import edu.wpi.first.epilogue.Logged;
-
 public interface DyeRotorIO {
   default void updateInputs(DyeRotorInputs inputs) {}
   default void setSpinVelocity(double velocityRPM) {}

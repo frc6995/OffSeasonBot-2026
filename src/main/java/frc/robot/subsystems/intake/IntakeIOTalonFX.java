@@ -5,13 +5,11 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -165,11 +163,6 @@ public class IntakeIOTalonFX implements IntakeIO {
         extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.kExtensionAccelerationRotationsPerSec2)
              .withMotionMagicCruiseVelocity(IntakeConstants.kExtensionCruiseVelocityRotationsPerSec);
 
-        // The hood and turret both carry soft limits; the extension did not, so the only thing
-        // keeping it inside its travel was that resolveExtensionTargetPosition() happens to return
-        // in-range constants. With kExtensionP = 20, MotionMagic, brake mode and an 80A stator
-        // limit, a bad zero (resetEncoder() is a zero-where-it-sits) would drive it into the hard
-        // stop and hold it there. Enforce the range on the motor as well.
         extensionConfig.SoftwareLimitSwitch =
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)

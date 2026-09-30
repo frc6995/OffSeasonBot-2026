@@ -102,9 +102,6 @@ public class Hood extends SubsystemBase {
     @Override
     public void periodic() {
         if (DriverStation.isDisabled()) {
-            // An ACTIVE request must never survive a disable -- see Flywheel.periodic() for the
-            // full mechanism. Without this the hood drives to its shot angle the instant the robot
-            // is re-enabled, with nobody touching the controller.
             setState(HoodState.DISABLED);
         }
 
@@ -130,9 +127,6 @@ public class Hood extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        // Driven from the commanded setpoint rather than the simulated PID's actual angle: the sim
-        // PID doesn't track like the real robot's, so the simulated position lags/oscillates in a
-        // way that isn't representative. The setpoint is what the operator/vision actually asked for.
         hoodLigament.setAngle(commandedAngleDeg);
         RobotVisualizer.updateHood(Units.degreesToRadians(commandedAngleDeg));
     }
@@ -152,12 +146,6 @@ public class Hood extends SubsystemBase {
     public void resetEncoder() {
         io.resetEncoder();
     }
-
-    // setAngle(double) used to live here. It set requestedAngle and flipped the state to ACTIVE,
-    // but periodic()'s ACTIVE branch recomputes the angle from targetData every loop and never
-    // read requestedAngle -- so the value was discarded on the next tick and only the state change
-    // took effect. It had no callers. Removed rather than left as a trap; the Hood has no MANUAL
-    // state to make it meaningful the way Turret.setAngle has.
 
     public double applyLimits(double angle) {
         double clamped = MathUtil.clamp(angle, Hood.HoodConstants.kMinAngleDeg, Hood.HoodConstants.kMaxAngleDeg);

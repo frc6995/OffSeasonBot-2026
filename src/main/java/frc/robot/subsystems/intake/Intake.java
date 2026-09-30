@@ -100,8 +100,7 @@ public class Intake extends SubsystemBase {
             
     private IntakeState intakeState = IntakeState.RETRACTED;
 
-    // The extension position actually sent to the IO this loop, used to drive the sim visualization
-    // (see simulationPeriodic()) instead of the simulated PID's actual position.
+    // sim visualization
     private double commandedExtensionMeters;
 
     private final Timer agitateTimer = new Timer();
@@ -259,12 +258,6 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean isDeployed() {
-        // Not compareTo(RETRACTED) > 0: that was only correct because RETRACTED happens to be
-        // declared first, and reordering IntakeState would have silently inverted the a() toggle.
-        // Every state except RETRACTED holds the extension out (see resolveExtensionTargetPosition),
-        // so RETRACTED is the only one that counts as stowed. Comparing against ACTIVE instead made
-        // requestIntakeToggle() a no-op in both directions -- from RETRACTED it reported deployed and
-        // retracted again; from ACTIVE it reported stowed and re-deployed.
         return getState() != IntakeState.RETRACTED;
     }
 
