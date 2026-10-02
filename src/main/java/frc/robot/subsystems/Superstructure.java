@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.util.POI;
 import frc.robot.subsystems.dyerotor.DyeRotor;
@@ -57,6 +58,7 @@ public class Superstructure extends SubsystemBase {
     RobotState robotState = RobotState.IDLE;
 
     private final Supplier<SwerveDriveState> m_swerveState;
+    private final Trigger m_neutralZoneTrigger;
 
     public final ShotProjection m_shotProjector;
 
@@ -64,6 +66,8 @@ public class Superstructure extends SubsystemBase {
         this.m_swerveState = swerveState;
         m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData,
                 FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
+
+        m_neutralZoneTrigger = new Trigger(() -> POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation()));
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
@@ -140,6 +144,10 @@ public class Superstructure extends SubsystemBase {
                     goalPose.getX(),
                     goalPose.getY(),
                     ShotConstants.kShotDelay);
+            
+            m_neutralZoneTrigger.onTrue(
+                Commands.runOnce(() -> m_turret.requestUnwind())
+            );
         }
 
     }

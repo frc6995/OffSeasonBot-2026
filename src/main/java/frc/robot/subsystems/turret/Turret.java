@@ -70,10 +70,12 @@ public class Turret extends SubsystemBase {
         AIM_CLOSEST,
         AIM_CENTRAL,
         SAFE_SHOT,
-        MANUAL;
+        MANUAL,
+        UNWIND;
     }
 
     private TurretState turretState = TurretState.AIM_CLOSEST;
+    private TurretState turretStateBeforeUnwind = TurretState.AIM_CLOSEST;
     private double requestedAngleDeg = 0;
     // Which selection function MANUAL should re-apply each loop; set by setClosestAngleManual /
     // setCentralAngleManual. Without this, MANUAL always used selectClosestAngle, silently
@@ -109,6 +111,11 @@ public class Turret extends SubsystemBase {
         turretState = TurretState.DISABLED;
     }
 
+    public void requestUnwind() {
+        turretStateBeforeUnwind = turretState;
+        turretState = TurretState.UNWIND;
+    }
+
     public void resetEncoder() {
         io.resetEncoder();
     }
@@ -129,6 +136,13 @@ public class Turret extends SubsystemBase {
                     ? selectCentralAngle(requestedAngleDeg)
                     : selectClosestAngle(requestedAngleDeg);
             case SAFE_SHOT -> commandedAngleDeg = selectClosestAngle(TurretConstants.kSafeShotAngleDeg);
+            case UNWIND -> commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
+        }
+
+        if(turretState == TurretState.UNWIND) {
+            if(MathUtil.isNear(commandedAngleDeg, getAngle(), 15.0)) {
+                turretState = turretStateBeforeUnwind;
+            }
         }
     }
 
