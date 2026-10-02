@@ -38,8 +38,10 @@ use the published copy: https://claude.ai/artifact/97BbKZKZ2U4QkkPaQfgfBe
 
 Drop all of a match's `.wpilog` files onto it at once. It shows:
 
-- **Summary**: energy per subsystem, and P50/P90/P99/peak current while each one was running.
-  Drive, Flywheel and Intake get extra rows per state (from the `Robot State`, `Flywheel/State` and
+- **Summary**: a pie chart of energy per subsystem with Wh and share, and P50/P90/P99/peak current while
+  each one was running. The subsystems are Drive, Steer, Flywheel, Intake roller, Intake
+  extension, Intake kicker, Dye rotor hook (spin), Dye rotor index and Turret & Hood. Drive,
+  Flywheel and Intake roller get extra rows per state (from the `Robot State`, `Flywheel/State` and
   `Intake/State` signals `HootLogging` writes), so `Drive · SCORING` shows whether the rule in
   `RobotCurrentLimits` actually cut drive current.
 - **Timeline**: battery voltage over stacked current by subsystem, sags shaded. Drag to zoom.

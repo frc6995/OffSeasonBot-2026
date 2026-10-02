@@ -1,60 +1,46 @@
 <meta charset="utf-8">
-<title>NOMAD Power Budget</title>
+<title>NOMAD Power</title>
 <meta name="description" content="Per-subsystem power and brownout breakdown from CTRE hoot logs exported to .wpilog.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lexend:wght@300;400;500;600;700&display=swap">
 <style>
 :root {
-  --page: #f3f4f1;
-  --surface: #fcfcfb;
-  --surface-2: #eceee9;
-  --ink: #101312;
-  --ink-2: #4a504c;
-  --muted: #737a74;
-  --grid: #e1e3dd;
-  --axis: #c3c6bf;
-  --border: rgba(16, 19, 18, 0.12);
-  --accent: #1d6b52;
-  --accent-ink: #ffffff;
-  --accent-soft: #dcebe4;
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
-  --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
-  --good: #0ca30c; --good-ink: #006300;
-  --warn: #fab219; --warn-ink: #8a5a00;
-  --serious: #ec835a; --serious-ink: #a4441c;
-  --critical: #d03b3b; --critical-ink: #b02a2a;
-  --sag-fill: rgba(208, 59, 59, 0.11);
-  --auto-band: rgba(29, 107, 82, 0.07);
-  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --page: #0e100f; --surface: #171a18; --surface-2: #202421;
-    --ink: #f3f5f2; --ink-2: #c3c7c0; --muted: #8b918b;
-    --grid: #2a2e2b; --axis: #3b403c; --border: rgba(255, 255, 255, 0.1);
-    --accent: #4fb08c; --accent-ink: #08130e; --accent-soft: #1c3a2f;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
-    --good-ink: #3cc13c; --warn-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ef6b6b;
-    --sag-fill: rgba(230, 103, 103, 0.16);
-    --auto-band: rgba(79, 176, 140, 0.08);
-  }
-}
-:root[data-theme="dark"] {
+  /* Dark only, for every viewer regardless of their theme setting. */
   color-scheme: dark;
-  --page: #0e100f; --surface: #171a18; --surface-2: #202421;
-  --ink: #f3f5f2; --ink-2: #c3c7c0; --muted: #8b918b;
-  --grid: #2a2e2b; --axis: #3b403c; --border: rgba(255, 255, 255, 0.1);
-  --accent: #4fb08c; --accent-ink: #08130e; --accent-soft: #1c3a2f;
+  /* NOMAD brand greens */
+  --nomad-light: #8ebf2b;
+  --nomad-dark: #69882c;
+  --page: #0f110c;
+  --surface: #181b14;
+  --surface-2: #21251b;
+  --ink: #f3f5ee;
+  --ink-2: #c4c9b9;
+  --muted: #8c9280;
+  --grid: #2b2f25;
+  --axis: #3c4234;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: var(--nomad-light);     /* rules, underlines, focus */
+  --accent-text: var(--nomad-light);
+  --brand-mark: var(--nomad-light);
+  --btn-bg: var(--nomad-light);
+  --btn-ink: #13160e;
+  --accent-soft: #233016;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
   --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
-  --good-ink: #3cc13c; --warn-ink: #fab219; --serious-ink: #ec835a; --critical-ink: #ef6b6b;
+  /* Past the eight validated hues: neutral greys, never a generated ninth hue. */
+  --s9: #858b7c; --s10: #c4c9b9;
+  --good: #0ca30c; --good-ink: #3cc13c;
+  --warn: #fab219; --warn-ink: #fab219;
+  --serious: #ec835a; --serious-ink: #ec835a;
+  --critical: #d03b3b; --critical-ink: #ef6b6b;
   --sag-fill: rgba(230, 103, 103, 0.16);
-  --auto-band: rgba(79, 176, 140, 0.08);
+  --auto-band: rgba(142, 191, 43, 0.10);
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  /* Approved brand faces first, used wherever they are installed; Lexend is the web fallback. */
+  --display: "Kabel", "ITC Kabel", "Kabel LT Std", "Century Gothic", "Lexend", system-ui, sans-serif;
+  --body: "Akisdenz Grotesk", "Akisdenz-Grotesk", "Lexend", "Century Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -64,13 +50,16 @@ body {
   color: var(--ink);
   font-family: var(--body);
   font-size: 14px;
-  line-height: 1.5;
+  font-weight: 300;
+  line-height: 1.55;
   padding: 0 16px 48px;
 }
 .wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
-h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
-h2 { font-size: 22px; }
-h3 { font-size: 17px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; margin: 0; text-wrap: balance; letter-spacing: 0; }
+b, strong { font-weight: 500; }
+table, .btn, .tab, .field input, .field select { font-weight: 400; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
 p { margin: 0; }
 code, .mono { font-family: var(--mono); font-size: 12.5px; }
 button, input, select { font: inherit; color: inherit; }
@@ -83,7 +72,8 @@ button, input, select { font: inherit; color: inherit; }
   padding-block: 18px 4px;
 }
 .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.brand h1 { font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.brand h1 { font-size: 28px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.brand h1 .mark { color: var(--brand-mark); }
 .brand .tag {
   font-family: var(--mono); font-size: 12px; color: var(--ink-2);
   border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px;
@@ -94,7 +84,7 @@ button, input, select { font: inherit; color: inherit; }
   padding: 7px 12px; font-weight: 500;
 }
 .btn:hover { background: var(--surface-2); }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.primary { background: var(--btn-bg); color: var(--btn-ink); border-color: transparent; font-weight: 500; }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -117,7 +107,7 @@ button, input, select { font: inherit; color: inherit; }
 .chip.warn { color: var(--warn-ink); }
 .chip.serious { color: var(--serious-ink); }
 .chip.critical { color: var(--critical-ink); }
-.chip.info { color: var(--accent); }
+.chip.info { color: var(--accent-text); }
 details.howto { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
 details.howto summary { cursor: pointer; padding: 10px 16px; font-weight: 500; }
 details.howto .body { padding: 0 16px 14px; display: grid; gap: 10px; max-width: 78ch; }
@@ -138,8 +128,8 @@ details.howto ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
   padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
 }
 .tile .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
-.tile .value { font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1.1; }
-.tile .value small { font-size: 18px; font-weight: 500; color: var(--ink-2); margin-left: 3px; }
+.tile .value { font-family: var(--display); font-size: 30px; font-weight: 500; line-height: 1.15; }
+.tile .value small { font-size: 16px; font-weight: 400; color: var(--ink-2); margin-left: 3px; }
 .tile .foot { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
 /* ---------- controls ---------- */
@@ -161,7 +151,7 @@ details.howto ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
   border: 0; background: none; padding: 9px 14px; cursor: pointer; font-weight: 500; color: var(--ink-2);
   border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
 }
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab[aria-selected="true"] { color: var(--ink); font-weight: 500; border-bottom-color: var(--accent); }
 .tab .count { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-left: 4px; }
 .panel { display: flex; flex-direction: column; gap: 16px; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -170,14 +160,19 @@ details.howto ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .two { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px; }
 @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- bars ---------- */
-.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 7px 10px; align-items: center; }
-.bars .name { display: flex; align-items: center; gap: 7px; font-weight: 500; }
+/* ---------- energy pie ---------- */
+.pie-wrap { position: relative; display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
 .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
-.track { height: 16px; background: var(--surface-2); border-radius: 0 4px 4px 0; position: relative; }
-.fill { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
-.bars .val { font-variant-numeric: tabular-nums; color: var(--ink-2); text-align: right; font-size: 13px; }
-.bars .val b { color: var(--ink); font-weight: 600; }
+.pie-wrap svg { width: 190px; height: 190px; max-width: 100%; flex: none; }
+.pie-wrap path { cursor: default; transition: opacity .12s; }
+.pie-wrap svg:hover path:not(:hover) { opacity: 0.55; }
+.pie-legend { display: grid; grid-template-columns: max-content max-content max-content; gap: 5px 14px; font-size: 13px; align-items: center; }
+.pie-legend .h { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+.pie-legend .h.r, .pie-legend .wh { text-align: right; font-variant-numeric: tabular-nums; }
+.pie-legend .wh { color: var(--ink); font-weight: 500; }
+.pie-legend .total { border-top: 1px solid var(--grid); padding-top: 5px; }
+.pie-legend .name { display: flex; align-items: center; gap: 7px; color: var(--ink-2); }
+.pie-legend .pct { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ---------- tables ---------- */
 .table-wrap { overflow-x: auto; }
@@ -202,7 +197,7 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
 .tip {
   position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border);
   border-radius: 8px; padding: 8px 10px; font-size: 12.5px; min-width: 190px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14); display: grid; gap: 2px; z-index: 5;
+  box-shadow: var(--shadow); display: grid; gap: 2px; z-index: 5;
 }
 .tip .row { display: flex; align-items: center; gap: 7px; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .tip .row .l { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
@@ -234,8 +229,8 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <h1>Power Budget</h1>
-      <span class="tag">6995 NOMAD · hoot logs</span>
+      <h1><span class="mark">NOMAD</span> Power</h1>
+      <span class="tag">FRC 6995 · hoot logs</span>
     </div>
     <div class="btn-row">
       <button class="btn" id="copy-summary" type="button">Copy summary</button>
@@ -304,7 +299,11 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
     <div class="two">
       <div class="card">
         <div class="card-head"><h2>Energy by subsystem</h2><span class="note">Wh drawn from the battery</span></div>
-        <div class="bars" id="energy-bars"></div>
+        <div class="pie-wrap" id="pie-wrap">
+          <svg id="energy-pie" viewBox="0 0 200 200" role="img" aria-label="Share of energy by subsystem"></svg>
+          <div class="pie-legend" id="pie-legend"></div>
+          <div class="tip" id="pie-tip" hidden></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-head"><h2>Draw while running</h2><span class="note">percentiles over samples above the running threshold</span></div>
@@ -349,15 +348,20 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
 // Robot wiring. CAN IDs match the robot code (TunerConstants, *Constants in each subsystem).
 // Group order is the color order: slots are assigned once, in this order, never re-ranked.
 // ---------------------------------------------------------------------------------------------
+// Nine named groups against eight validated hues: Turret & Hood, the smallest load, takes a
+// neutral grey instead of a generated ninth color. Stack order is this order, which is the
+// palette's validated adjacency order.
 const GROUPS = [
   { key: "drive", name: "Drive", slot: 1 },
   { key: "steer", name: "Steer", slot: 2 },
   { key: "flywheel", name: "Flywheel", slot: 3 },
-  { key: "intake", name: "Intake", slot: 4 },
-  { key: "kicker", name: "Kicker", slot: 5 },
-  { key: "dye", name: "Dye Rotor", slot: 6 },
-  { key: "aim", name: "Turret & Hood", slot: 7 },
-  { key: "other", name: "Unmapped", slot: 8 },
+  { key: "roller", name: "Intake roller", slot: 4 },
+  { key: "kicker", name: "Intake kicker", slot: 5 },
+  { key: "spin", name: "Dye rotor hook (spin)", slot: 6 },
+  { key: "index", name: "Dye rotor index", slot: 7 },
+  { key: "extension", name: "Intake extension", slot: 8 },
+  { key: "aim", name: "Turret & Hood", slot: 9 },
+  { key: "other", name: "Unmapped", slot: 10 },
 ];
 const MOTORS = [
   [15, "Drive FL", "drive", "LowerBus"], [16, "Drive FR", "drive", "LowerBus"],
@@ -366,17 +370,18 @@ const MOTORS = [
   [13, "Steer BL", "steer", "LowerBus"], [14, "Steer BR", "steer", "LowerBus"],
   [40, "Flywheel lead", "flywheel", "UpperBus"], [41, "Flywheel follower 1", "flywheel", "UpperBus"],
   [42, "Flywheel follower 2", "flywheel", "UpperBus"], [43, "Flywheel follower 3", "flywheel", "UpperBus"],
-  [30, "Roller lead", "intake", "UpperBus"], [31, "Roller follower", "intake", "UpperBus"],
-  [32, "Extension lead", "intake", "UpperBus"], [33, "Extension follower", "intake", "UpperBus"],
+  [30, "Roller lead", "roller", "UpperBus"], [31, "Roller follower", "roller", "UpperBus"],
+  [32, "Extension lead", "extension", "UpperBus"], [33, "Extension follower", "extension", "UpperBus"],
   [34, "Kicker", "kicker", "UpperBus"],
-  [21, "Index lead", "dye", "UpperBus"], [22, "Index follower", "dye", "UpperBus"], [23, "Spin", "dye", "UpperBus"],
+  [21, "Index lead", "index", "UpperBus"], [22, "Index follower", "index", "UpperBus"],
+  [23, "Hook (spin)", "spin", "UpperBus"],
   [45, "Turret", "aim", "UpperBus"], [44, "Hood", "aim", "UpperBus"],
 ].map(([id, name, group, bus]) => ({ id, name, group, bus }));
 // Custom signals written by HootLogging.java; the state rows split a group's draw by these.
 const STATE_SPLITS = [
   { group: "drive", channel: "Robot State" },
   { group: "flywheel", channel: "Flywheel/State" },
-  { group: "intake", channel: "Intake/State" },
+  { group: "roller", channel: "Intake/State" },
 ];
 const DT = 0.02;               // analysis grid, s - one robot loop
 const MIN_RATE_HZ = 15;        // below this a 200 ms brownout can fall between samples
@@ -800,12 +805,7 @@ function renderTiles(m, r, o) {
 
 function renderSummary(r) {
   const sorted = r.groups.slice().sort((a, b) => b.stats.wh - a.stats.wh);
-  const max = Math.max(1e-9, ...sorted.map(g => g.stats.wh));
-  const total = Math.max(1e-9, r.totalWh);
-  $("energy-bars").innerHTML = sorted.map(g => `
-    <span class="name"><span class="sw" style="background:${color(g)}"></span>${esc(g.name)}</span>
-    <span class="track"><span class="fill" style="display:block;width:${(g.stats.wh / max * 100).toFixed(1)}%;background:${color(g)}"></span></span>
-    <span class="val"><b>${fmt(g.stats.wh, 2)}</b> Wh · ${fmt(g.stats.wh / total * 100, 0)}%</span>`).join("");
+  renderPie(sorted);
 
   const head = `<thead><tr><th>Subsystem</th><th>On %</th><th>P50 A</th><th>P90 A</th><th>P99 A</th><th>Peak A</th><th>Wh</th></tr></thead>`;
   const line = (s, cls, sw) => `<tr class="${cls}"><td><span class="name">${sw || ""}${esc(s.name)}</span></td><td>${fmt(s.onFrac * 100, 0)}%</td><td>${fmt(s.p50)}</td><td>${fmt(s.p90)}</td><td>${fmt(s.p99)}</td><td>${fmt(s.peak)}</td><td>${fmt(s.wh, 2)}</td></tr>`;
@@ -815,6 +815,42 @@ function renderSummary(r) {
     for (const s of r.stateRows[g.key] || []) body += line({ ...s, name: `${g.name} · ${s.name}` }, "sub");
   }
   $("draw-table").innerHTML = head + `<tbody>${body}</tbody>`;
+}
+
+/** Share of energy, largest slice first from 12 o'clock. Back-driven (negative) energy counts as 0. */
+function renderPie(sorted) {
+  const slices = sorted.map(g => ({ g, wh: Math.max(0, g.stats.wh) })).filter(x => x.wh > 0);
+  const sum = slices.reduce((a, x) => a + x.wh, 0);
+  const svg = $("energy-pie"), legend = $("pie-legend"), tip = $("pie-tip");
+  if (!sum) { svg.innerHTML = ""; legend.innerHTML = `<span class="name">No energy drawn in this window.</span>`; return; }
+  const cx = 100, cy = 100, r = 96;
+  const pt = a => `${(cx + r * Math.sin(a)).toFixed(2)},${(cy - r * Math.cos(a)).toFixed(2)}`;
+  let a0 = 0, paths = "";
+  for (const x of slices) {
+    const frac = x.wh / sum, a1 = a0 + frac * 2 * Math.PI;
+    const d = frac >= 0.9999
+      ? `M${cx},${cy - r}A${r},${r} 0 1 1 ${cx - 0.01},${cy - r}Z`
+      : `M${cx},${cy}L${pt(a0)}A${r},${r} 0 ${frac > 0.5 ? 1 : 0} 1 ${pt(a1)}Z`;
+    paths += `<path d="${d}" fill="${color(x.g)}" stroke="var(--surface)" stroke-width="2" stroke-linejoin="round" data-key="${x.g.key}" aria-label="${esc(x.g.name)}: ${fmt(x.wh, 2)} Wh (${fmt(frac * 100, 0)}%)"></path>`;
+    a0 = a1;
+  }
+  svg.innerHTML = paths;
+  legend.innerHTML = `<span class="h">Subsystem</span><span class="h r">Wh</span><span class="h r">Share</span>`
+    + slices.map(x => `<span class="name"><span class="sw" style="background:${color(x.g)}"></span>${esc(x.g.name)}</span><span class="wh">${fmt(x.wh, 2)}</span><span class="pct">${fmt(x.wh / sum * 100, 1)}%</span>`).join("")
+    + `<span class="name total">Total</span><span class="wh total">${fmt(sum, 2)}</span><span class="pct total">100%</span>`;
+
+  const wrap = $("pie-wrap");
+  svg.onpointermove = ev => {
+    const key = ev.target.dataset && ev.target.dataset.key;
+    const x = slices.find(s => s.g.key === key);
+    if (!x) { tip.hidden = true; return; }
+    tip.innerHTML = `<div class="head">${esc(x.g.name)}</div><div class="row"><span class="l">Energy</span><span>${fmt(x.wh, 2)} Wh</span></div><div class="row"><span class="l">Share</span><span>${fmt(x.wh / sum * 100, 1)}%</span></div><div class="row"><span class="l">P90 draw</span><span>${fmt(x.g.stats.p90)} A</span></div>`;
+    tip.hidden = false;
+    const rect = wrap.getBoundingClientRect();
+    tip.style.left = `${Math.min(rect.width - tip.offsetWidth, ev.clientX - rect.left + 14)}px`;
+    tip.style.top = `${Math.max(0, ev.clientY - rect.top - tip.offsetHeight - 8)}px`;
+  };
+  svg.onpointerleave = () => { tip.hidden = true; };
 }
 
 function renderMotors(m, r) {
@@ -990,7 +1026,7 @@ function summaryText() {
   if (!RESULT) return "";
   const r = RESULT, o = opts();
   const pad = (s, n) => String(s).padEnd(n), lp = (s, n) => String(s).padStart(n);
-  let t = `Power Budget — ${MODEL.sources.join(", ")}\n`;
+  let t = `NOMAD Power — ${MODEL.sources.join(", ")}\n`;
   t += `${r.allTime ? "Analyzed" : "Enabled"} ${fmt(r.windowS, 1)} s · ${fmt(r.totalWh, 2)} Wh · min ${fmt(r.minV, 2)} V · peak ${fmt(r.peakTotal, 0)} A · ${r.sags.length} sags < ${o.sagV} V (${r.sags.filter(s => s.brownout).length} brownouts)\n\n`;
   t += pad("Subsystem", 26) + ["Wh", "On%", "P50", "P90", "P99", "Peak"].map(h => lp(h, 8)).join("") + "\n";
   for (const g of r.groups.slice().sort((a, b) => b.stats.wh - a.stats.wh)) {
@@ -1057,7 +1093,7 @@ function selectTab(name) {
     $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
     $(`panel-${t}`).hidden = t !== name;
   }
-  try { localStorage.setItem("power-budget-tab", name); } catch (e) {}
+  try { localStorage.setItem("nomad-power-tab", name); } catch (e) {}
   if (name === "timeline" && MODEL) renderTimeline();
 }
 for (const t of TABS) $(`tab-${t}`).addEventListener("click", () => selectTab(t));
@@ -1098,5 +1134,5 @@ let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (!$("panel-timeline").hidden) renderTimeline(); }, 120); });
 
 loadSample();
-try { const t = localStorage.getItem("power-budget-tab"); if (TABS.includes(t)) selectTab(t); } catch (e) {}
+try { const t = localStorage.getItem("nomad-power-tab"); if (TABS.includes(t)) selectTab(t); } catch (e) {}
 </script>
