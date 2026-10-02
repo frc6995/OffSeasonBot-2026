@@ -112,7 +112,7 @@ public class Turret extends SubsystemBase {
     }
 
     public void requestUnwind() {
-        turretStateBeforeUnwind = turretState;
+        if(turretState != TurretState.UNWIND) turretStateBeforeUnwind = turretState;
         turretState = TurretState.UNWIND;
     }
 

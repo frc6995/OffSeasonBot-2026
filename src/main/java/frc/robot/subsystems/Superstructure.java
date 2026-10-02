@@ -67,7 +67,8 @@ public class Superstructure extends SubsystemBase {
         m_shotProjector = new ShotProjection(ShotConstants.kTofData, HoodConstants.kAngleData,
                 FlywheelConstants.kShooterData, FlywheelConstants.kPassingShooterData, HoodConstants.kPassingAngleData);
 
-        m_neutralZoneTrigger = new Trigger(() -> POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation()));
+        m_neutralZoneTrigger = new Trigger(
+                () -> POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation()));
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
@@ -84,7 +85,8 @@ public class Superstructure extends SubsystemBase {
             this.m_turret = new Turret(new TurretIOTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
-
+        m_neutralZoneTrigger.debounce(0.5).onTrue(
+                Commands.runOnce(() -> m_turret.requestUnwind()));
     }
 
     @Override
@@ -144,10 +146,7 @@ public class Superstructure extends SubsystemBase {
                     goalPose.getX(),
                     goalPose.getY(),
                     ShotConstants.kShotDelay);
-            
-            m_neutralZoneTrigger.onTrue(
-                Commands.runOnce(() -> m_turret.requestUnwind())
-            );
+
         }
 
     }
@@ -159,7 +158,6 @@ public class Superstructure extends SubsystemBase {
     public Command requestIntakeRetracted() {
         return Commands.runOnce(() -> m_intake.requestRetract());
     }
-
 
     public Command requestIntakeMiniAgitate() {
         return Commands.runOnce(() -> m_intake.requestMiniAgitate());
