@@ -29,7 +29,6 @@ import frc.robot.subsystems.hood.Hood.HoodConstants;
 import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.hood.HoodIOSimTalonFX;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSimTalonFX;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.turret.Turret;
@@ -78,8 +77,7 @@ public class Superstructure extends SubsystemBase {
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOSimTalonFX());
 
         } else {
-            this.m_intake = new Intake(new IntakeIO() {
-            });
+            this.m_intake = new Intake(new IntakeIOTalonFX());
             this.m_hood = new Hood(new HoodIOTalonFX(), () -> m_shotProjector.hoodDeg);
             this.m_flywheel = new Flywheel(new FlywheelIOTalonFX(), () -> m_shotProjector.rpm);
             this.m_turret = new Turret(new TurretIOTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));

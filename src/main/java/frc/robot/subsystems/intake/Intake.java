@@ -71,7 +71,7 @@ public class Intake extends SubsystemBase {
         public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
         public static final double kExtensionCruiseVelocityRotationsPerSec = 10.0;
 
-        // Full agitate sweeps down from 100% to 30% extension and holds once it arrives
+        // Full agitate sweeps down from 100% to 50% extension and holds once it arrives
         // (shoot-only). Mini agitate oscillates between 70% and 100% every
         // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
         public static final double kFullAgitateNearMeters = 0.5 * kExtensionMaxMeters;
@@ -104,7 +104,7 @@ public class Intake extends SubsystemBase {
     private double commandedExtensionMeters;
 
     private final Timer agitateTimer = new Timer();
-    private boolean agitateAtFarPosition = false;
+    private boolean agitateAtNearPosition = false;
 
     public Intake() {
         this(new IntakeIO() {
@@ -123,7 +123,7 @@ public class Intake extends SubsystemBase {
 
     public void setState(IntakeState state) {
         if ((state == IntakeState.MINI_AGITATE || state == IntakeState.FULL_AGITATE) && intakeState != IntakeState.MINI_AGITATE && intakeState != IntakeState.FULL_AGITATE) {
-            agitateAtFarPosition = false;
+            agitateAtNearPosition = false;
             agitateTimer.restart();
         }
         intakeState = state;
@@ -296,16 +296,16 @@ public class Intake extends SubsystemBase {
 
     private double resolveMiniAgitateTargetPosition() {
         if (agitateTimer.advanceIfElapsed(IntakeConstants.kMiniAgitateIntervalSeconds)) {
-            agitateAtFarPosition = !agitateAtFarPosition;
+            agitateAtNearPosition = !agitateAtNearPosition;
         }
-        return agitateAtFarPosition ? IntakeConstants.kMiniAgitateNearMeters : IntakeConstants.kMiniAgitateFarMeters;
+        return agitateAtNearPosition ? IntakeConstants.kMiniAgitateNearMeters : IntakeConstants.kMiniAgitateFarMeters;
     }
 
     private double resolveFullAgitateTargetPosition() {
         if (!MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters) && agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
-            agitateAtFarPosition = !agitateAtFarPosition;
+            agitateAtNearPosition = !agitateAtNearPosition;
         }
-        return agitateAtFarPosition ? IntakeConstants.kFullAgitateNearMeters : IntakeConstants.kFullAgitateFarMeters;
+        return agitateAtNearPosition ? IntakeConstants.kFullAgitateNearMeters : IntakeConstants.kFullAgitateFarMeters;
     }
 
     private static double clampExtension(double positionMeters) {
