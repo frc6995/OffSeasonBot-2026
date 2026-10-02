@@ -47,6 +47,8 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
     simState.setRawRotorPosition(angleToMotorRotations(turretPosition));
     simState.setRotorVelocity(angleToMotorRotations(turretVelocity));
 
+    cachedAngle = turretPosition / 360.0;
+
     inputs.angle = turretPosition;
     inputs.velocity = turretVelocity;
     inputs.appliedVolts = appliedVolts;

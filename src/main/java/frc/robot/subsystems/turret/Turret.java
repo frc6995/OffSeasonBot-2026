@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -33,6 +34,12 @@ public class Turret extends SubsystemBase {
         public static final double kMinAngleDeg = -288-135.612;
         public static final double kMaxAngleDeg = 288-135.612;
         public static final double kSafeShotAngleDeg = 0;
+
+        /**
+         * Aim this far ahead of the target along its current rate (sec) to cancel loop + CAN +
+         * closed-loop latency. Tune: if the turret lags a spinning robot, raise it; if it leads, lower it.
+         */
+        public static final double kAimLookaheadSec = 0.01;
 
         public static final double kCruiseVelocityDegPerSec = 720;
         public static final double kMaxAccelerationDegPerSec2 = 3600;
@@ -84,6 +91,11 @@ public class Turret extends SubsystemBase {
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
     private double commandedAngleDeg = 0;
 
+    // Rate of change of the aim target (deg/s), fed forward to the motor so tracking doesn't lag.
+    private final LinearFilter targetRateFilter = LinearFilter.movingAverage(2);
+    private double lastRawTargetDeg = Double.NaN;
+    private double targetRateDegPerSec = 0;
+
     private TurretIO io;
     private Supplier<Double> targetAngleDeg;
     
@@ -128,10 +140,13 @@ public class Turret extends SubsystemBase {
         // exactly the error that makes a turret take the long way round near a +/-180 boundary.
         io.updateInputs(inputs);
 
+        updateTargetRate(turretState == TurretState.AIM_CLOSEST || turretState == TurretState.AIM_CENTRAL
+                ? targetAngleDeg.get() : Double.NaN);
+
         switch (turretState) {
             case DISABLED -> io.disable();
-            case AIM_CENTRAL -> commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
-            case AIM_CLOSEST -> commandedAngleDeg = selectClosestAngle(targetAngleDeg.get());
+            case AIM_CENTRAL -> commandedAngleDeg = selectCentralAngle(leadTarget(targetAngleDeg.get()));
+            case AIM_CLOSEST -> commandedAngleDeg = selectClosestAngle(leadTarget(targetAngleDeg.get()));
             case MANUAL -> commandedAngleDeg = manualUsesCentralAngle
                     ? selectCentralAngle(requestedAngleDeg)
                     : selectClosestAngle(requestedAngleDeg);
@@ -180,6 +195,21 @@ public class Turret extends SubsystemBase {
         this.turretState = TurretState.MANUAL;
     }
 
+    private double leadTarget(double rawTargetDeg) {
+        return rawTargetDeg + targetRateDegPerSec * TurretConstants.kAimLookaheadSec;
+    }
+
+    private void updateTargetRate(double rawTargetDeg) {
+        if (Double.isNaN(rawTargetDeg) || Double.isNaN(lastRawTargetDeg)) {
+            targetRateFilter.reset();
+            targetRateDegPerSec = 0;
+        } else {
+            double delta = MathUtil.inputModulus(rawTargetDeg - lastRawTargetDeg, -180, 180);
+            targetRateDegPerSec = targetRateFilter.calculate(delta / 0.02);
+        }
+        lastRawTargetDeg = rawTargetDeg;
+    }
+
     private double selectClosestAngle(double angle) {
         double currentAngle = this.getAngle();
 
@@ -209,14 +239,14 @@ public class Turret extends SubsystemBase {
             }
         }
 
-        io.setAngle(smallestAngle);
+        io.setAngle(smallestAngle, targetRateDegPerSec);
         return smallestAngle;
     }
 
     private double selectCentralAngle(double angle) {
         angle = MathUtil.inputModulus(angle, -180, 180);
 
-        io.setAngle(angle);
+        io.setAngle(angle, targetRateDegPerSec);
         return angle;
     }
 

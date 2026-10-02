@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -32,6 +33,13 @@ public class TurretIOTalonFX implements TurretIO {
     protected final TalonFX m_turretMotor = new TalonFX(kCANID, Constants.CANBuses.UpperBus);
 
     protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(true);
+
+    // Tracking request: no profile, so a moving setpoint is followed with velocity feedforward
+    // instead of MotionMagic's plan-to-stop-at-target behaviour (which trails a moving target).
+    protected final PositionVoltage trackRequest = new PositionVoltage(0).withEnableFOC(true);
+
+    /** Above this error, use the profiled MotionMagic request for big slews (unwind, snaps). */
+    private static final double kTrackingMaxErrorDeg = 25;
 
     protected StatusSignal<Angle> angleSignal;
     protected StatusSignal<AngularVelocity> velocitySignal;
@@ -143,11 +151,22 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setAngle(double angle) {
+        setAngle(angle, 0);
+    }
+
+    @Override
+    public void setAngle(double angle, double velocityDegPerSec) {
         double clampedAngle = MathUtil.clamp(angle, kMinAngleDeg, kMaxAngleDeg);
 
         double rotations = clampedAngle / 360;
         // positionRequest.FeedForward = -m_feedforward.calculate(cachedAngle * Math.PI * 2.0);
-        m_turretMotor.setControl(positionRequest.withPosition(rotations));
+        double errorDeg = clampedAngle - mechanismToAngleDegrees(cachedAngle);
+        if (Math.abs(errorDeg) > kTrackingMaxErrorDeg) {
+            m_turretMotor.setControl(positionRequest.withPosition(rotations));
+        } else {
+            double ffRps = MathUtil.clamp(velocityDegPerSec, -kCruiseVelocityDegPerSec, kCruiseVelocityDegPerSec) / 360.0;
+            m_turretMotor.setControl(trackRequest.withPosition(rotations).withVelocity(ffRps));
+        }
     }
     
     protected double angleToMotorRotations(double angle) {
