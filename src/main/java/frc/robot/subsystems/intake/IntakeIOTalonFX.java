@@ -27,19 +27,19 @@ import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_rollerLeadMotor
-    = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_rollerFollowerMotor 
-    = new TalonFX(Intake.IntakeConstants.kROLLER_FOLLOWER_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kROLLER_FOLLOWER_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_extensionLeadMotor
-    = new TalonFX(Intake.IntakeConstants.kEXTENSION_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kEXTENSION_LEAD_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_extensionFollowerMotor
-    = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_kickerMotor
-    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected VoltageOut m_rollerVoltageRequest = new VoltageOut(0);
     protected VoltageOut m_kickerVoltageRequest = new VoltageOut(0);

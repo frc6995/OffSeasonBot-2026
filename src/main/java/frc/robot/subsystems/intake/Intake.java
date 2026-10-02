@@ -57,12 +57,12 @@ public class Intake extends SubsystemBase {
         public static final double kRollerIdleVolts = 2.0;
 
         // Extension PID Constants
-        public static final double kExtensionP = 20;
+        public static final double kExtensionP = 5.0;
         // Extension Feedforward Constants
         public static final double kExtensionV = 0.07;
         // Extension Config Constants
-        public static final double kExtensionStatorCurrentLimitAmps = 80.0;
-        public static final double kExtensionSupplyCurrentLimitAmps = 40.0;
+        public static final double kExtensionStatorCurrentLimitAmps = 20.0;
+        public static final double kExtensionSupplyCurrentLimitAmps = 20.0;
         public static final double kExtensionReduction = 3.33;
         public static final double kExtensionMaxMeters = 0.31;
         public static final double kExtensionMinMeters = 0.0;
