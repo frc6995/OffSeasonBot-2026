@@ -9,31 +9,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.CtreUtil;
 
-/**
- * Starts CTRE's hoot signal logging when {@link #kEnabled} is set, and adds the handful of values the
- * power dashboard needs that no CTRE device reports.
- *
- * <p>This is the whole on-robot side of power logging. Phoenix records every motor's supply current
- * and supply voltage into the hoot file as the frames arrive on the bus, in its own thread, so the
- * robot loop never reads or writes a current value (see {@link CtreUtil#setPowerSignalFrequency}).
- * What this class adds per loop is a few cheap reads and comparisons; a hoot write happens only when
- * one of those values actually changes, a few dozen times a match.
- *
- * <p>Phoenix already logs {@code RobotMode} and {@code RobotEnable} itself. Custom signals written
- * here (names as they appear after export):
- * <ul>
- *   <li>{@code BrownedOut}: the roboRIO's own brownout flag
- *   <li>{@code Robot State}, {@code Flywheel/State}, {@code Intake/State}: for the dashboard's
- *       per-state rows, e.g. whether {@code RobotCurrentLimits} really cut drive current while
- *       SCORING
- * </ul>
- */
+
 public final class HootLogging {
-    /**
-     * Whether hoot logging runs. Logging starts at robot program start and runs until the program
-     * exits, one folder of .hoot files per start. Set false for the baseline run of a loop-timing
-     * A/B test, then redeploy.
-     */
     public static final boolean kEnabled = true;
 
     /** Only on the real robot, and only if a USB stick is plugged in; see the constructor. */
