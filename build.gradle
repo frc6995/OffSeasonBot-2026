@@ -47,7 +47,9 @@ def deployArtifact = deploy.targets.roborio.artifacts.frcJava
 // the roboRIO so pauses can be correlated against /LoopTiming and the watchdog epoch dumps.
 // Remove once GC is ruled in or out; fetch the log first with:
 //   scp admin@10.69.95.2:/home/lvuser/gc.log .
-deployArtifact.jvmArgs.add("-Xlog:gc*:file=/home/lvuser/gc.log")
+// ":time,uptime" adds wall-clock timestamps so GC events can be lined up against the
+// "[CmdTiming] autonomousInit start: wallMs=..." console line (also temporary).
+deployArtifact.jvmArgs.add("-Xlog:gc*:file=/home/lvuser/gc.log:time,uptime")
 
 // Set to true to use debug for all targets including JNI, which will drastically impact
 // performance.

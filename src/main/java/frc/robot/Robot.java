@@ -18,6 +18,8 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -110,8 +112,17 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        // TEMPORARY - first-enable hitch diagnosis (see CommandTiming). Prints one line per step
+        // of autonomousInit every enable; schedule() runs the auto's first initialize() inline,
+        // so part of a stall can land here rather than in the scheduler's own overrun printout.
+        // currentTimeMillis is printed so this can be lined up against gc.log's wall-clock times.
+        Tracer autoInitTracer = new Tracer();
+        System.out.println("[CmdTiming] autonomousInit start: fpga=" + Timer.getFPGATimestamp()
+                + " wallMs=" + System.currentTimeMillis());
+
         // Dynamic current limiting disabled for auto
         m_robotContainer.currentLimitManager.setEnabled(false);
+        autoInitTracer.addEpoch("currentLimitManager.setEnabled");
 
         if (RobotBase.isSimulation()) {
             CommandScheduler.getInstance().schedule(
@@ -123,13 +134,18 @@ public class Robot extends TimedRobot {
                                     })
                             .onlyWhile(DriverStation::isAutonomousEnabled));
         }
+        autoInitTracer.addEpoch("simAutoDisable");
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        autoInitTracer.addEpoch("getAutonomousCommand");
 
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+        autoInitTracer.addEpoch("schedule(auto)");
         //Tab switching so when we start, tab switches to "Autonomous".
         Elastic.selectTab("Autonomous");
+        autoInitTracer.addEpoch("Elastic.selectTab");
+        autoInitTracer.printEpochs(line -> System.out.println("[CmdTiming] autonomousInit " + line));
     }
 
     @Override

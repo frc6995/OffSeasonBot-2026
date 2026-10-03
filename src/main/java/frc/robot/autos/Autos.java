@@ -18,6 +18,7 @@ import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.CommandTiming;
 
 public class Autos {
 
@@ -134,14 +135,16 @@ public class Autos {
                     c.addCommands(RightBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
                 }));
 
+        // TEMPORARY CommandTiming wrappers - first-enable hitch diagnosis, see CommandTiming.
         autos.put("Bline_Workshop_Test_Canrange",
-                () -> auto(TEST_START_CANRANGE.get(), c -> {
-                    Command canRangeTestAuto1 = pathBuilder.build(Testcanrange);
-                    Command canRangeTestAuto2 = pathBuilder.build(Testcanrange2);
+                () -> CommandTiming.timed("canrangeAuto", auto(TEST_START_CANRANGE.get(), c -> {
+                    Command canRangeTestAuto1 = CommandTiming.timed("path1", pathBuilder.build(Testcanrange));
+                    Command canRangeTestAuto2 = CommandTiming.timed("path2", pathBuilder.build(Testcanrange2));
 
-                    c.addCommands(untilCloseToWallAfterEvent(canRangeTestAuto1, "testActivation", 6));
+                    c.addCommands(CommandTiming.timed("path1UntilWall",
+                            untilCloseToWallAfterEvent(canRangeTestAuto1, "testActivation", 6)));
                     c.addCommands((canRangeTestAuto2));
-                }));
+                })));
 
         // Register all autos with the chooser for driver station selection
         autos.forEach(autoChooser::addCmd);
@@ -205,7 +208,8 @@ public class Autos {
     private Command auto(Pose2d startPose, Consumer<SequentialCommandGroup> builder) {
         SequentialCommandGroup group = new SequentialCommandGroup();
         // reset odometry
-        group.addCommands(Commands.runOnce(() -> m_drivetrain.resetPose(startPose), m_drivetrain));
+        group.addCommands(CommandTiming.timed("resetPose",
+                Commands.runOnce(() -> m_drivetrain.resetPose(startPose), m_drivetrain)));
         builder.accept(group);
         return group;
     }
