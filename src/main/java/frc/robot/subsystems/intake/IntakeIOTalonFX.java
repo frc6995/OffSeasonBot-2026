@@ -268,11 +268,11 @@ public class IntakeIOTalonFX implements IntakeIO {
     }
 
 
-    protected static double metersToMechanismRotations(double meters) {
+    public static double metersToMechanismRotations(double meters) {
         return meters / IntakeConstants.kDrumCircumferenceMeters;
     }
 
-    protected static double mechanismRotationsToMeters(double rotations) {
+    public static double mechanismRotationsToMeters(double rotations) {
         return rotations * IntakeConstants.kDrumCircumferenceMeters;
     }
 

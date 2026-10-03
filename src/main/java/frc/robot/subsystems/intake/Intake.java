@@ -35,9 +35,9 @@ public class Intake extends SubsystemBase {
         public static final double kKickerReduction = 1.5;
         public static final double kKickerToleranceRPM = 10;
         public static final double kKickerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kKickerEjectingVoltage = -4.0;
-        public static final double kKickerForwardVoltage = 4.0;
-        public static final double kKickerIdleVolts = 2.0;
+        public static final double kKickerEjectingVoltage = -10.0;
+        public static final double kKickerForwardVoltage = 10.0;
+        public static final double kKickerIdleVolts = 0.0;
 
         // // Roller PID Constants
         // public static final double kRollerP = 0.2;
@@ -52,8 +52,8 @@ public class Intake extends SubsystemBase {
         public static final double kRollerReduction = 3.45;
         public static final double kRollerToleranceRPM = 10;
         public static final double kRollerMOI = 0.0000292639653; // meters^2 kg
-        public static final double kRollerEjectingVoltage = -5.0; // placeholder, needs to be tuned
-        public static final double kRollerForwardVoltage = 5.0; // placeholder, needs to be tuned
+        public static final double kRollerEjectingVoltage = -10.0;
+        public static final double kRollerForwardVoltage = 10.0;
         public static final double kRollerIdleVolts = 2.0;
 
         // Extension PID Constants
@@ -64,7 +64,7 @@ public class Intake extends SubsystemBase {
         public static final double kExtensionStatorCurrentLimitAmps = 20.0;
         public static final double kExtensionSupplyCurrentLimitAmps = 20.0;
         public static final double kExtensionReduction = 3.33;
-        public static final double kExtensionMaxMeters = 0.31;
+        public static final double kExtensionMaxMeters = IntakeIOTalonFX.mechanismRotationsToMeters(3.83);
         public static final double kExtensionMinMeters = 0.0;
         public static final double kIntakeAngleDegrees = 10.8;
         public static final double kDrumCircumferenceMeters = 0.119;
@@ -74,9 +74,9 @@ public class Intake extends SubsystemBase {
         // Full agitate sweeps down from 100% to 50% extension and holds once it arrives
         // (shoot-only). Mini agitate oscillates between 70% and 100% every
         // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
-        public static final double kFullAgitateNearMeters = 0.5 * kExtensionMaxMeters;
+        public static final double kFullAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(2.45);
         public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kMiniAgitateNearMeters = 0.7 * kExtensionMaxMeters;
+        public static final double kMiniAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(3.4);
         public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
         public static final double kMiniAgitateIntervalSeconds = 0.3;
         public static final double kFullAgitateIntervalSeconds = 0.4;
