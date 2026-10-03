@@ -51,7 +51,7 @@ public class ATVision extends SubsystemBase {
         /** Reject estimates while the chassis is yawing faster than this. */
         public static final double kMaxChassisOmegaRadPerSec = Math.PI / 2;
         /** Reject estimates while the robot is tilted more than this (in radians). */
-        public static final double kMaxTiltRad = Math.toRadians(20);
+        public static final double kMaxTiltRad = 20; //Math.toRadians(20);
 
         public static final double kEstimateHistorySeconds = 1.0;
         public static final double kMaxEstimateAgeSeconds = 0.4;
