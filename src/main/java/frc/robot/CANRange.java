@@ -15,16 +15,13 @@ public class CANRange {
 
     public class CANRangeConstants {
         public static final int kCAN_ID = 35;
-        public static final double kProximityThreshold = Units.inchesToMeters(3.0);
+        public static final double kProximityThreshold = 0.05;
     }
 
     CANrange m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.UpperBus);
 
     CANrangeConfiguration m_frontCANrangeConfigurator = new CANrangeConfiguration();
 
-    // In simulation the physical sensor is never actually "detected," so it defaults to false here
-    // and is instead driven by a driver-station button (see setSimProximitySupplier) so BLine
-    // auto transitions can be exercised in sim. Ignored entirely on real hardware.
     private BooleanSupplier m_simProximitySupplier = () -> false;
 
     public CANRange() {
@@ -40,8 +37,8 @@ public class CANRange {
 
     public Boolean isCloseToWall() {
         if (RobotBase.isSimulation()) {
-           return m_simProximitySupplier.getAsBoolean();
-         }
-        return m_frontCANrange.getIsDetected().getValue();
+            return m_simProximitySupplier.getAsBoolean();
+        }
+       return m_frontCANrange.getIsDetected().getValue();
     }
 }
