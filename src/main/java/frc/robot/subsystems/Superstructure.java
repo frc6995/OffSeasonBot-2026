@@ -7,6 +7,9 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -53,7 +56,8 @@ public class Superstructure extends SubsystemBase {
     public Flywheel m_flywheel;
     public Turret m_turret;
     public DyeRotor m_dyeRotor;
-
+    private final BooleanPublisher isZeroedPublisher;
+    private boolean isZeroed = false;
     RobotState robotState = RobotState.IDLE;
 
     private final Supplier<SwerveDriveState> m_swerveState;
@@ -85,6 +89,11 @@ public class Superstructure extends SubsystemBase {
         }
         m_neutralZoneTrigger.debounce(0.5).onTrue(
                 Commands.runOnce(() -> m_turret.requestUnwind()));
+
+        isZeroedPublisher = NetworkTableInstance.getDefault().getBooleanTopic("IsZeroed").publish();
+
+        //intakeIsZeroed = NetworkTable.
+        //hoodIsZeroed = NetworkTable.
     }
 
     @Override
@@ -109,6 +118,11 @@ public class Superstructure extends SubsystemBase {
             // and
             // released the shoot button.
             robotState = RobotState.IDLE;
+        }
+
+        if(!isZeroed) {
+            isZeroed = m_turret.isZerod() && m_intake.isZeroed() && m_hood.isZeroed();
+            isZeroedPublisher.accept(isZeroed);
         }
 
         if (robotState == RobotState.PASSING) {
@@ -272,4 +286,6 @@ public class Superstructure extends SubsystemBase {
             m_turret.resetEncoder();
         }).ignoringDisable(true);
     }
+
+    
 }

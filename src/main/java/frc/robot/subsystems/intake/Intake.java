@@ -95,6 +95,8 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIO.IntakeInputs inputs = new IntakeIO.IntakeInputs();
 
+    private boolean isZeroed = false;
+
     private final MechanismLigament2d intakeLigament = new MechanismLigament2d("intake", Units.inchesToMeters(8), 10.854, 6,
             new Color8Bit(52, 235, 137));
             
@@ -155,6 +157,11 @@ public class Intake extends SubsystemBase {
 
     public void resetEncoder() {
         io.resetEncoder();
+        isZeroed = true;
+    }
+
+    public boolean isZeroed(){
+        return isZeroed;
     }
 
     public void setRollerCurrentLimit(CurrentLimit limit) {
