@@ -18,7 +18,7 @@ public class CANRange {
         public static final double kProximityThreshold = 0.05;
     }
 
-    CANrange m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.UpperBus);
+    CANrange m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.LowerBus);
 
     CANrangeConfiguration m_frontCANrangeConfigurator = new CANrangeConfiguration();
 
@@ -33,6 +33,10 @@ public class CANRange {
 
     public void setSimProximitySupplier(BooleanSupplier simProximitySupplier) {
         m_simProximitySupplier = simProximitySupplier;
+    }
+
+    public void periodic() {
+        // System.out.println(m_frontCANrange.getIsDetected());
     }
 
     public Boolean isCloseToWall() {
