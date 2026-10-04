@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -94,10 +93,10 @@ public class RobotContainer {
         RobotCurrentLimits.configure(currentLimitManager, m_superstructure, m_drivetrain);
 
         configureBindings();
-        SignalLogger.enableAutoLogging(false);
         RobotVisualizer.setupVisualizer();
         warmUpAutoAlignCommands();
         warmUpElastic();
+        autos.warmUpPathFollowing();
     }
 
     /**

@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.HootAutoReplay;
+import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.Epilogue;
@@ -48,6 +49,15 @@ public class Robot extends TimedRobot {
     //         .withJoystickReplay();
 
     public Robot() {
+        // Must run before RobotContainer constructs any CTRE device. Phoenix starts hoot
+        // auto-logging (on by default with a CANivore present) as soon as its backend comes up, so
+        // disabling it from the end of the RobotContainer constructor - where this used to live -
+        // was too late: on-robot 2026-10-03 it was still writing ~45 MB of .hoot per 6 minutes
+        // (10.2 GB accumulated in /home/lvuser/logs) on a roboRIO already ~75% CPU-busy while
+        // disabled. stop() covers anything that started regardless.
+        SignalLogger.enableAutoLogging(false);
+        SignalLogger.stop();
+
         m_robotContainer = new RobotContainer();
 
         Epilogue.configure(config -> {
