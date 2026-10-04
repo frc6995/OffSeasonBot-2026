@@ -15,7 +15,7 @@ public class CANRange {
 
     public class CANRangeConstants {
         public static final int kCAN_ID = 35;
-        public static final double kProximityThreshold = 0.05;
+        public static final double kProximityThreshold = 0.1;
     }
 
     CANrange m_frontCANrange = new CANrange(CANRangeConstants.kCAN_ID, Constants.CANBuses.LowerBus);
