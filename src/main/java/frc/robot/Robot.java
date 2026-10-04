@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.HootAutoReplay;
+import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.Epilogue;
@@ -18,8 +19,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -50,6 +49,15 @@ public class Robot extends TimedRobot {
     //         .withJoystickReplay();
 
     public Robot() {
+        // Must run before RobotContainer constructs any CTRE device. Phoenix starts hoot
+        // auto-logging (on by default with a CANivore present) as soon as its backend comes up, so
+        // disabling it from the end of the RobotContainer constructor - where this used to live -
+        // was too late: on-robot 2026-10-03 it was still writing ~45 MB of .hoot per 6 minutes
+        // (10.2 GB accumulated in /home/lvuser/logs) on a roboRIO already ~75% CPU-busy while
+        // disabled. stop() covers anything that started regardless.
+        SignalLogger.enableAutoLogging(false);
+        SignalLogger.stop();
+
         m_robotContainer = new RobotContainer();
 
         Epilogue.configure(config -> {
@@ -112,17 +120,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        // TEMPORARY - first-enable hitch diagnosis (see CommandTiming). Prints one line per step
-        // of autonomousInit every enable; schedule() runs the auto's first initialize() inline,
-        // so part of a stall can land here rather than in the scheduler's own overrun printout.
-        // currentTimeMillis is printed so this can be lined up against gc.log's wall-clock times.
-        Tracer autoInitTracer = new Tracer();
-        System.out.println("[CmdTiming] autonomousInit start: fpga=" + Timer.getFPGATimestamp()
-                + " wallMs=" + System.currentTimeMillis());
-
         // Dynamic current limiting disabled for auto
         m_robotContainer.currentLimitManager.setEnabled(false);
-        autoInitTracer.addEpoch("currentLimitManager.setEnabled");
 
         if (RobotBase.isSimulation()) {
             CommandScheduler.getInstance().schedule(
@@ -134,18 +133,13 @@ public class Robot extends TimedRobot {
                                     })
                             .onlyWhile(DriverStation::isAutonomousEnabled));
         }
-        autoInitTracer.addEpoch("simAutoDisable");
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-        autoInitTracer.addEpoch("getAutonomousCommand");
 
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
-        autoInitTracer.addEpoch("schedule(auto)");
         //Tab switching so when we start, tab switches to "Autonomous".
         Elastic.selectTab("Autonomous");
-        autoInitTracer.addEpoch("Elastic.selectTab");
-        autoInitTracer.printEpochs(line -> System.out.println("[CmdTiming] autonomousInit " + line));
     }
 
     @Override
