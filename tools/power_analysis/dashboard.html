@@ -345,7 +345,8 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
 "use strict";
 
 // ---------------------------------------------------------------------------------------------
-// Robot wiring. CAN IDs match the robot code (TunerConstants, *Constants in each subsystem).
+// Robot wiring. CAN IDs and buses match the robot code: TunerConstants for swerve, and the
+// `new TalonFX(id, bus)` lines in each subsystem's IO class. Update this when the wiring moves.
 // Group order is the color order: slots are assigned once, in this order, never re-ranked.
 // ---------------------------------------------------------------------------------------------
 // Nine named groups against eight validated hues: Turret & Hood, the smallest load, takes a
@@ -370,9 +371,9 @@ const MOTORS = [
   [13, "Steer BL", "steer", "LowerBus"], [14, "Steer BR", "steer", "LowerBus"],
   [40, "Flywheel lead", "flywheel", "UpperBus"], [41, "Flywheel follower 1", "flywheel", "UpperBus"],
   [42, "Flywheel follower 2", "flywheel", "UpperBus"], [43, "Flywheel follower 3", "flywheel", "UpperBus"],
-  [30, "Roller lead", "roller", "UpperBus"], [31, "Roller follower", "roller", "UpperBus"],
-  [32, "Extension lead", "extension", "UpperBus"], [33, "Extension follower", "extension", "UpperBus"],
-  [34, "Kicker", "kicker", "UpperBus"],
+  [30, "Roller lead", "roller", "LowerBus"], [31, "Roller follower", "roller", "LowerBus"],
+  [32, "Extension lead", "extension", "LowerBus"], [33, "Extension follower", "extension", "LowerBus"],
+  [34, "Kicker", "kicker", "LowerBus"],
   [21, "Index lead", "index", "UpperBus"], [22, "Index follower", "index", "UpperBus"],
   [23, "Hook (spin)", "spin", "UpperBus"],
   [45, "Turret", "aim", "UpperBus"], [44, "Hood", "aim", "UpperBus"],
