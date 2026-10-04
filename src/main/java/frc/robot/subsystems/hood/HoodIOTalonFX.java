@@ -5,10 +5,12 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.HardwareLimitSwitchConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -26,7 +28,7 @@ public class HoodIOTalonFX implements HoodIO {
 
     protected final TalonFX m_hoodMotor = new TalonFX(Hood.HoodConstants.kCANID, Constants.CANBuses.UpperBus);
 
-    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(false);
+    protected final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0).withEnableFOC(false);
     
     protected final StatusSignal<Angle> angleSignal = m_hoodMotor.getPosition();
     protected final StatusSignal<Voltage> voltSignal = m_hoodMotor.getMotorVoltage();
@@ -76,6 +78,10 @@ public class HoodIOTalonFX implements HoodIO {
                 .withKG(Hood.HoodConstants.kG)
                 .withKD(Hood.HoodConstants.kD)
                 .withKS(Hood.HoodConstants.kS);
+        config.MotionMagic = 
+            new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(Hood.HoodConstants.mKV)
+                .withMotionMagicAcceleration(Hood.HoodConstants.mKA);
         
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()
