@@ -62,7 +62,7 @@
       },
       "rotation_target": {
         "rotation_radians": -3.13681,
-        "profiled_rotation": false
+        "profiled_rotation": true
       }
     },
     {

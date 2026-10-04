@@ -51,7 +51,7 @@ public class ATVision extends SubsystemBase {
         /** Reject estimates while the chassis is yawing faster than this. */
         public static final double kMaxChassisOmegaRadPerSec = Math.PI / 2;
         /** Reject estimates while the robot is tilted more than this (in radians). */
-        public static final double kMaxTiltRad = 20;
+        public static final double kMaxTiltRad = Math.toRadians(20);
 
         public static final double kEstimateHistorySeconds = 1.0;
         public static final double kMaxEstimateAgeSeconds = 0.4;
@@ -283,7 +283,7 @@ public class ATVision extends SubsystemBase {
         Optional<Double> pitch = pitchBuffer.getSample(captureTime);
         if (chassisOmega.isEmpty() || roll.isEmpty() || pitch.isEmpty()) return "no chassis history";
         if (Math.abs(chassisOmega.get()) >= ATVisionConstants.kMaxChassisOmegaRadPerSec) return "chassis yaw rate";
-        if (Math.abs(roll.get()) >= ATVisionConstants.kMaxTiltRad
+        if (Math.PI-Math.abs(roll.get()) >= ATVisionConstants.kMaxTiltRad
             || Math.abs(pitch.get()) >= ATVisionConstants.kMaxTiltRad) return "robot tilted";
 
         if (est.tagCount() <= 0) return "no tags";

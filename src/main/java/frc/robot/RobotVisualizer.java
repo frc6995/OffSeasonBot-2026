@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
-import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
 
 /**
@@ -68,7 +67,6 @@ public final class RobotVisualizer {
                     .publish()
             : null;
 
-    private static double intakeAngleRadians;
     private static double intakeExtensionMeters;
     private static double turretAngleRadians;
     private static double hoodAngleRadians;

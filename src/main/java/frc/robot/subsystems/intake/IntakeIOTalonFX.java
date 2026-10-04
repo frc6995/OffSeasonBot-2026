@@ -5,13 +5,11 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -29,19 +27,19 @@ import frc.robot.util.CtreUtil;
 
 public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_rollerLeadMotor
-    = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(IntakeConstants.kROLLER_LEAD_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_rollerFollowerMotor 
-    = new TalonFX(Intake.IntakeConstants.kROLLER_FOLLOWER_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kROLLER_FOLLOWER_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_extensionLeadMotor
-    = new TalonFX(Intake.IntakeConstants.kEXTENSION_LEAD_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kEXTENSION_LEAD_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_extensionFollowerMotor
-    = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kEXTENSION_FOLLOWER_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected final TalonFX m_kickerMotor
-    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.UpperBus);
+    = new TalonFX(Intake.IntakeConstants.kKICKER_MOTOR_ID, Constants.CANBuses.LowerBus);
 
     protected VoltageOut m_rollerVoltageRequest = new VoltageOut(0);
     protected VoltageOut m_kickerVoltageRequest = new VoltageOut(0);
@@ -162,11 +160,6 @@ public class IntakeIOTalonFX implements IntakeIO {
         extensionConfig.MotionMagic.withMotionMagicAcceleration(IntakeConstants.kExtensionAccelerationRotationsPerSec2)
              .withMotionMagicCruiseVelocity(IntakeConstants.kExtensionCruiseVelocityRotationsPerSec);
 
-        // The hood and turret both carry soft limits; the extension did not, so the only thing
-        // keeping it inside its travel was that resolveExtensionTargetPosition() happens to return
-        // in-range constants. With kExtensionP = 20, MotionMagic, brake mode and an 80A stator
-        // limit, a bad zero (resetEncoder() is a zero-where-it-sits) would drive it into the hard
-        // stop and hold it there. Enforce the range on the motor as well.
         extensionConfig.SoftwareLimitSwitch =
             new SoftwareLimitSwitchConfigs()
                 .withForwardSoftLimitEnable(true)
@@ -264,11 +257,11 @@ public class IntakeIOTalonFX implements IntakeIO {
     }
 
 
-    protected static double metersToMechanismRotations(double meters) {
+    public static double metersToMechanismRotations(double meters) {
         return meters / IntakeConstants.kDrumCircumferenceMeters;
     }
 
-    protected static double mechanismRotationsToMeters(double rotations) {
+    public static double mechanismRotationsToMeters(double rotations) {
         return rotations * IntakeConstants.kDrumCircumferenceMeters;
     }
 

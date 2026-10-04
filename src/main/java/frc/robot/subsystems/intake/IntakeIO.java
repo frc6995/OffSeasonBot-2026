@@ -1,7 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import edu.wpi.first.epilogue.Logged;
-
 public interface IntakeIO {
     default void updateInputs(IntakeInputs inputs) {}
     default void setRollerVoltage(double voltage) {}

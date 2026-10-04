@@ -34,7 +34,6 @@ import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Elastic;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
-import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorState;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
 
@@ -98,6 +97,7 @@ public class RobotContainer {
         RobotVisualizer.setupVisualizer();
         warmUpAutoAlignCommands();
         warmUpElastic();
+        autos.warmUpPathFollowing();
     }
 
     /**

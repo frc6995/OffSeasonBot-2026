@@ -1,7 +1,5 @@
 package frc.robot.subsystems.flywheel;
 
-import edu.wpi.first.epilogue.Logged;
-
 public interface FlywheelIO {
     default void updateInputs(FlywheelInputs inputs) {}
     default void setVelocityRPM(double velocityRPM) {}

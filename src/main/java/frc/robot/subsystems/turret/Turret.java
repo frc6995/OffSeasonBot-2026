@@ -13,9 +13,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
-import frc.robot.subsystems.hood.Hood.HoodState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
-import frc.robot.util.TurretFeedforward;
 
 public class Turret extends SubsystemBase {
     public static class TurretConstants {
@@ -72,15 +70,18 @@ public class Turret extends SubsystemBase {
         AIM_CLOSEST,
         AIM_CENTRAL,
         SAFE_SHOT,
-        MANUAL;
+        MANUAL,
+        UNWIND;
     }
 
     private TurretState turretState = TurretState.AIM_CLOSEST;
+    private TurretState turretStateBeforeUnwind = TurretState.AIM_CLOSEST;
     private double requestedAngleDeg = 0;
     // Which selection function MANUAL should re-apply each loop; set by setClosestAngleManual /
     // setCentralAngleManual. Without this, MANUAL always used selectClosestAngle, silently
     // discarding setCentralAngleManual's central-angle request after its first tick.
     private boolean manualUsesCentralAngle = false;
+    private boolean isZeroed = false;
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
     private double commandedAngleDeg = 0;
 
@@ -111,8 +112,18 @@ public class Turret extends SubsystemBase {
         turretState = TurretState.DISABLED;
     }
 
+    public void requestUnwind() {
+        if(turretState != TurretState.UNWIND) turretStateBeforeUnwind = turretState;
+        turretState = TurretState.UNWIND;
+    }
+
     public void resetEncoder() {
         io.resetEncoder();
+        isZeroed = true;
+    }
+
+    public boolean isZerod(){
+        return isZeroed;
     }
 
     @Override
@@ -131,14 +142,18 @@ public class Turret extends SubsystemBase {
                     ? selectCentralAngle(requestedAngleDeg)
                     : selectClosestAngle(requestedAngleDeg);
             case SAFE_SHOT -> commandedAngleDeg = selectClosestAngle(TurretConstants.kSafeShotAngleDeg);
+            case UNWIND -> commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
+        }
+
+        if(turretState == TurretState.UNWIND) {
+            if(MathUtil.isNear(commandedAngleDeg, getAngle(), 15.0)) {
+                turretState = turretStateBeforeUnwind;
+            }
         }
     }
 
     @Override
     public void simulationPeriodic() {
-        // Driven from the commanded setpoint rather than the simulated PID's actual angle: the sim
-        // PID doesn't track like the real robot's, so the simulated position lags/oscillates in a
-        // way that isn't representative. The setpoint is what was actually requested this loop.
         turretLigament.setAngle(commandedAngleDeg);
         RobotVisualizer.updateTurret(Units.degreesToRadians(commandedAngleDeg));
     }
