@@ -81,6 +81,7 @@ public class Turret extends SubsystemBase {
     // setCentralAngleManual. Without this, MANUAL always used selectClosestAngle, silently
     // discarding setCentralAngleManual's central-angle request after its first tick.
     private boolean manualUsesCentralAngle = false;
+    private boolean isZeroed = false;
     // The angle actually sent to the IO this loop, for telemetry (DISABLED leaves this at its last value).
     private double commandedAngleDeg = 0;
 
@@ -118,6 +119,11 @@ public class Turret extends SubsystemBase {
 
     public void resetEncoder() {
         io.resetEncoder();
+        isZeroed = true;
+    }
+
+    public boolean isZerod(){
+        return isZeroed;
     }
 
     @Override
