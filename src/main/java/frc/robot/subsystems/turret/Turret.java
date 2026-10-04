@@ -33,6 +33,7 @@ public class Turret extends SubsystemBase {
         public static final double kMinAngleDeg = -288-135.612;
         public static final double kMaxAngleDeg = 288-135.612;
         public static final double kSafeShotAngleDeg = 0;
+        public static final double kToleranceDeg = 5;
 
         public static final double kCruiseVelocityDegPerSec = 720;
         public static final double kMaxAccelerationDegPerSec2 = 3600;
@@ -259,5 +260,9 @@ public class Turret extends SubsystemBase {
     @Logged(name = "Voltage", importance = Importance.DEBUG)
     public double getVoltage() {
         return inputs.appliedVolts;
+    }
+
+    public boolean atSetpoint() {
+        return MathUtil.isNear(commandedAngleDeg, getAngle(), TurretConstants.kToleranceDeg);
     }
 }

@@ -161,6 +161,14 @@ public class Superstructure extends SubsystemBase {
 
         }
 
+
+        if(robotState == RobotState.SCORING || robotState == RobotState.PASSING) {
+            if(!m_turret.atSetpoint()) {
+                m_dyeRotor.requestIdle();
+            } else if(m_dyeRotor.getSpinState() == DyeRotorState.IDLE) {
+                m_dyeRotor.requestSpinNoDelay();
+            }
+        }
     }
 
     public Command requestIntakeActive() {
@@ -260,7 +268,6 @@ public class Superstructure extends SubsystemBase {
         switch (state) {
             case SCORING, PASSING -> {
                 m_turret.requestAimClosest();
-                ;
                 m_flywheel.requestActive();
                 m_hood.requestActive();
             }
