@@ -89,6 +89,8 @@ public class Hood extends SubsystemBase {
 
     private HoodState hoodState = HoodState.DISABLED;
 
+    private boolean isZeroed = false;
+
     private final Supplier<Double> targetAngleDeg;
 
 
@@ -145,6 +147,10 @@ public class Hood extends SubsystemBase {
 
     public void resetEncoder() {
         io.resetEncoder();
+        isZeroed = true;
+    }
+    public boolean isZeroed(){
+        return isZeroed;
     }
 
     public double applyLimits(double angle) {
