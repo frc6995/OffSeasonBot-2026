@@ -69,7 +69,7 @@ public class RobotContainer {
             Utils.isSimulation()
                 ? new NoneATLimelightVision()
                 : new RealATLimelightVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
-            true //Utils.isSimulation()
+            Utils.isSimulation()
                 ? null
                 : new RealPhotonATVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
             m_drivetrain::state,
