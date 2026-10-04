@@ -54,6 +54,7 @@ public class DyeRotor extends SubsystemBase {
 
     public enum DyeRotorState {
         IDLE,
+        DELAYED,
         SPIN;
     }
 
@@ -96,13 +97,20 @@ public class DyeRotor extends SubsystemBase {
 
     /** Requests SPIN, delaying the rollers (index) and the hood motor after the request depending on their variables. */
     public void requestSpin() {
-        indexState = DyeRotorState.IDLE;
-        spinState = DyeRotorState.IDLE;
+        indexState = DyeRotorState.DELAYED;
+        spinState = DyeRotorState.DELAYED;
         indexSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kIndexSpinUpDelaySecs);
         spinSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kSpinSpinUpDelaySecs);
     }
 
+    public void requestSpinNoDelay() {
+        indexState = DyeRotorState.SPIN;
+        spinState = DyeRotorState.SPIN;
+    }
+
     private void cancelPendingSpinUp() {
+        indexState = DyeRotorState.IDLE;
+        spinState = DyeRotorState.IDLE;
         indexSpinUpTicksRemaining = 0;
         spinSpinUpTicksRemaining = 0;
     }
@@ -190,14 +198,14 @@ public class DyeRotor extends SubsystemBase {
 
     private static double resolveSpinTargetRPM(DyeRotorState state) {
         return switch (state) {
-            case IDLE -> -DyeRotorConstants.kSpinBackwardRPM;
+            case IDLE, DELAYED -> -DyeRotorConstants.kSpinBackwardRPM;
             case SPIN -> DyeRotorConstants.kSpinForwardRPM;
         };
     }
 
     private static double resolveIndexTargetRPM(DyeRotorState state) {
         return switch (state) {
-            case IDLE -> 0.0;
+            case IDLE, DELAYED -> 0.0;
             case SPIN -> DyeRotorConstants.kIndexForwardRPM;
         };
     }
