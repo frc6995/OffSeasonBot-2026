@@ -77,7 +77,8 @@ public class HoodIOTalonFX implements HoodIO {
                 .withKV(Hood.HoodConstants.kV)
                 .withKG(Hood.HoodConstants.kG)
                 .withKD(Hood.HoodConstants.kD)
-                .withKS(Hood.HoodConstants.kS);
+                .withKS(Hood.HoodConstants.kS)
+                .withKA(Hood.HoodConstants.kA);
         config.MotionMagic = 
             new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(Hood.HoodConstants.mKV)

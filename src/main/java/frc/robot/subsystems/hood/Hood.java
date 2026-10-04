@@ -47,14 +47,15 @@ public class Hood extends SubsystemBase {
         };
 
         //Tune PID/FF constants
-        public static final double kP = 300; //Double check this
+        public static final double kP = 500; //Double check this
         public static final double kD = 0;
         public static final double kS = 0;
-        public static final double kV = 2;
+        public static final double kV = 6;
         public static final double kG = 0;
+        public static final double kA = 0.05;
 
-        public static final double mKV = 3;
-        public static final double mKA = 3;
+        public static final double mKV = 6;
+        public static final double mKA = 6;
 
         public static final double kStatorCurrentLimitAmps = 20;
         public static final double kSupplyCurrentLimitAmps = 40;

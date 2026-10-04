@@ -33,7 +33,7 @@ public class Turret extends SubsystemBase {
         public static final double kMinAngleDeg = -288-135.612;
         public static final double kMaxAngleDeg = 288-135.612;
         public static final double kSafeShotAngleDeg = 0;
-        public static final double kToleranceDeg = 5;
+        public static final double kToleranceDeg = 15;
 
         public static final double kCruiseVelocityDegPerSec = 720;
         public static final double kMaxAccelerationDegPerSec2 = 3600;
