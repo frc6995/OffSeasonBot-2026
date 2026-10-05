@@ -46,7 +46,7 @@ public final class CtreUtil {
      * error, just a stale reading.
      *
      * <p>A constant rather than a literal at five call sites; the calls themselves are stock
-     * {@link BaseStatusSignal#setUpdateFrequencyForAll} on purpose.
+     * {@link BaseStatusSignal#setUpdateFrequencyForAll} on purpose. Intake uses seperate constant.
      */
     public static final double kMechanismSignalFrequencyHz = 100.0;
 

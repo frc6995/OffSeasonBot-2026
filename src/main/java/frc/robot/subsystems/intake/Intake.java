@@ -21,6 +21,9 @@ public class Intake extends SubsystemBase {
         public static final int kEXTENSION_LEAD_MOTOR_ID = 32;
         public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
 
+       
+        public static final double kIntakeSignalFrequencyHz = 100.0;
+
         // // Kicker PID Constants
         // public static final double kKickerP = 0.2;
         // // Kicker Feedforward Constants

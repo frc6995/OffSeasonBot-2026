@@ -78,13 +78,11 @@ public class IntakeIOTalonFX implements IntakeIO {
         // Must come before the optimize below, and must cover every signal updateInputs()
         // refreshes - anything left out silently drops to 4 Hz.
         BaseStatusSignal.setUpdateFrequencyForAll(
-            CtreUtil.kMechanismSignalFrequencyHz,
+            IntakeConstants.kIntakeSignalFrequencyHz,
             m_rollerVelocity, m_rollerAppliedVoltage,
             m_extensionPosition, m_extensionAppliedVoltage,
             m_kickerVelocity, m_kickerAppliedVoltage);
 
-        // Everything else these motors publish is never read here; on CAN FD it all defaults to
-        // 100 Hz, so Phoenix decodes it every loop for nothing.
         CtreUtil.reportIfNotOk("Intake optimize bus utilization",
             ParentDevice.optimizeBusUtilizationForAll(
                 m_rollerLeadMotor, m_rollerFollowerMotor,
