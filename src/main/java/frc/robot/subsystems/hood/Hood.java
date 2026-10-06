@@ -54,8 +54,8 @@ public class Hood extends SubsystemBase {
         public static final double kG = 0;
         public static final double kA = 0.05;
 
-        public static final double mKV = 6;
-        public static final double mKA = 6;
+        public static final double kHoodCruiseVelocityRotationsPerSec = 6;
+        public static final double kHoodAccelerationRotationsPerSec2 = 6;
 
         public static final double kStatorCurrentLimitAmps = 20;
         public static final double kSupplyCurrentLimitAmps = 40;

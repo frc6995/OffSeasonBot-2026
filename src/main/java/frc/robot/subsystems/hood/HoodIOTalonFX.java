@@ -81,8 +81,8 @@ public class HoodIOTalonFX implements HoodIO {
                 .withKA(Hood.HoodConstants.kA);
         config.MotionMagic = 
             new MotionMagicConfigs()
-                .withMotionMagicCruiseVelocity(Hood.HoodConstants.mKV)
-                .withMotionMagicAcceleration(Hood.HoodConstants.mKA);
+                .withMotionMagicCruiseVelocity(Hood.HoodConstants.kHoodCruiseVelocityRotationsPerSec)
+                .withMotionMagicAcceleration(Hood.HoodConstants.kHoodAccelerationRotationsPerSec2);
         
         config.SoftwareLimitSwitch = 
             new SoftwareLimitSwitchConfigs()

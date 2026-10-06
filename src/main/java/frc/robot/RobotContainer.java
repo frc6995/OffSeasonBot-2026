@@ -151,16 +151,16 @@ public class RobotContainer {
         *
         */
 
-        joystick.leftTrigger().onTrue(m_superstructure.requestIntakeEject());
-        joystick.leftTrigger().onFalse(m_superstructure.requestIntakeIdle());
+        joystick.rightBumper().onTrue(m_superstructure.requestIntakeEject());
+        joystick.rightBumper().onFalse(m_superstructure.requestIntakeIdle());
 
         // Right bumper = shoot only (flywheel/hood/turret + dye rotor); left bumper = intake
         // only. Holding both drives the intake's agitation, but only while scoring -- passing
         // shots keep the intake at plain ACTIVE. Each combination below is bound as its own
         // onTrue edge so the final intake state is always set fresh by whichever exclusive
         // trigger just became true, regardless of the order the two bumpers were pressed in.
-        Trigger shootButton = joystick.rightBumper();
-        Trigger intakeButton = joystick.leftBumper();
+        Trigger shootButton = joystick.rightTrigger();
+        Trigger intakeButton = joystick.leftTrigger();
         Trigger shootAndIntake = shootButton.and(intakeButton);
         Trigger shootOnly = shootButton.and(intakeButton.negate());
         Trigger intakeOnly = intakeButton.and(shootButton.negate());
