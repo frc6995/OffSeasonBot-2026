@@ -61,7 +61,7 @@ public class Autos {
 
         // ===== DEPOT AUTO EVENT TRIGGERS =====
         FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
-        FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
+//        FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
                 m_superstructure.requestRobotScoring()));
         FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeMiniAgitate());
@@ -152,7 +152,7 @@ public class Autos {
 
     /**
      * Runs a path command until it times out or the robot is close to a
-     * wall/obstacle but only after a specified event marker has fired in the
+     * wall but only after a specified event marker has fired in the
      * trajectory.
      *
      * @param path           the BLine path command to follow

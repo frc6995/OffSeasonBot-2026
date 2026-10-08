@@ -68,6 +68,8 @@ public class Intake extends SubsystemBase {
         public static final double kExtensionReduction = 3.33;
         public static final double kExtensionMaxMeters = IntakeIOTalonFX.mechanismRotationsToMeters(3.83);
         public static final double kExtensionMinMeters = 0.0;
+    // matches how cad was configured
+        public static final double kCadExtensionMaxMeters = 0.31;
         public static final double kIntakeAngleDegrees = 10.8;
         public static final double kDrumCircumferenceMeters = 0.119;
         public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
@@ -232,7 +234,8 @@ public class Intake extends SubsystemBase {
         double retractedLengthMeters = Units.inchesToMeters(8.0);
         double extensionMeters = inputs.extensionPositionMeters;
         intakeLigament.setLength(retractedLengthMeters + extensionMeters);
-        RobotVisualizer.updateIntakeExtension(extensionMeters);
+        RobotVisualizer.updateIntakeExtension(
+                extensionMeters * IntakeConstants.kCadExtensionMaxMeters / IntakeConstants.kExtensionMaxMeters);
     }
 
     private double resolveExtensionTargetPosition(IntakeState state) {
