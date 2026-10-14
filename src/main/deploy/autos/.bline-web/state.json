@@ -42,8 +42,8 @@
       "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
     }
   },
-  "active_path_file_name": "depot-2.json",
-  "active_path_group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
+  "active_path_file_name": "path-1.json",
+  "active_path_group_id": "group-49956fb5-6115-4ba8-b5e1-7b0a0e92a4c8",
   "path_groups": [
     {
       "group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
@@ -90,6 +90,10 @@
     }
   ],
   "paths": {
+    "path-2.json": {
+      "display_name": "Path 2",
+      "editor_metadata": null
+    },
     "depot-2.json": {
       "display_name": "Depot 2",
       "editor_metadata": {
@@ -105,12 +109,23 @@
       "display_name": "Path 1",
       "editor_metadata": null
     },
-    "path-2.json": {
-      "display_name": "Path 2",
-      "editor_metadata": null
+    "left-center-line-depot.json": {
+      "display_name": "(Left) Center Line+Depot",
+      "editor_metadata": {
+        "linked_targets": [
+          {
+            "element_index": 6.0,
+            "target_id": "target-418b4784"
+          }
+        ]
+      }
     },
     "depot-3.json": {
       "display_name": "Depot 3",
+      "editor_metadata": null
+    },
+    "test-canrange.json": {
+      "display_name": "Test-canrange",
       "editor_metadata": null
     },
     "test-canrange2.json": {
@@ -133,21 +148,6 @@
               "merge_tolerance_meters_per_sec": 0.3,
               "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":3.08364,\"yMeters\":3.92531,\"handoffRadiusMeters\":0.45,\"rotationRadians\":0,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":2.002991527471924,\"yMeters\":3.8886238142112957,\"handoffRadiusMeters\":0.45,\"rotationRadians\":1.58715,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":7020,\"maxAccelerationDegPerSec\":2000,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.9,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
             }
-          }
-        ]
-      }
-    },
-    "test-canrange.json": {
-      "display_name": "Test-canrange",
-      "editor_metadata": null
-    },
-    "left-center-line-depot.json": {
-      "display_name": "(Left) Center Line+Depot",
-      "editor_metadata": {
-        "linked_targets": [
-          {
-            "element_index": 6.0,
-            "target_id": "target-418b4784"
           }
         ]
       }

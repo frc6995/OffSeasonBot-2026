@@ -20,16 +20,14 @@ public class Flywheel extends SubsystemBase {
     public static final int kFollowMotor2CANID = 42;
     public static final int kFollowMotor3CANID = 43;
     // Motor Config Constants
-    public static final double kSupplyCurrentLimitAmps = 120;
+    public static final double kSupplyCurrentLimitAmps = 80;
     public static final double kStatorCurrentLimitAmps = 120;
     public static final double kNewMaxVolts = 10;
     public static final double kNewMinVolts = 0;
     public static final double kReduction = 1;
     public static final double kToleranceRPM = 100;
     public static final double FlywheelMOI = 0.000292639653; // meters^2 kg
-
-    public static final double kSafeShotRPM = 2700;
-
+    
     public static final double [][] kShooterData = {
       {0.0, 2100},
       {1.0, 2100},
@@ -45,14 +43,17 @@ public class Flywheel extends SubsystemBase {
       {7.0, 3200}
     };
 
+    // Interpolated from kShooterData at 3.136 m (safe shot at x=1.4879, y=4.054 to hub)
+    public static final double kSafeShotRPM = 2427;
+
     // distance from POI.PASSING_WALL
     public static final double [][] kPassingShooterData = {
       {0.0, 1500},
       {3.0, 1850},
       {4.0, 1950},
       {5.0, 2050},
-      {10, 2500},
-      {15.0, 3500}
+      {10, 2600},
+      {12.0, 3000}
     };
 
   }

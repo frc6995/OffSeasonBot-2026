@@ -71,7 +71,8 @@ public class Hood extends SubsystemBase {
         // 5.57 inches
         public static final double kHoodLengthMeters = 0.141478;
 
-        public static final double kSafeShotAngleDeg = 35.0;
+        // Interpolated from kAngleData at 3.136 m (safe shot at x=1.4879, y=4.054 to hub)
+        public static final double kSafeShotAngleDeg = 20.4;
 
     }
 

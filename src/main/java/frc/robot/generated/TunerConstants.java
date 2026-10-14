@@ -68,7 +68,7 @@ public class TunerConstants {
     // Default supply current limit for the drive motors; can be lowered at runtime (e.g. by
     // RobotCurrentLimits) to free up current budget for other subsystems. Supply current
     // limits can be larger than the breaker current rating.
-    public static final double kDriveNominalSupplyCurrentLimitAmps = 70;
+    public static final double kDriveNominalSupplyCurrentLimitAmps = 50;
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.

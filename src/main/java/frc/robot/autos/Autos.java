@@ -107,10 +107,10 @@ public class Autos {
                     Command Depot2 = pathBuilder.build(Depot2Path);
                     Command Depot3 = pathBuilder.build(Depot3Path);
 
-                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 5)
+                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 8)
                             .alongWith(m_superstructure.requestIntakeActive()));
 
-                    c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 7));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 12)); //tune timeouts
 
                     c.addCommands(Depot3);
                 }));
