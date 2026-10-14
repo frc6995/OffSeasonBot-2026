@@ -151,8 +151,8 @@ public class RobotContainer {
         *
         */
 
-        joystick.rightBumper().onTrue(m_superstructure.requestIntakeEject());
-        joystick.rightBumper().onFalse(m_superstructure.requestIntakeIdle());
+        Trigger ejectButton = joystick.rightBumper();
+        ejectButton.onTrue(m_superstructure.requestIntakeEject());
 
         // Right bumper = shoot only (flywheel/hood/turret + dye rotor); left bumper = intake
         // only. Holding both drives the intake's agitation, but only while scoring -- passing
@@ -161,18 +161,19 @@ public class RobotContainer {
         // trigger just became true, regardless of the order the two bumpers were pressed in.
         Trigger shootButton = joystick.rightTrigger();
         Trigger intakeButton = joystick.leftTrigger();
-        Trigger shootAndIntake = shootButton.and(intakeButton);
-        Trigger shootOnly = shootButton.and(intakeButton.negate());
-        Trigger intakeOnly = intakeButton.and(shootButton.negate());
+        Trigger notEjecting = ejectButton.negate();
+        Trigger shootAndIntake = shootButton.and(intakeButton).and(notEjecting);
+        Trigger shootOnly = shootButton.and(intakeButton.negate()).and(notEjecting);
+        Trigger intakeOnly = intakeButton.and(shootButton.negate()).and(notEjecting);
 
         shootButton.onTrue(m_superstructure.requestRobotShooting());
         intakeOnly.onTrue(m_superstructure.requestIntakeActive());
         shootOnly.onTrue(m_superstructure.requestIntakeFullAgitate());
         shootAndIntake.onTrue(m_superstructure.requestIntakeForShootAndIntake());
 
-        // Once neither bumper is held, the intake is no longer explicitly running -- park it
+        // Once no button is held, the intake is no longer explicitly running -- park it
         // at IDLE so the roller/kicker voltages go to 0.
-        shootButton.or(intakeButton).onFalse(m_superstructure.requestIntakeIdle());
+        shootButton.or(intakeButton).or(ejectButton).negate().onTrue(m_superstructure.requestIntakeIdle());
 
         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 

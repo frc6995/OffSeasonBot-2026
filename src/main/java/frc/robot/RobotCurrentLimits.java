@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.util.Map;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
@@ -28,6 +29,12 @@ public final class RobotCurrentLimits {
     private static final CurrentLimit kShootingKickerLimit = new CurrentLimit(40, 20);
     private static final CurrentLimit kShootingDriveLimit = CurrentLimit.supplyOnly(10);
 
+    // Drive supply limits by mode. These are the drivetrain's nominal (unthrottled) limit, so
+    // unlike the shooting rule above they can be higher or lower than each other. Tune to taste.
+    private static final CurrentLimit kTeleopDriveLimit =
+            CurrentLimit.supplyOnly(TunerConstants.kDriveNominalSupplyCurrentLimitAmps);
+    private static final CurrentLimit kAutoDriveLimit = CurrentLimit.supplyOnly(50);
+
     public static void configure(
             CurrentLimitManager manager,
             Superstructure superstructure,
@@ -45,7 +52,7 @@ public final class RobotCurrentLimits {
 
         manager.registerTarget(
                 "Drivetrain/Drive",
-                CurrentLimit.supplyOnly(TunerConstants.kDriveNominalSupplyCurrentLimitAmps),
+                () -> DriverStation.isAutonomousEnabled() ? kAutoDriveLimit : kTeleopDriveLimit,
                 limit -> drivetrain.setDriveSupplyCurrentLimit(limit.supplyCurrentLimitAmps()));
 
         manager.addRule(

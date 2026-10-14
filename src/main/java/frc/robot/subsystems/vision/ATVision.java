@@ -33,6 +33,7 @@ import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
+import frc.robot.subsystems.vision.apriltag.RealATLimelightVision.LimelightConstants;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
 import frc.robot.util.LimelightHelpers;
 
@@ -105,6 +106,16 @@ public class ATVision extends SubsystemBase {
     private final DoublePublisher estimateAgePublisher;
     private final StringPublisher rejectReasonPublisher;
 
+    // Turret camera geometry debugging.
+    private final DoublePublisher camTurretInputDegPublisher;
+    private final DoublePublisher camSentRollDegPublisher;
+    private final DoublePublisher camSentPitchDegPublisher;
+    private final DoublePublisher camSentYawDegPublisher;
+    private final DoublePublisher camLensHeadingDegPublisher;
+    private final DoublePublisher camRadialHeadingDegPublisher;
+    private final StructPublisher<Pose3d> camLimelightAppliedPublisher;
+    private final StructPublisher<Pose3d> camFieldPosePublisher;
+
     private boolean headingSeeded = false;
     private double lastMismatchDeg = 0;
     private double lastAgeSeconds = 0;
@@ -132,6 +143,43 @@ public class ATVision extends SubsystemBase {
         mismatchPublisher = visionTable.getDoubleTopic("TurretMismatchDeg").publish();
         estimateAgePublisher = visionTable.getDoubleTopic("EstimateAgeSeconds").publish();
         rejectReasonPublisher = visionTable.getStringTopic("LastRejectReason").publish();
+
+        NetworkTable camTable = visionTable.getSubTable("TurretCamDebug");
+        camTurretInputDegPublisher = camTable.getDoubleTopic("TurretInputDeg").publish();
+        camSentRollDegPublisher = camTable.getDoubleTopic("SentRollDeg").publish();
+        camSentPitchDegPublisher = camTable.getDoubleTopic("SentPitchDeg").publish();
+        camSentYawDegPublisher = camTable.getDoubleTopic("SentYawDeg").publish();
+        camLensHeadingDegPublisher = camTable.getDoubleTopic("LensHeadingDeg").publish();
+        camRadialHeadingDegPublisher = camTable.getDoubleTopic("RadialHeadingDeg").publish();
+        camLimelightAppliedPublisher = camTable.getStructTopic("LimelightApplied", Pose3d.struct).publish();
+        camFieldPosePublisher = camTable.getStructTopic("FieldPose", Pose3d.struct).publish();
+    }
+
+    /**
+     * Publishes the turret camera geometry several independent ways so a wrong-facing camera can
+     * be traced to the input angle, the math, the Limelight's interpretation, or the visualizer.
+     */
+    private void publishTurretCameraDebug(double turretInputDeg, Pose3d robotToCamera, Pose2d robotPose) {
+        Rotation3d rot = robotToCamera.getRotation();
+        camTurretInputDegPublisher.accept(turretInputDeg);
+        camSentRollDegPublisher.accept(Math.toDegrees(rot.getX()));
+        camSentPitchDegPublisher.accept(Math.toDegrees(rot.getY()));
+        camSentYawDegPublisher.accept(Math.toDegrees(rot.getZ()));
+
+        // Where the lens points vs. the direction from the pivot to the camera; should be equal.
+        Translation3d lens = new Translation3d(1, 0, 0).rotateBy(rot);
+        Translation3d radial = robotToCamera.getTranslation()
+            .minus(TurretConstants.turretCenterPose.getTranslation());
+        camLensHeadingDegPublisher.accept(Math.toDegrees(Math.atan2(lens.getY(), lens.getX())));
+        camRadialHeadingDegPublisher.accept(Math.toDegrees(Math.atan2(radial.getY(), radial.getX())));
+
+        // What the Limelight echoes back as its applied camera pose.
+        camLimelightAppliedPublisher.accept(LimelightHelpers.getCameraPose3d_RobotSpace(
+            LimelightConstants.LL_IDS[LimelightConstants.kTurretCameraIndex]));
+
+        // Camera on the field, so AdvantageScope can draw it on the robot instead of at the origin.
+        camFieldPosePublisher.accept(new Pose3d(robotPose).transformBy(
+            new Transform3d(robotToCamera.getTranslation(), robotToCamera.getRotation())));
     }
 
     /**
@@ -183,6 +231,7 @@ public class ATVision extends SubsystemBase {
                 
         pushedAngleBuffer.addSample(now, turretAngle);
         robotToCameraPublisher.accept(robotToCamera);
+        publishTurretCameraDebug(turretAngle.getDegrees(), robotToCamera, state.Pose);
 
         // MegaTag1-only by design (confirmed with the team 2026-09-19) - MegaTag2 is never used,
         // so there is nothing to seed: MegaTag1's PnP solve is vision-only and never reads the
