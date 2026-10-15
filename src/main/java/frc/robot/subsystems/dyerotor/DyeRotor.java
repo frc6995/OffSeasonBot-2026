@@ -31,11 +31,11 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexKS = 0.3;
         public static final double kIndexKV = 0.31;
 
-        public static final double kSpinForwardRPM = 110.0; 
+        public static final double kSpinForwardRPM = 120.0; 
         public static final double kSpinBackwardRPM = 20.0;
         public static final double kSpinVelocityToleranceRPM = 20.0;
 
-        public static final double kIndexForwardRPM = 2000.0;
+        public static final double kIndexForwardRPM = 2160.0;
         public static final double kIndexBackwardRPM = 0.0;
 
         // Delay after the state is set to shoot before each mechanism spins up.
@@ -43,7 +43,7 @@ public class DyeRotor extends SubsystemBase {
         public static final double kSpinSpinUpDelaySecs = 0.4;
 
         public static final double kMinAppliedVolts = 0.0;
-        public static final double kMaxAppliedVolts = 10.0;
+        public static final double kMaxAppliedVolts = 11.0;
 
         public static final double kSpinIdleReverseVolts = -10.0;
 
