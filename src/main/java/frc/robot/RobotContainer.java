@@ -83,7 +83,7 @@ public class RobotContainer {
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
     /** Hoot signal logging; on/off is HootLogging.kEnabled. */
-    public final HootLogging hootLogging = new HootLogging(m_superstructure);
+    public final HootLogging hootLogging = new HootLogging(m_superstructure, m_drivetrain, m_vision);
 
     public RobotContainer() {
         VISUALIZER = RobotVisualizer.MECH_VISUALIZER;

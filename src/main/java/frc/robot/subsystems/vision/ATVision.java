@@ -104,6 +104,7 @@ public class ATVision extends SubsystemBase {
     private final DoublePublisher mismatchPublisher;
     private final DoublePublisher estimateAgePublisher;
     private final StringPublisher rejectReasonPublisher;
+    private volatile Pose2d m_lastAcceptedEstimate;
 
     private boolean headingSeeded = false;
     private double lastMismatchDeg = 0;
@@ -132,6 +133,11 @@ public class ATVision extends SubsystemBase {
         mismatchPublisher = visionTable.getDoubleTopic("TurretMismatchDeg").publish();
         estimateAgePublisher = visionTable.getDoubleTopic("EstimateAgeSeconds").publish();
         rejectReasonPublisher = visionTable.getStringTopic("LastRejectReason").publish();
+    }
+
+    /** Latest accepted vision-estimate pose (pre-fusion), or null if none accepted yet. For Hoot logging. */
+    public Pose2d getLastAcceptedEstimate() {
+        return m_lastAcceptedEstimate;
     }
 
     /**
@@ -230,8 +236,11 @@ public class ATVision extends SubsystemBase {
                 continue;
             }
 
-            addVisionMeasurement.accept(estimate.estimatedPose(), estimate.timestampSeconds(),
+            addVisionMeasurement.accept(
+                estimate.estimatedPose(), 
+                estimate.timestampSeconds(),
                 DriverStation.isEnabled() ? getStdDevs(estimate) : getDisabledStdDevs(estimate));
+            m_lastAcceptedEstimate = estimate.estimatedPose();
             accepted++;
             lastRejectReason = "";
             headingSeeded = true;
@@ -259,6 +268,8 @@ public class ATVision extends SubsystemBase {
                 estimate.estimatedPose.toPose2d(),
                 estimate.timestampSeconds,
                 photonVision.getEstimationStdDevs(estimate.targetsUsed));
+            
+            m_lastAcceptedEstimate = estimate.estimatedPose.toPose2d();
             accepted++;
             headingSeeded = true;
         }
