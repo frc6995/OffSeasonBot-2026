@@ -78,7 +78,7 @@ public class Intake extends SubsystemBase {
         // Full agitate sweeps down from 100% to 50% extension and holds once it arrives
         // (shoot-only). Mini agitate oscillates between 70% and 100% every
         // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
-        public static final double kFullAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(2.45);
+        public static final double kFullAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(2.0);
         public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
         public static final double kMiniAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(3.4);
         public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;

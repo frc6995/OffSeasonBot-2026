@@ -190,7 +190,7 @@ public class ATVision extends SubsystemBase {
      * @return Robot-to-camera pose in the WPILib frame.
      */
     public static Pose3d solveRobotToCamera(double turretAngleDeg) {
-        Rotation3d turretRotation = new Rotation3d(0, 0, Math.toRadians(turretAngleDeg));
+        Rotation3d turretRotation = new Rotation3d(0, 0, -Math.toRadians(turretAngleDeg));
 
         Pose3d rotatedTurret = new Pose3d(
             TurretConstants.turretCenterPose.getTranslation(),
