@@ -14,28 +14,9 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-/**
- * Automatically reduces motor current limits based on the state of other subsystems, e.g.
- * lowering intake and drivetrain current limits while the flywheel is shooting so more of
- * the robot's current budget is available where it matters.
- *
- * <p>Register the motors this manager is allowed to throttle with {@link #registerTarget},
- * then describe when they should be throttled with {@link #addRule}. Every loop the rule
- * conditions are re-checked (cheap, no CAN traffic), and a target's current limit is only
- * re-sent to its motor(s) when the resolved limit actually changes, and never more often
- * than {@code minReapplyIntervalSeconds}. That keeps a flickering condition from flooding
- * the CAN bus.
- *
- * <p>The actual hardware push (a blocking CTRE config-apply call, see each target's
- * {@code applyLimit} consumer) is dispatched onto a single dedicated background thread rather
- * than run inline from {@link #periodic()}. Config-apply calls block waiting on a CAN response
- * for up to their configured timeout, and a target motor that isn't actually present on the
- * currently deployed robot will never respond - running that call from periodic() would stall
- * the whole command scheduler loop for the timeout duration every time the rule fires. Applying
- * asynchronously means a slow or missing target can never cause a loop overrun, at the cost of
- * the new limit taking effect slightly later (at most a couple hundred milliseconds) than the
- * rule that requested it - an acceptable tradeoff for something as non-time-critical as a
- * current limit.
+/*
+ * <p>The actual hardware push is dispatched onto a single dedicated background thread rather
+ * than run inline from {@link #periodic()}.
  */
 public class CurrentLimitManager extends SubsystemBase {
 
@@ -46,10 +27,7 @@ public class CurrentLimitManager extends SubsystemBase {
         final Consumer<CurrentLimit> apply;
         CurrentLimit lastApplied;
         double lastAppliedTimestamp = -Double.MAX_VALUE;
-        // False until this manager has pushed a limit to hardware at least once. Without this,
-        // lastApplied starting at nominal made the first periodic() a no-op (want == lastApplied),
-        // so a target whose subsystem never configured it - e.g. a lead/follower pair where only
-        // the lead was configured - stayed unlimited until the first rule fired and released.
+        // False until this manager has pushed a limit to hardware at least once.
         boolean everApplied = false;
 
         Target(CurrentLimit nominal, Consumer<CurrentLimit> apply) {
@@ -77,9 +55,7 @@ public class CurrentLimitManager extends SubsystemBase {
     private final Map<String, CurrentLimit> desiredScratch = new LinkedHashMap<>();
     private boolean enabled = true;
 
-    // Runs target.apply.accept(...) off the main thread; see the class javadoc for why. A single
-    // thread is enough - applies are already throttled to one per target per
-    // minReapplyIntervalSeconds, and there's no reason to reorder applies relative to each other.
+    // Runs target.apply.accept(...) off the main thread
     private final ExecutorService applyExecutor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "CurrentLimitManager-apply");
         thread.setDaemon(true);
@@ -96,9 +72,7 @@ public class CurrentLimitManager extends SubsystemBase {
 
     /**
      * Registers a motor (or group of motors moving together, e.g. a lead/follower pair) that
-     * this manager is allowed to current-limit. {@code applyLimit} is however the caller wants
-     * to actually push a limit to hardware (see subsystem-level setters like
-     * {@code Intake.setRollerCurrentLimit}), keeping CAN/TalonFX details out of this class.
+     * this manager is allowed to current-limit.
      */
     public void registerTarget(String name, CurrentLimit nominalLimit, Consumer<CurrentLimit> applyLimit) {
         targets.put(name, new Target(nominalLimit, applyLimit));
@@ -164,10 +138,7 @@ public class CurrentLimitManager extends SubsystemBase {
         }
     }
 
-    // Runs applyLimit off the main thread (see class javadoc). Exceptions are caught rather than
-    // left to the executor's default handler: an uncaught exception would otherwise only surface
-    // as a silent thread death, and the next dispatchApply() call would just spin up a new worker
-    // thread with no indication anything had gone wrong.
+    // Runs applyLimit off the main thread
     private void dispatchApply(String name, Consumer<CurrentLimit> applyLimit, CurrentLimit want) {
         applyExecutor.execute(() -> {
             try {

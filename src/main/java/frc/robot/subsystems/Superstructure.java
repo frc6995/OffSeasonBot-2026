@@ -4,11 +4,8 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
-import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -38,7 +35,6 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
-import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.util.ShotProjection;
 import frc.robot.util.ShotProjection.ShotConstants;
 
@@ -91,32 +87,11 @@ public class Superstructure extends SubsystemBase {
                 Commands.runOnce(() -> m_turret.requestUnwind()));
 
         isZeroedPublisher = NetworkTableInstance.getDefault().getBooleanTopic("IsZeroed").publish();
-
-        //intakeIsZeroed = NetworkTable.
-        //hoodIsZeroed = NetworkTable.
     }
 
     @Override
     public void periodic() {
         if (DriverStation.isDisabled()) {
-            // robotState must not survive a disable, for the same reason the mechanism
-            // states
-            // can't (see Flywheel.periodic): requestRobotIdle() is bound to the shoot
-            // button's
-            // onFalse edge and to an end-of-auto marker, and neither can run while
-            // disabled.
-            //
-            // Unlike the mechanisms, the damage here is not a mechanism that restarts
-            // itself --
-            // it is that RobotCurrentLimits throttles the drivetrain to 1A whenever this
-            // reads
-            // SCORING or PASSING. An auto that ends before its stopScoring marker would
-            // carry
-            // that state through the disable, and teleopInit() re-enables the limit
-            // manager, so
-            // teleop would start with a near-immobile drivetrain until the driver pressed
-            // and
-            // released the shoot button.
             robotState = RobotState.IDLE;
         }
 
@@ -139,14 +114,7 @@ public class Superstructure extends SubsystemBase {
         } else {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
-            var pose = state.Pose;
-            // state.Speeds is robot-relative (CTRE's SwerveDriveState), but solve()
-            // requires
-            // field-relative velocity -- see its javadoc. Left un-rotated, the compensation
-            // is
-            // only correct at 0 deg heading and rotates away from the field frame as the
-            // robot
-            // turns, which is why it only showed up while actually driving/turning.
+            var pose = state.Pose;          
             var fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, pose.getRotation());
 
             m_shotProjector.solve(
@@ -189,13 +157,8 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.requestFullAgitate());
     }
 
-    /**
-     * Shoot+intake held together: mini-agitate (long extension only) while scoring,
-     * plain
-     * ACTIVE while passing -- passing shots don't want the extension sweeping.
-     * Intake button is
-     * held in both cases, so rollers/kicker stay spinning.
-     */
+ 
+    // ACTIVE while passing
     public Command requestIntakeForShootAndIntake() {
         return Commands.runOnce(() -> {
             if (isInPassingZone()) {

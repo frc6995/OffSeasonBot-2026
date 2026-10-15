@@ -2,19 +2,6 @@ package frc.robot.util.currentlimit;
 
 /**
  * A stator/supply current limit pair, in amps.
- *
- * <p>A value {@code <= 0} for either axis means "this limit does not manage that axis," so a
- * rule that only caps supply current can ignore the stator axis without it losing a
- * {@link #mostRestrictive} comparison.
- *
- * <p>Note what that can and cannot mean at the hardware layer. Phoenix's
- * {@code CurrentLimitsConfigs} is a config <em>group</em>: applying it overwrites both axes, so
- * an unmanaged axis cannot be left untouched - something has to be written for it. The manager
- * therefore resolves every unmanaged axis against the target's nominal limit (see
- * {@link #resolvedAgainst}) before handing a limit to a consumer, which is what "leave that axis
- * alone" actually resolves to: keep it at its unthrottled value. An axis that is still unmanaged
- * after that resolution is one no one ever specified, and consumers must disable that limit
- * rather than write the sentinel to hardware.
  */
 public record CurrentLimit(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
 

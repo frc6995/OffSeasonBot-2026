@@ -217,23 +217,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /**
      * Slows every status frame the drivetrain's devices publish that nothing reads down to 4 Hz.
-     *
-     * <p>Uses CTRE's drivetrain-aware {@code SwerveDrivetrain.optimizeBusUtilization()} rather
-     * than calling ParentDevice directly, because it covers the Pigeon and both CANcoders as well
-     * as the eight motors, and CTRE documents that "all signals necessary for drivetrain
-     * functionality will remain enabled" - the odometry thread's frames are set natively and are
-     * not affected.
-     *
-     * <p>The eight motors' power signals are given an explicit rate first, so they survive the
-     * optimize and reach the hoot log - see {@link CtreUtil#setPowerSignalFrequency}.
      */
     private void optimizeSignals() {
-        // The Pigeon's QUATERNION signals, specifically. ATVision calls
-        // Pigeon2.getRotation3d() every loop, and that method refreshes QuatW/X/Y/Z - not
-        // yaw/pitch/roll. Odometry only needs yaw, so "signals necessary for drivetrain
-        // functionality" does not cover the quaternion and the optimize below would drop it from
-        // its 100 Hz CAN FD default to 4 Hz. That would feed MegaTag2 a robot orientation whose
-        // roll and pitch are up to 250 ms stale, and stale the tilt-rejection check with it.
         var pigeon = getPigeon2();
         BaseStatusSignal.setUpdateFrequencyForAll(
                 CtreUtil.kMechanismSignalFrequencyHz,
@@ -288,55 +273,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     /**
-     * The drivetrain state. Prefer this over Phoenix's {@link #getState()} everywhere in robot code.
-     *
-     * <p>{@code getState()} is not a cheap accessor: every call is a JNI round trip, a lock
-     * acquisition, and a rebuild of the state struct that allocates a fresh {@code Pose2d},
-     * {@code Rotation2d}, {@code ChassisSpeeds}, and up to twelve {@code SwerveModuleState}/
-     * {@code SwerveModulePosition} objects, since on a moving robot essentially every field differs
-     * from the last call. Shot control, Epilogue logging, auto-align, and this class's own
-     * periodic() all read the state every loop, so calling through meant ~60 short-lived objects
-     * per loop purely as GC fodder. This holds the reference and re-reads it once, in periodic().
-     *
-     * <p><b>This is a live reference, not a snapshot.</b> Phoenix returns its own internal
-     * {@code m_cachedState} instance, and the telemetry callback installed by
-     * {@code registerTelemetry} rewrites that same instance from the odometry thread at up to
-     * 250Hz. Two consequences:
-     *
-     * <ul>
-     *   <li>Readers are <i>not</i> mutually consistent, and never were - the object changes
-     *       underneath them. In practice this is benign: {@code Pose}, {@code Speeds},
-     *       {@code RawHeading} and each module state are <i>replaced</i> with new immutable objects
-     *       rather than mutated in place, so no individual value can be read torn. The worst case
-     *       is reading {@code Pose} from one odometry tick and {@code Speeds} from the next, i.e.
-     *       up to 4ms of skew. Don't add a reader that needs those two to be same-tick coherent;
-     *       use {@link #getStateCopy()} if you ever do.
-     *   <li>Data is fresher than a true snapshot would be - the odometry thread keeps updating it -
-     *       so the once-per-loop refresh costs nothing in latency.
-     * </ul>
-     *
-     * <p>Reads here do not hold {@code m_stateLock}, which the odometry thread holds while it
-     * writes. That race predates this method - getState() locks only its own update, then hands the
-     * caller the shared object to dereference unlocked - and is harmless for the reference-typed
-     * fields above. {@code SuccessfulDaqs}/{@code FailedDaqs} are {@code int}, so they read
-     * atomically too.
-     *
-     * <p>{@code Timestamp} and {@code OdometryPeriod} are the exception: they are {@code double},
-     * and 64-bit reads are not atomic on the roboRIO's 32-bit JVM, so a concurrent odometry write
-     * can in principle be read torn. {@link AutoAlign#initialize()} and
-     * {@link AutoAlign#applyDriveRequest} read {@code Timestamp} to seed and step their rotation
-     * profile, and they need {@code Pose}, {@code Speeds} and {@code Timestamp} to agree on a
-     * single tick - which this method cannot promise. Those three call sites (the ones that assign
-     * the {@code swerveState} field) therefore use {@link #getStateCopy()} instead, which clones
-     * under the lock. Single-field reads such as {@code state().Pose} are fine here: a lone
-     * reference read is atomic and needs no cross-field coherence.
-     *
-     * <p>The refresh happens at the <i>end</i> of {@link #periodic()}. AprilTag fusion lives in
-     * {@code ATVision}, which is constructed after this subsystem and so runs later in the
-     * scheduler's registration order: it reads the state refreshed here, then calls
-     * {@code addVisionMeasurement}, whose correction this method picks up on the next loop. The
-     * ordering is belt-and-braces rather than load-bearing, given the odometry thread would
-     * surface the correction within a tick anyway.
+     * The drivetrain state. 
      */
     // @Logged(name = "State", importance = Importance.CRITICAL)
     public SwerveDriveState state() {
@@ -356,21 +293,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_state = getState();
     }
 
-
     /**
-     * Sets the supply current limit on every drive motor. Only ever called from
-     * {@link frc.robot.util.currentlimit.CurrentLimitManager}'s background apply thread (see
-     * {@link frc.robot.RobotCurrentLimits}), never from periodic() directly - a config-apply call
-     * blocks waiting on a CAN response, which would stall the main loop if run there.
-     *
-     * <p>{@code CurrentLimitsConfigs} is a config *group*: applying one overwrites every field in
-     * the group on the motor, including ones this call doesn't set, resetting them to their class
-     * defaults. So the stator limit is re-asserted to {@link TunerConstants#kModuleSlipCurrents} on
-     * every call here as well, even though this method only ever changes the supply limit.
-     * Otherwise a dynamic supply-limit change would silently wipe out the slip-current-based
-     * stator limit that TunerConstants configures. {@code kModuleSlipCurrents} is indexed in the
-     * same order as {@link #getModules()} (FrontLeft, FrontRight, BackLeft, BackRight), so each
-     * module keeps its own front/back slip current rather than all four being reset to one value.
+     * Sets the supply current limit on every drive motor. 
      */
     public void setDriveSupplyCurrentLimit(double supplyCurrentLimitAmps) {
         var modules = getModules();
