@@ -143,10 +143,6 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.requestActive());
     }
 
-    public Command requestIntakeRetracted() {
-        return Commands.runOnce(() -> m_intake.requestRetract());
-    }
-
     public Command requestIntakeMiniAgitate() {
         return Commands.runOnce(() -> m_intake.requestMiniAgitate());
     }

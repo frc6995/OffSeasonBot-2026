@@ -103,7 +103,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        // Dynamic current limiting disabled for auto
+        // Shooting-based throttling is off for auto; the drive nominal still switches to its auto limit
         m_robotContainer.currentLimitManager.setEnabled(false);
 
         if (RobotBase.isSimulation()) {
