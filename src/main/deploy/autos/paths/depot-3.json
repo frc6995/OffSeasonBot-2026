@@ -13,6 +13,11 @@
       }
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.28679,
+      "lib_key": "depotFullAgitateStart"
+    },
+    {
       "type": "waypoint",
       "translation_target": {
         "x_meters": 2.57678,

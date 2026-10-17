@@ -65,6 +65,7 @@ public class Autos {
         FollowPath.registerEventTrigger("startShooting", Commands.parallel(
                 m_superstructure.requestRobotScoring()));
         FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeMiniAgitate());
+        FollowPath.registerEventTrigger("depotFullAgitateStart", m_superstructure.requestIntakeFullAgitate());
         FollowPath.registerEventTrigger("stopScoring",
                 Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
 

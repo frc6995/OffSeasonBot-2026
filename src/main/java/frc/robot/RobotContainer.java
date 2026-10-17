@@ -32,6 +32,7 @@ import frc.robot.util.logging.HootLogging;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Elastic;
+import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.util.currentlimit.CurrentLimitManager;
@@ -192,6 +193,16 @@ public class RobotContainer {
 
     }
   
+    /** Requests the maximum Rewind window on each real Limelight. Files stay on the cameras. */
+    public void saveLimelightRewind() {
+        if (!Utils.isSimulation()) {
+            for (String cameraName : RealATLimelightVision.LimelightConstants.LL_IDS) {
+                LimelightHelpers.triggerRewindCapture(cameraName, 165.0);
+            }
+            LimelightHelpers.Flush();
+        }
+    }
+
     public Command getAutonomousCommand() {
         return autos.selectedCommand();
     }
