@@ -38,8 +38,6 @@ import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
 
-import java.util.Set;
-
 // @Logged
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
@@ -51,6 +49,8 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
@@ -189,9 +189,8 @@ public class RobotContainer {
         // let releasing one button cancel a shot still being held via the other.
         shootButton.or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
-        joystick.x().whileTrue(Commands.defer(
-                () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
-                Set.of(m_drivetrain)));
+        // Hold X to lock the wheels in an X pattern.
+        joystick.x().whileTrue(m_drivetrain.applyRequest(() -> brake));
 
     }
 

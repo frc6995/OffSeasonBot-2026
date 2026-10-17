@@ -39,8 +39,8 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexBackwardRPM = 0.0;
 
         // Delay after the state is set to shoot before each mechanism spins up.
-        public static final double kIndexSpinUpDelaySecs = 0.4;
-        public static final double kSpinSpinUpDelaySecs = 0.4;
+        public static final double kIndexSpinUpDelaySecs = 0.2;
+        public static final double kHookSpinUpDelaySecs = 0.4;
 
         public static final double kMinAppliedVolts = 0.0;
         public static final double kMaxAppliedVolts = 11.0;
@@ -106,7 +106,7 @@ public class DyeRotor extends SubsystemBase {
         indexState = DyeRotorState.DELAYED;
         spinState = DyeRotorState.DELAYED;
         indexSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kIndexSpinUpDelaySecs);
-        spinSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kSpinSpinUpDelaySecs);
+        spinSpinUpTicksRemaining = ticksFor(DyeRotorConstants.kHookSpinUpDelaySecs);
     }
 
     public void requestSpinNoDelay() {
