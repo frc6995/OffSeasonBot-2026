@@ -165,6 +165,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopExit() {
+        // Save once when teleop ends, never during the auto-to-teleop transition.
+        m_robotContainer.saveLimelightRewind();
     }
 
     @Override

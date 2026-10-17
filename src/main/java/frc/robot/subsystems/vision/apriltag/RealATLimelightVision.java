@@ -56,6 +56,8 @@ public class RealATLimelightVision extends AprilTagVision {
         limelights = new AprilTagModule[LimelightConstants.LL_IDS.length];
 
         for (int i = 0; i < limelights.length; i++) {
+            // Rewind buffers in memory during the match; Robot.teleopExit() saves it to disk.
+            LimelightHelpers.setRewindEnabled(LimelightConstants.LL_IDS[i], true);
             limelights[i] = new AprilTagModule(
                 LimelightConstants.LL_IDS[i],
                 LimelightConstants.LL_OFFSETS[i],
