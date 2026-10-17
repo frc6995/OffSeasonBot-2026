@@ -29,4 +29,6 @@ public abstract class AprilTagVision {
     public List<AprilTagEstimate> getAllEstimates() {
         return Collections.unmodifiableList(estimates);
     }
+
+    public abstract AprilTagModule getCamera(int index);
 }

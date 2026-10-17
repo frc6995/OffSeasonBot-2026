@@ -29,5 +29,10 @@ public class NoneATLimelightVision extends AprilTagVision {
     }
 
     @Override
+    public AprilTagModule getCamera(int index) {
+        return null;
+    }
+
+    @Override
     public void flush() {}
 }

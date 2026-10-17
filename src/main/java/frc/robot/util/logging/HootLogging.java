@@ -22,7 +22,6 @@ public final class HootLogging {
     private final Superstructure m_superstructure;
     private final CommandSwerveDrivetrain m_drivetrain;
     private final ATVision m_vision;
-    private final AprilTagModule m_aprilTagModule;
     private Pose2d m_lastRobotPose;
 
     private String m_lastRejectReason;
@@ -45,11 +44,10 @@ public final class HootLogging {
     private Enum<?> m_lastDyeRotorIndexState;
     private Pose2d m_lastVisionEstimate; // null => write on first loop an estimate exists
 
-    public HootLogging(Superstructure superstructure, CommandSwerveDrivetrain drivetrain, ATVision vision, AprilTagModule aprilTag) {
+    public HootLogging(Superstructure superstructure, CommandSwerveDrivetrain drivetrain, ATVision vision) {
         m_superstructure = superstructure;
         m_drivetrain = drivetrain;
         m_vision = vision;
-        m_aprilTagModule = aprilTag;
 
         // This class decides whether logging runs; Phoenix's own auto-start would ignore kEnabled.
         SignalLogger.enableAutoLogging(false);
@@ -101,7 +99,7 @@ public final class HootLogging {
             m_lastRejectReason = rejectReason;
         }
 
-        boolean turretCamConnected = m_aprilTagModule.turretCamConnected();
+        boolean turretCamConnected = m_vision.turretCameraConnected();
         if (turretCamConnected != m_lastTurretCamConnectedState) {
             SignalLogger.writeBoolean("Vision/TurretCamConnected", turretCamConnected);
             m_lastTurretCamConnectedState = turretCamConnected;
@@ -119,7 +117,7 @@ public final class HootLogging {
             m_lastRightPhotonCamConnectedState = rightPhotonCameraConnected;
         }
 
-        boolean turretCamHasData = m_aprilTagModule.hasTargets();
+        boolean turretCamHasData = m_vision.turretCameraHasData();
         if (turretCamHasData != m_lastTurretCamHasData) {
             SignalLogger.writeBoolean("Vision/TurretCamHasData", turretCamHasData);
             m_lastTurretCamHasData = turretCamHasData;

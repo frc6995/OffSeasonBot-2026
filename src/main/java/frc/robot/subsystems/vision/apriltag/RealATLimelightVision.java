@@ -121,4 +121,9 @@ public class RealATLimelightVision extends AprilTagVision {
             cam.captureRewind(seconds);
         }
     }
+
+    @Override
+    public AprilTagModule getCamera(int index) {
+        return limelights[index];
+    }
 }

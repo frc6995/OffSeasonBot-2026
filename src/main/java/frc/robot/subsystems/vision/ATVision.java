@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.turret.Turret.TurretConstants;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.AprilTagEstimate;
 import frc.robot.subsystems.vision.apriltag.AprilTagModule.EstimationMode;
+import frc.robot.subsystems.vision.apriltag.RealATLimelightVision.LimelightConstants;
 import frc.robot.subsystems.vision.apriltag.AprilTagVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
 import frc.robot.util.LimelightHelpers;
@@ -269,6 +270,14 @@ public class ATVision extends SubsystemBase {
 
     public boolean rightCameraHasData() {
         return photonVision.rightCamHasData();
+    }
+
+    public boolean turretCameraConnected() {
+        return limelightVision.getCamera(LimelightConstants.kTurretCameraIndex).isConnected();
+    }
+
+    public boolean turretCameraHasData() {
+        return limelightVision.getCamera(LimelightConstants.kTurretCameraIndex).hasTargets();
     }
 
     private int acceptPhotonEstimates() {
