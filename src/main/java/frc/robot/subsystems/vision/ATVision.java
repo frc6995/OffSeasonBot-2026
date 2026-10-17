@@ -103,7 +103,6 @@ public class ATVision extends SubsystemBase {
     private final DoublePublisher acceptedCountPublisher;
     private final DoublePublisher mismatchPublisher;
     private final DoublePublisher estimateAgePublisher;
-    private final StringPublisher rejectReasonPublisher;
     private volatile Pose2d m_lastAcceptedEstimate;
 
     private boolean headingSeeded = false;
@@ -132,7 +131,6 @@ public class ATVision extends SubsystemBase {
         acceptedCountPublisher = visionTable.getDoubleTopic("AcceptedEstimates").publish();
         mismatchPublisher = visionTable.getDoubleTopic("TurretMismatchDeg").publish();
         estimateAgePublisher = visionTable.getDoubleTopic("EstimateAgeSeconds").publish();
-        rejectReasonPublisher = visionTable.getStringTopic("LastRejectReason").publish();
     }
 
     /** Latest accepted vision-estimate pose (pre-fusion), or null if none accepted yet. For Hoot logging. */
@@ -212,7 +210,6 @@ public class ATVision extends SubsystemBase {
         acceptedCountPublisher.accept(accepted);
         mismatchPublisher.accept(lastMismatchDeg);
         estimateAgePublisher.accept(lastAgeSeconds);
-        rejectReasonPublisher.accept(lastRejectReason);
     }
 
     private int acceptLimelightEstimates(double now) {
@@ -256,6 +253,22 @@ public class ATVision extends SubsystemBase {
             }
         }
         return false;
+    }
+
+    public boolean leftCameraConnected() {
+        return photonVision.leftCameraConnected();
+    }
+
+    public boolean rightCameraConnected() {
+        return photonVision.rightCameraConnected();
+    }
+
+    public boolean leftCameraHasData() {
+        return photonVision.leftCamHasData();
+    }
+
+    public boolean rightCameraHasData() {
+        return photonVision.rightCamHasData();
     }
 
     private int acceptPhotonEstimates() {
@@ -371,5 +384,9 @@ public class ATVision extends SubsystemBase {
         if (estimate.tagCount() <= 0) return Double.POSITIVE_INFINITY;
         double distMeters = Math.max(estimate.avgTagDistMeters(), 1.0);
         return (distMeters * distMeters) * ATVisionConstants.kOptimalTagCount / estimate.tagCount();
+    }
+
+    public String lastRejectReason() {
+        return lastRejectReason;
     }
 }

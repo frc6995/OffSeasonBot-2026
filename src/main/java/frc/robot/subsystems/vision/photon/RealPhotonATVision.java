@@ -81,6 +81,14 @@ public class RealPhotonATVision {
         }
     }
 
+    public boolean rightCameraConnected() {
+        return cameras[0].cameraConnected();
+    }
+
+    public boolean leftCameraConnected() {
+        return cameras[1].cameraConnected();
+    }
+
     public void periodic() {
         for(var cam : cameras) {
             cam.periodic();
@@ -93,6 +101,14 @@ public class RealPhotonATVision {
             estimates.addAll(cam.getLatestEstimates());
         }
         return estimates;
+    }
+
+    public boolean rightCamHasData() {
+        return cameras[0].getLatestEstimates().size() != 0;
+    }
+    
+    public boolean leftCamHasData() {
+        return cameras[1].getLatestEstimates().size() != 0;
     }
 
     public Matrix<N3, N1> getEstimationStdDevs(List<PhotonTrackedTarget> targets) {

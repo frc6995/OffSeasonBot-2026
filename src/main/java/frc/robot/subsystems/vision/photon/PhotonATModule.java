@@ -25,7 +25,6 @@ public class PhotonATModule {
 
     private final NetworkTable cameraTable;
     private final StructPublisher<Pose3d> posePublisher;
-    private final BooleanPublisher connectedPublisher;
 
     public PhotonATModule(String cameraID, Transform3d offset, NetworkTable visionTable) {
         camera = new PhotonCamera(cameraID);
@@ -33,7 +32,6 @@ public class PhotonATModule {
 
         cameraTable = visionTable.getSubTable(cameraID);
         posePublisher = cameraTable.getStructTopic("Estimate", Pose3d.struct).publish();
-        connectedPublisher = cameraTable.getBooleanTopic("Is Connected").publish();
     }
 
     public void periodic() {
@@ -55,7 +53,9 @@ public class PhotonATModule {
     private void updateTelemetry() {
         var estimate = estimator.estimateCoprocMultiTagPose(camera.getLatestResult());
         estimate.ifPresent((e) -> posePublisher.accept(e.estimatedPose));
+    }
 
-        connectedPublisher.accept(camera.isConnected());
+    public boolean cameraConnected() {
+        return camera.isConnected();
     }
 }

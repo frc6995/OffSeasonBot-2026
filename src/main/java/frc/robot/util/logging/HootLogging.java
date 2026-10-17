@@ -11,6 +11,7 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.util.CtreUtil;
 import frc.robot.subsystems.vision.ATVision;
+import frc.robot.subsystems.vision.apriltag.AprilTagModule;
 
 public final class HootLogging {
     public static final boolean kEnabled = true;
@@ -20,8 +21,18 @@ public final class HootLogging {
 
     private final Superstructure m_superstructure;
     private final CommandSwerveDrivetrain m_drivetrain;
-    private final ATVision mVision;
+    private final ATVision m_vision;
+    private final AprilTagModule m_aprilTagModule;
     private Pose2d m_lastRobotPose;
+
+    private String m_lastRejectReason;
+    private boolean m_lastTurretCamConnectedState;
+    private boolean m_lastLeftPhotonCamConnectedState;
+    private boolean m_lastRightPhotonCamConnectedState;
+    
+    private boolean m_lastTurretCamHasData;
+    private boolean m_lastLeftPhotonCamHasData;
+    private boolean m_lastRightPhotonCamHasData;
 
     // Last value written of each custom signal. null forces a write on the first loop.
     private Enum<?> m_lastRobotState;
@@ -34,10 +45,11 @@ public final class HootLogging {
     private Enum<?> m_lastDyeRotorIndexState;
     private Pose2d m_lastVisionEstimate; // null => write on first loop an estimate exists
 
-    public HootLogging(Superstructure superstructure, CommandSwerveDrivetrain drivetrain, ATVision vision) {
+    public HootLogging(Superstructure superstructure, CommandSwerveDrivetrain drivetrain, ATVision vision, AprilTagModule aprilTag) {
         m_superstructure = superstructure;
         m_drivetrain = drivetrain;
-        mVision = vision;
+        m_vision = vision;
+        m_aprilTagModule = aprilTag;
 
         // This class decides whether logging runs; Phoenix's own auto-start would ignore kEnabled.
         SignalLogger.enableAutoLogging(false);
@@ -64,7 +76,7 @@ public final class HootLogging {
 
         // Raw vision estimate (pre-fusion). equals() compare: each accepted estimate is a fresh
         // Pose2d, so this writes only when a new estimate was accepted.
-        Pose2d visionEstimate = mVision.getLastAcceptedEstimate();
+        Pose2d visionEstimate = m_vision.getLastAcceptedEstimate();
         if (visionEstimate != m_lastVisionEstimate) {
             if (visionEstimate != null) {
                 SignalLogger.writeDouble("Vision/EstimateX", visionEstimate.getX());
@@ -81,6 +93,48 @@ public final class HootLogging {
             SignalLogger.writeDouble("Robot/PoseY", robotPose.getY());
             SignalLogger.writeDouble("Robot/PoseTheta", robotPose.getRotation().getRadians());
             m_lastRobotPose = robotPose;
+        }
+
+        String rejectReason = m_vision.lastRejectReason();
+        if (rejectReason != m_lastRejectReason) {
+            SignalLogger.writeString("Vision/RejectReason", rejectReason);
+            m_lastRejectReason = rejectReason;
+        }
+
+        boolean turretCamConnected = m_aprilTagModule.turretCamConnected();
+        if (turretCamConnected != m_lastTurretCamConnectedState) {
+            SignalLogger.writeBoolean("Vision/TurretCamConnected", turretCamConnected);
+            m_lastTurretCamConnectedState = turretCamConnected;
+        }
+
+        boolean leftPhotonCameraConnected = m_vision.leftCameraConnected();
+        if (leftPhotonCameraConnected != m_lastLeftPhotonCamConnectedState) {
+            SignalLogger.writeBoolean("Vision/LeftPhotonCamConnected", leftPhotonCameraConnected);
+            m_lastLeftPhotonCamConnectedState = leftPhotonCameraConnected;
+        }
+
+        boolean rightPhotonCameraConnected = m_vision.rightCameraConnected();
+        if (rightPhotonCameraConnected != m_lastRightPhotonCamConnectedState) {
+            SignalLogger.writeBoolean("Vision/RightPhotonCamConnected", rightPhotonCameraConnected);
+            m_lastRightPhotonCamConnectedState = rightPhotonCameraConnected;
+        }
+
+        boolean turretCamHasData = m_aprilTagModule.hasTargets();
+        if (turretCamHasData != m_lastTurretCamHasData) {
+            SignalLogger.writeBoolean("Vision/TurretCamHasData", turretCamHasData);
+            m_lastTurretCamHasData = turretCamHasData;
+        }
+        
+        boolean leftCamHasData = m_vision.leftCameraHasData();
+        if (leftCamHasData != m_lastLeftPhotonCamHasData) {
+            SignalLogger.writeBoolean("Vision/LeftPhotonCamHasData", leftCamHasData);
+            m_lastLeftPhotonCamHasData = leftCamHasData;
+        }
+
+        boolean rightCamHasData = m_vision.rightCameraHasData();
+        if (rightCamHasData != m_lastRightPhotonCamHasData) {
+            SignalLogger.writeBoolean("Vision/LeftPhotonCamHasData", rightCamHasData);
+            m_lastRightPhotonCamHasData = rightCamHasData;
         }
 
         boolean brownedOut = RobotController.isBrownedOut();

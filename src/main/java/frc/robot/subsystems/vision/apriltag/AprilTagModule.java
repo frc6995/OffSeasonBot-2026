@@ -40,7 +40,6 @@ public class AprilTagModule {
     private final StructPublisher<Pose3d> robotToCameraPublisher;
     private final StructPublisher<Pose3d> estimatePublisher;
     private final BooleanPublisher isActivePublisher;
-    private final BooleanPublisher isConnectedPublisher;
     private final StringPublisher modePublisher;
     private final StringPublisher defaultModePublisher;
 
@@ -83,7 +82,6 @@ public class AprilTagModule {
         isActivePublisher = moduleSubTable.getBooleanTopic("IsActive").publish();
         modePublisher = moduleSubTable.getStringTopic("LastEstimateMode").publish();
         defaultModePublisher = moduleSubTable.getStringTopic("DefaultEstimateMode").publish();
-        isConnectedPublisher = moduleSubTable.getBooleanTopic("IsConnected").publish();
         ntClockOffsetPublisher = moduleSubTable.getDoubleTopic("NTClockOffsetMs").publish();
 
         listenForPoses("botpose_wpiblue", latestMT1);
@@ -160,6 +158,10 @@ public class AprilTagModule {
         updateTelemetry();
     }
 
+    public boolean turretCamConnected() {
+        return connected;
+    }
+
     /** @return This loop's pose estimate, or empty if the Limelight had nothing usable. */
     public Optional<AprilTagEstimate> getLatestEstimate() {
         return latestEstimate;
@@ -175,7 +177,6 @@ public class AprilTagModule {
         isActivePublisher.accept(latestEstimate.isPresent());
         modePublisher.accept(lastMode.toString());
         defaultModePublisher.accept(defaultMode.toString());
-        isConnectedPublisher.accept(connected);
     }
 
     public Pose3d getOffset() {
