@@ -49,14 +49,8 @@ public class RealPhotonATVision {
         };
 
         public static final Transform3d[] PHOTON_OFFSETS = {
-            new Transform3d(
-                new Translation3d(Inches.of(0), Inches.of(0), Inches.of(0)),
-                new Rotation3d(Degrees.of(0), Degrees.of(0), Degrees.of(0))
-            ),
-            new Transform3d(
-                new Translation3d(Inches.of(0), Inches.of(0), Inches.of(0)),
-                new Rotation3d(Degrees.of(0), Degrees.of(0), Degrees.of(0))
-            )
+            new Transform3d(new Translation3d(Units.inchesToMeters(-10.082781), Units.inchesToMeters(-8.886446), Units.inchesToMeters(-20.772423)), new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-30), Units.degreesToRadians(-90))),
+            new Transform3d(new Translation3d(Units.inchesToMeters(-10.082781), Units.inchesToMeters(-11.506326), Units.inchesToMeters(-20.77923)), new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-30), Units.degreesToRadians(90)))
         };
         
         public static final AprilTagFieldLayout kTagLayout =

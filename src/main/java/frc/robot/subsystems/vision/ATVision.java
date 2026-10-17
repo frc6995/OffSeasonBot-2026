@@ -199,6 +199,7 @@ public class ATVision extends SubsystemBase {
         if (photonVision != null && !hasTurretCameraEstimate) {
             accepted += acceptPhotonEstimates();
             photonVision.periodic();
+            // System.out.println("PHOTON ACTIVE");
         }
 
         headingSeededPublisher.accept(headingSeeded);
