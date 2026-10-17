@@ -40,7 +40,6 @@ public class PhotonATModule {
 
     public void periodic() {
         updateTelemetry();
-        // System.out.println(camera.getName() + " PERIODIC");
     }
 
     public ArrayList<EstimatedRobotPose> getLatestEstimates() {
@@ -54,14 +53,11 @@ public class PhotonATModule {
 
         if(!estimates.isEmpty()) lastResult = estimates.get(estimates.size() - 1);
 
-        System.out.println(camera.getName() + " HAS " + estimates.size());
         return estimates;
     }
 
     private void updateTelemetry() {
         if(lastResult != null) {
-            posePublisher.accept(lastResult.estimatedPose);
-            System.out.println(camera.getName() + " HAS POSE");
         }
 
         connectedPublisher.accept(camera.isConnected());
