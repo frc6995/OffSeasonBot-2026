@@ -31,7 +31,7 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.78022,
+      "t_ratio": 0.77349,
       "lib_key": "outtakeEvent"
     },
     {
