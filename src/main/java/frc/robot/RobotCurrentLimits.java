@@ -27,6 +27,7 @@ public final class RobotCurrentLimits {
     // Tune these to taste.
     private static final CurrentLimit kShootingRollerLimit = new CurrentLimit(40, 20);
     private static final CurrentLimit kShootingKickerLimit = new CurrentLimit(40, 20);
+    private static final CurrentLimit kShootingExtensionLimit = new CurrentLimit(13, 20);
     private static final CurrentLimit kShootingDriveLimit = CurrentLimit.supplyOnly(10);
 
     // Drive supply limits by mode. These are the drivetrain's nominal (unthrottled) limit, so
@@ -51,6 +52,11 @@ public final class RobotCurrentLimits {
                 superstructure.m_intake::setKickerCurrentLimit);
 
         manager.registerTarget(
+                "Intake/Extension",
+                new CurrentLimit(IntakeConstants.kExtensionStatorCurrentLimitAmps, IntakeConstants.kExtensionSupplyCurrentLimitAmps),
+                superstructure.m_intake::setExtensionCurrentLimit);
+
+        manager.registerTarget(
                 "Drivetrain/Drive",
                 () -> DriverStation.isAutonomousEnabled() ? kAutoDriveLimit : kTeleopDriveLimit,
                 limit -> drivetrain.setDriveSupplyCurrentLimit(limit.supplyCurrentLimitAmps()));
@@ -64,6 +70,7 @@ public final class RobotCurrentLimits {
                 Map.of(
                         "Intake/Roller", kShootingRollerLimit,
                         "Intake/Kicker", kShootingKickerLimit,
+                        "Intake/Extension", kShootingExtensionLimit,
                         "Drivetrain/Drive", kShootingDriveLimit));
     }
 }

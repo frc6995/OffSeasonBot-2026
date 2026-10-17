@@ -249,6 +249,15 @@ public class IntakeIOTalonFX implements IntakeIO {
     }
 
     @Override
+    public void setExtensionCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {
+        CurrentLimitsConfigs limits = currentLimits(statorCurrentLimitAmps, supplyCurrentLimitAmps);
+        CtreUtil.reportIfNotOk("Intake/Extension current limit",
+                m_extensionLeadMotor.getConfigurator().apply(limits, Constants.kDynamicConfigTimeoutSeconds));
+        CtreUtil.reportIfNotOk("Intake/Extension (follower) current limit",
+                m_extensionFollowerMotor.getConfigurator().apply(limits, Constants.kDynamicConfigTimeoutSeconds));
+    }
+
+    @Override
     public void resetEncoder() {
         m_extensionLeadMotor.setPosition(0.0);
         m_extensionFollowerMotor.setPosition(0.0);

@@ -179,7 +179,7 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.requestMiniAgitate());
     }
 
-    // Shoot-only: sweep+hold the extension; requestFullAgitate() always keeps the
+    // Shoot-only: continuously sweep the extension; requestFullAgitate() always keeps the
     // rollers/kicker idle.
     public Command requestIntakeFullAgitate() {
         return Commands.runOnce(() -> m_intake.requestFullAgitate());

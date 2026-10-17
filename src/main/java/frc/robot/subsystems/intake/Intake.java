@@ -60,14 +60,16 @@ public class Intake extends SubsystemBase {
         public static final double kIntakeAngleDegrees = 10.8;
         public static final double kDrumCircumferenceMeters = 0.119;
         public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
-        public static final double kExtensionCruiseVelocityRotationsPerSec = 10.0;
+        public static final double kExtensionCruiseVelocityRotationsPerSec = 20.0;
 
 
         public static final double kFullAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(2.0);
         public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kMediumAgitateNearMeters = kFullAgitateNearMeters;
+        public static final double kMediumAgitateFarMeters = kFullAgitateNearMeters + 0.05;
         public static final double kMiniAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(3.4);
         public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kMiniAgitateIntervalSeconds = 0.3;
+        public static final double kMiniAgitateIntervalSeconds = 0.15;
         public static final double kFullAgitateIntervalSeconds = 0.4;
         public static final double kAgitateToleranceMeters = 0.02;
     }
@@ -96,6 +98,7 @@ public class Intake extends SubsystemBase {
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtNearPosition = false;
+    private boolean fullAgitateReachedSetpoint = false;
 
     public Intake() {
         this(new IntakeIO() {
@@ -115,6 +118,7 @@ public class Intake extends SubsystemBase {
     public void setState(IntakeState state) {
         if ((state == IntakeState.MINI_AGITATE || state == IntakeState.FULL_AGITATE) && intakeState != IntakeState.MINI_AGITATE && intakeState != IntakeState.FULL_AGITATE) {
             agitateAtNearPosition = false;
+            fullAgitateReachedSetpoint = false;
             agitateTimer.restart();
         }
         intakeState = state;
@@ -155,6 +159,10 @@ public class Intake extends SubsystemBase {
 
     public void setKickerCurrentLimit(CurrentLimit limit) {
         io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
+    public void setExtensionCurrentLimit(CurrentLimit limit) {
+        io.setExtensionCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
     }
 
     @Logged(name = "State", importance = Importance.CRITICAL)
@@ -233,9 +241,23 @@ public class Intake extends SubsystemBase {
         return agitateAtNearPosition ? IntakeConstants.kMiniAgitateNearMeters : IntakeConstants.kMiniAgitateFarMeters;
     }
 
+    private double resolveMediumAgitateTargetPosition() {
+        if (agitateTimer.advanceIfElapsed(IntakeConstants.kMiniAgitateIntervalSeconds)) {
+            agitateAtNearPosition = !agitateAtNearPosition;
+        }
+        return agitateAtNearPosition ? IntakeConstants.kMediumAgitateNearMeters : IntakeConstants.kMediumAgitateFarMeters;
+    }
+
     private double resolveFullAgitateTargetPosition() {
-        if (!MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters) 
-            && agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
+        if (!fullAgitateReachedSetpoint
+            && MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters)) {
+            fullAgitateReachedSetpoint = true;
+        }
+        // After the first full stroke reaches its setpoint, keep going with the smaller agitation.
+        if (fullAgitateReachedSetpoint) {
+            return resolveMediumAgitateTargetPosition();
+        }
+        if (agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
             agitateAtNearPosition = !agitateAtNearPosition;
         }
         return agitateAtNearPosition ? IntakeConstants.kFullAgitateNearMeters : IntakeConstants.kFullAgitateFarMeters;

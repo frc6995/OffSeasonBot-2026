@@ -10,6 +10,8 @@ public interface IntakeIO {
 
     default void setKickerCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {}
 
+    default void setExtensionCurrentLimits(double statorCurrentLimitAmps, double supplyCurrentLimitAmps) {}
+
     default void resetEncoder() {}
 
     default void stop() {
