@@ -90,6 +90,17 @@
     }
   ],
   "paths": {
+    "depot-2.json": {
+      "display_name": "Depot 2",
+      "editor_metadata": {
+        "linked_targets": [
+          {
+            "element_index": 9.0,
+            "target_id": "target-2f1e31fa"
+          }
+        ]
+      }
+    },
     "left-center-line-depot.json": {
       "display_name": "(Left) Center Line+Depot",
       "editor_metadata": {
@@ -101,16 +112,12 @@
         ]
       }
     },
-    "test-canrange2.json": {
-      "display_name": "Test-canrange2",
+    "depot-3.json": {
+      "display_name": "Depot 3",
       "editor_metadata": null
     },
     "test-canrange.json": {
       "display_name": "Test-canrange",
-      "editor_metadata": null
-    },
-    "path-1.json": {
-      "display_name": "Path 1",
       "editor_metadata": null
     },
     "workshop-test-1.json": {
@@ -133,24 +140,17 @@
         ]
       }
     },
+    "test-canrange2.json": {
+      "display_name": "Test-canrange2",
+      "editor_metadata": null
+    },
+    "path-1.json": {
+      "display_name": "Path 1",
+      "editor_metadata": null
+    },
     "path-2.json": {
       "display_name": "Path 2",
       "editor_metadata": null
-    },
-    "depot-3.json": {
-      "display_name": "Depot 3",
-      "editor_metadata": null
-    },
-    "depot-2.json": {
-      "display_name": "Depot 2",
-      "editor_metadata": {
-        "linked_targets": [
-          {
-            "element_index": 9.0,
-            "target_id": "target-2f1e31fa"
-          }
-        ]
-      }
     }
   },
   "field_assets": {
@@ -158,13 +158,13 @@
       "file_name": "tempImageF3Xr1W.png",
       "mime_type": "image/png"
     },
-    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
-      "file_name": "DSCN8698.JPG",
-      "mime_type": "image/jpeg"
-    },
     "field-bd99cee4-7c44-4fb4-99ed-927e571ea999.png": {
       "file_name": "model_0.glb",
       "mime_type": "model/gltf-binary"
+    },
+    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
+      "file_name": "DSCN8698.JPG",
+      "mime_type": "image/jpeg"
     },
     "field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png": {
       "file_name": "Choreo-v2026.0.3-macOS-aarch64.dmg",
