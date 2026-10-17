@@ -11,7 +11,7 @@ public class TurretIOSimTalonFX extends TurretIOTalonFX {
   private final SingleJointedArmSim m_TurretSim = new SingleJointedArmSim(
         DCMotor.getKrakenX44(1), 
         Turret.TurretConstants.kReduction, 
-        Turret.TurretConstants.kMOI, //Need MOI
+        Turret.TurretConstants.kMOI,
         Turret.TurretConstants.kLengthMeters, 
         Math.toRadians(Turret.TurretConstants.kMinAngleDeg), 
         Math.toRadians(Turret.TurretConstants.kMaxAngleDeg), 

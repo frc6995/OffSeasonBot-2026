@@ -6,7 +6,6 @@ import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.epilogue.logging.errors.ErrorHandler;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.Superstructure;
 
 @CustomLoggerFor(RobotContainer.class)
 public class RobotContainerLogger extends ClassSpecificLogger<RobotContainer> {

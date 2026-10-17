@@ -30,8 +30,8 @@ public class Turret extends SubsystemBase {
         public static final double kStatorCurrentLimitAmps = 60;
         public static final double kSupplyCurrentLimitAmps = 40;
 
-        public static final double kMinAngleDeg = -288-135.612;
-        public static final double kMaxAngleDeg = 288-135.612;
+        public static final double kMinAngleDeg = -423.612;
+        public static final double kMaxAngleDeg = 152.388;
         public static final double kSafeShotAngleDeg = 0;
         public static final double kToleranceDeg = 15;
 

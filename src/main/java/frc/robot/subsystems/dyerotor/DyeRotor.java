@@ -46,9 +46,6 @@ public class DyeRotor extends SubsystemBase {
         public static final double kMaxAppliedVolts = 11.0;
 
         public static final double kSpinIdleReverseVolts = -10.0;
-
-        private DyeRotorConstants() {
-        }
     }
 
     public enum DyeRotorState {

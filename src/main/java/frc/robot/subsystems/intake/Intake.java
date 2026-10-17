@@ -91,9 +91,6 @@ public class Intake extends SubsystemBase {
             
     private IntakeState intakeState = IntakeState.RETRACTED;
 
-    // sim visualization
-    private double commandedExtensionMeters;
-
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtNearPosition = false;
 

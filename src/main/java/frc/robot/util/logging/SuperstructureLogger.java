@@ -2,12 +2,10 @@ package frc.robot.util.logging;
 
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.Epilogue;
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.epilogue.logging.errors.ErrorHandler;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.hood.HoodLogger;
 
 @CustomLoggerFor(Superstructure.class)
 public class SuperstructureLogger extends ClassSpecificLogger<Superstructure> {

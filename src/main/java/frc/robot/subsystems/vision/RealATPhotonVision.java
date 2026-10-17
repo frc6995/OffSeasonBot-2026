@@ -3,11 +3,9 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -25,11 +23,9 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.simulation.VisionTargetSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import java.util.List;
@@ -68,8 +64,6 @@ public class RealATPhotonVision {
     private final PhotonCamera rightPhotonCamera;
     private final PhotonCamera leftPhotonCamera;
 
-    private PhotonCamera[] cameras;
-
     private final PhotonPoseEstimator rightPhotonPoseEstimator;
     private final PhotonPoseEstimator leftPhotonPoseEstimator;
     private Matrix<N3, N1> curStdDevs = PhotonVisionConstants.kSingleTagStdDevs;
@@ -84,8 +78,6 @@ public class RealATPhotonVision {
     public RealATPhotonVision() {
         rightPhotonCamera = new PhotonCamera(PhotonVisionConstants.rightPhotonCameraName);
         leftPhotonCamera = new PhotonCamera(PhotonVisionConstants.leftPhotonCameraName);
-        
-        cameras = new PhotonCamera[] {rightPhotonCamera, leftPhotonCamera};
 
         // Create PhotonPoseEstimator with MULTI_TAG_PNP_ON_COPROCESSOR as primary strategy
         rightPhotonPoseEstimator = new PhotonPoseEstimator(
@@ -116,10 +108,6 @@ public class RealATPhotonVision {
             visionSim = new VisionSystemSim("main");
             // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
             visionSim.addAprilTags(PhotonVisionConstants.kTagLayout);
-            TargetModel targetModel = new TargetModel(0.5,0.25);
-            Pose3d targetPose = new Pose3d(16,4,2, new Rotation3d(0,0,Math.PI));
-
-            VisionTargetSim visionTarget = new VisionTargetSim(targetPose, targetModel);
             // Create simulated camera properties. These can be set to mimic your actual camera.
             var cameraProp = new SimCameraProperties();
             cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));

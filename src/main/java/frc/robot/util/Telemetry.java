@@ -58,8 +58,6 @@ public class Telemetry {
     private double m_lastPublishTimestamp = Double.NEGATIVE_INFINITY;
 
     private final double[] m_poseArray = new double[3];
-    private final double[] m_moduleStatesArray = new double[8];
-    private final double[] m_moduleTargetsArray = new double[8];
 
     public Telemetry() {
         // The Field2d type string never changes, so publish it once here rather than on every
