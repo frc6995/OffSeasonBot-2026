@@ -32,7 +32,7 @@ public class DyeRotor extends SubsystemBase {
         public static final double kIndexKV = 0.31;
 
         public static final double kSpinForwardRPM = 120.0; 
-        public static final double kSpinBackwardRPM = 20.0;
+        public static final double kSpinBackwardRPM = 30.0;
         public static final double kSpinVelocityToleranceRPM = 20.0;
 
         public static final double kIndexForwardRPM = 2160.0;
@@ -65,6 +65,8 @@ public class DyeRotor extends SubsystemBase {
 
     private static final double kLoopPeriodSecs = 0.02;
 
+    private boolean reverseEnabled = false;
+
     // Ticks remaining before the index (rollers) / spin motor are allowed to spin up.
     private int indexSpinUpTicksRemaining = 0;
     private int spinSpinUpTicksRemaining = 0;
@@ -76,6 +78,11 @@ public class DyeRotor extends SubsystemBase {
 
     public DyeRotor(DyeRotorIO io) {
         this.io = io;
+    }
+
+    /** The spin motor only runs in reverse while enabled (the intake is active); otherwise it holds at 0. */
+    public void setReverseEnabled(boolean enabled) {
+        reverseEnabled = enabled;
     }
 
     public void stop() {
@@ -166,9 +173,9 @@ public class DyeRotor extends SubsystemBase {
     RobotVisualizer.updateHook(resolveSpinTargetRPM(spinState) * 2 * Math.PI / 60.0 * kLoopPeriodSecs);
   }
 
-    private static double resolveSpinTargetRPM(DyeRotorState state) {
+    private double resolveSpinTargetRPM(DyeRotorState state) {
         return switch (state) {
-            case IDLE, DELAYED -> -DyeRotorConstants.kSpinBackwardRPM;
+            case IDLE, DELAYED -> reverseEnabled ? -DyeRotorConstants.kSpinBackwardRPM : 0.0;
             case SPIN -> DyeRotorConstants.kSpinForwardRPM;
         };
     }

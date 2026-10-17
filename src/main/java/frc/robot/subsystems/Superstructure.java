@@ -162,6 +162,8 @@ public class Superstructure extends SubsystemBase {
         }
 
 
+        m_dyeRotor.setReverseEnabled(m_intake.getState() == IntakeState.ACTIVE);
+
         if(robotState == RobotState.SCORING || robotState == RobotState.PASSING) {
             if(!m_turret.atSetpoint()) {
                 m_dyeRotor.requestIdle();
