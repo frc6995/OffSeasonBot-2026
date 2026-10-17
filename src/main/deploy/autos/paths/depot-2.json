@@ -26,12 +26,17 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.61044,
-      "lib_key": "startShooter"
+      "t_ratio": 0.35608,
+      "lib_key": "Unwind"
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.5527,
+      "t_ratio": 0.78022,
+      "lib_key": "outtakeEvent"
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.55784,
       "lib_key": "intakeIdle"
     },
     {

@@ -32,6 +32,7 @@ import frc.robot.util.logging.HootLogging;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Elastic;
+import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.util.currentlimit.CurrentLimitManager;
@@ -177,6 +178,8 @@ public class RobotContainer {
 
         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
+        joystick.povDown().onTrue(Commands.runOnce(this:: saveLimelightRewind)
+            .ignoringDisable(true));
         //Safe Shot
         joystick.y().onTrue(
             m_superstructure.requestRobotShootSafe());
@@ -190,6 +193,15 @@ public class RobotContainer {
                 () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
                 Set.of(m_drivetrain)));
 
+    }
+
+    public void saveLimelightRewind() {
+        if (!Utils.isSimulation()) {
+            for (String cameraName : RealATLimelightVision.LimelightConstants.LL_IDS) {
+                LimelightHelpers.triggerRewindCapture(cameraName, 165.0);
+            }
+            LimelightHelpers.Flush();
+        }
     }
   
     public Command getAutonomousCommand() {

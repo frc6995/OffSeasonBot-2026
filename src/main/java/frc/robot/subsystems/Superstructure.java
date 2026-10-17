@@ -216,6 +216,9 @@ public class Superstructure extends SubsystemBase {
     public Command requestFlywheelActive() {
         return Commands.runOnce(() -> m_flywheel.requestActive());
     }
+    public Command requestTurretUnwind() {
+        return Commands.runOnce(() -> m_turret.requestUnwind());
+    }
 
     public Command requestRobotIdle() {
         return Commands.runOnce(() -> {

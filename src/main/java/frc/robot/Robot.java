@@ -165,6 +165,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopExit() {
+        m_robotContainer.saveLimelightRewind();
     }
 
     @Override

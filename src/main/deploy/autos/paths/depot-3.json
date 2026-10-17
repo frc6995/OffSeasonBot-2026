@@ -90,6 +90,13 @@
         "start_ordinal": 0,
         "end_ordinal": 0
       }
+    ],
+    "max_acceleration_meters_per_sec2": [
+      {
+        "value": 2.0,
+        "start_ordinal": 0,
+        "end_ordinal": 0
+      }
     ]
   }
 }
