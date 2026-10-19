@@ -22,6 +22,7 @@ import frc.robot.subsystems.flywheel.Flywheel.FlywheelConstants;
 import frc.robot.Constants.CANBuses;
 import frc.robot.util.ArrayUtil;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.logging.PowerLogging;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
 
@@ -29,9 +30,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     configureMotors();
     // Current signals are published at an explicit rate rather than Phoenix's default,
     // which is not guaranteed fast enough to resolve a brownout. See
-    // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+    // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the power log.
     CtreUtil.setCurrentSignalFrequency(m_statorCurrentSignals);
-    CtreUtil.setPowerSignalFrequency(
+    PowerLogging.register(
         m_flywheelLeadMotor, m_flywheelFollowMotor1, m_flywheelFollowMotor2, m_flywheelFollowMotor3);
 
     // Must come before the optimize below, and must cover every signal updateInputs() refreshes -

@@ -20,6 +20,7 @@ public class RobotContainerLogger extends ClassSpecificLogger<RobotContainer> {
 
         Epilogue.swerveDriveStateLogger.tryUpdate(backend.getNested("Swerve/State"), object.m_drivetrain.state(), errorHandler);
         Epilogue.superstructureLogger.tryUpdate(backend, object.m_superstructure, errorHandler);
+        PowerLogging.log(backend.getNested("Power"));
     }
     
 }

@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.dyerotor.DyeRotor.DyeRotorConstants;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.logging.PowerLogging;
 
 public class DyeRotorIOTalonFX implements DyeRotorIO {
   protected final TalonFX m_spinMotor = new TalonFX(DyeRotorConstants.kSpinMotorCANID, Constants.CANBuses.UpperBus);
@@ -49,9 +50,9 @@ public class DyeRotorIOTalonFX implements DyeRotorIO {
     configureMotors();
     // Current signals are published at an explicit rate rather than Phoenix's default,
     // which is not guaranteed fast enough to resolve a brownout. See
-    // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+    // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the power log.
     CtreUtil.setCurrentSignalFrequency(m_spinStatCurrent, m_indexStatCurrent, m_indexFollowerStatCurrent);
-    CtreUtil.setPowerSignalFrequency(m_spinMotor, m_indexerLead, m_indexerFollow);
+    PowerLogging.register(m_spinMotor, m_indexerLead, m_indexerFollow);
 
     // Must come before the optimize below, and must cover every signal updateInputs() refreshes -
     // anything left out silently drops to 4 Hz. The index follower publishes nothing this code

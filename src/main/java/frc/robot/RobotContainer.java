@@ -28,7 +28,6 @@ import frc.robot.subsystems.vision.ATVision;
 import frc.robot.subsystems.vision.apriltag.NoneATLimelightVision;
 import frc.robot.subsystems.vision.apriltag.RealATLimelightVision;
 import frc.robot.subsystems.vision.photon.RealPhotonATVision;
-import frc.robot.util.logging.HootLogging;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Elastic;
@@ -82,9 +81,6 @@ public class RobotContainer {
     public final Autos autos = new Autos(m_drivetrain, m_superstructure);
 
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
-
-    /** Hoot signal logging; on/off is HootLogging.kEnabled. */
-    public final HootLogging hootLogging = new HootLogging(m_superstructure);
 
     public RobotContainer() {
         VISUALIZER = RobotVisualizer.MECH_VISUALIZER;

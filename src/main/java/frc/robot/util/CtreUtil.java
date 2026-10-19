@@ -2,7 +2,6 @@ package frc.robot.util;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
@@ -29,9 +28,9 @@ public final class CtreUtil {
      * packs supply current, stator current, and torque current into a single frame so raising all
      * three costs one frame per motor. This would not be safe on the roboRIO's native CAN bus.
      *
-     * <p>The hoot log records each signal at exactly this rate, and costs the robot loop nothing
-     * either way, so raising it is purely a CAN bandwidth question (check bus utilization in
-     * Tuner X). 20 Hz resolves a brownout event.
+     * <p>The power log ({@link frc.robot.util.logging.PowerLogging}) samples once per robot loop,
+     * so rates above 50 Hz add nothing to it; raising this is purely a CAN bandwidth question
+     * (check bus utilization in Tuner X). 20 Hz resolves a brownout event.
      */
     public static final double kCurrentSignalFrequencyHz = 20.0;
 
@@ -58,27 +57,6 @@ public final class CtreUtil {
     public static void setCurrentSignalFrequency(BaseStatusSignal... signals) {
         reportIfNotOk(
                 "set current signal update frequency",
-                BaseStatusSignal.setUpdateFrequencyForAll(kCurrentSignalFrequencyHz, signals));
-    }
-
-    /**
-     * Publishes each motor's supply current and supply voltage at {@link #kCurrentSignalFrequencyHz}
-     * so the hoot log captures them for the power dashboard. Call once from an IO layer's
-     * constructor with every motor it owns, before any {@code optimizeBusUtilization} call.
-     *
-     * <p>Nothing in robot code reads these signals. The hoot logger records them as they arrive on
-     * the bus, in its own thread, so there is deliberately no per-loop refresh anywhere - that is
-     * what keeps power logging off the loop-time budget. Without this call the bus optimizer would
-     * drop both to 4 Hz, too slow to see a brownout.
-     */
-    public static void setPowerSignalFrequency(TalonFX... motors) {
-        BaseStatusSignal[] signals = new BaseStatusSignal[motors.length * 2];
-        for (int i = 0; i < motors.length; i++) {
-            signals[2 * i] = motors[i].getSupplyCurrent(false);
-            signals[2 * i + 1] = motors[i].getSupplyVoltage(false);
-        }
-        reportIfNotOk(
-                "set power signal update frequency",
                 BaseStatusSignal.setUpdateFrequencyForAll(kCurrentSignalFrequencyHz, signals));
     }
 

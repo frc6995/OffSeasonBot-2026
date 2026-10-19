@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <title>NOMAD Power</title>
-<meta name="description" content="Per-subsystem power and brownout breakdown from CTRE hoot logs exported to .wpilog.">
+<meta name="description" content="Per-subsystem power and brownout breakdown from the robot's .wpilog.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lexend:wght@300;400;500;600;700&display=swap">
@@ -230,7 +230,7 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
   <header class="top">
     <div class="brand">
       <h1><span class="mark">NOMAD</span> Power</h1>
-      <span class="tag">FRC 6995 · hoot logs</span>
+      <span class="tag">FRC 6995 · robot logs</span>
     </div>
     <div class="btn-row">
       <button class="btn" id="copy-summary" type="button">Copy summary</button>
@@ -241,7 +241,7 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
 
   <section class="drop" id="drop">
     <div>
-      <p class="lead">Drop a match's exported .wpilog files here — one per CAN bus, all at once.</p>
+      <p class="lead">Drop a match's .wpilog here. Converted hoot logs work too: drop every bus's file at once.</p>
       <p class="sub">Files are read in this browser tab. Nothing is uploaded anywhere.</p>
     </div>
     <div class="status" id="status"></div>
@@ -251,14 +251,14 @@ td .name { display: inline-flex; align-items: center; gap: 7px; }
     <summary>How to get the log files off the robot</summary>
     <div class="body">
       <ol>
-        <li>Make sure logging is on: <code>HootLogging.kEnabled</code> is true in the robot code that was deployed. It logs from robot program start until the program exits.</li>
-        <li>After the match, copy the newest folder of <code>.hoot</code> files from the roboRIO. They are on the USB stick in <code>/u/logs</code>, or in <code>/home/lvuser/logs</code> without one. There is one file per CAN bus.</li>
-        <li>Convert each file with owlet, which ships with Phoenix Tuner X and AdvantageScope. <code>-e 5</code> keeps only the enabled part of the log plus 5 s either side, which makes the files much smaller.
+        <li>Make sure logging is on: <code>Robot.kLoggingEnabled</code> is true in the robot code that was deployed. It logs from robot program start until the program exits.</li>
+        <li>After the match, copy the <code>FRC_*.wpilog</code> for it from the roboRIO: on the USB stick in <code>/u/logs</code>, or in <code>/home/lvuser/logs</code> without one. On the field the file name includes the event and match number. AdvantageScope can download them too (File › Download Logs).</li>
+        <li>Drop it on this page. There is one file per robot program run, with every motor in it.</li>
+        <li>Older hoot logs still work: convert each bus's <code>.hoot</code> with owlet (it ships with Phoenix Tuner X and AdvantageScope) and drop all of a match's files together.
           <div class="cmd"><code id="owlet-cmd">owlet UpperBus.hoot UpperBus.wpilog -f wpilog -e 5</code><button class="btn" type="button" data-copy="owlet-cmd">Copy</button></div>
         </li>
-        <li>Drop every converted <code>.wpilog</code> from that match onto this page together.</li>
       </ol>
-      <p class="foot-note">The robot code only logs supply current and supply voltage for each Talon FX (Phoenix does this in its own thread, off the robot loop), plus the robot, flywheel and intake states when they change. Totals leave out the roboRIO, radio and cameras, typically another 5–10 A.</p>
+      <p class="foot-note">The robot code logs supply current and supply voltage for each Talon FX once per loop, plus the robot, flywheel and intake states, each only when it changes. Totals leave out the roboRIO, radio and cameras, typically another 5–10 A.</p>
     </div>
   </details>
 
@@ -378,7 +378,7 @@ const MOTORS = [
   [23, "Hook (spin)", "spin", "UpperBus"],
   [45, "Turret", "aim", "UpperBus"], [44, "Hood", "aim", "UpperBus"],
 ].map(([id, name, group, bus]) => ({ id, name, group, bus }));
-// Custom signals written by HootLogging.java; the state rows split a group's draw by these.
+// State signals logged by the robot code; the state rows split a group's draw by these.
 const STATE_SPLITS = [
   { group: "drive", channel: "Robot State" },
   { group: "flywheel", channel: "Flywheel/State" },
@@ -400,10 +400,19 @@ const fmt = (v, d = 1) => (Number.isFinite(v) ? v.toFixed(d) : "–");
 // WPILOG reader. Only decodes the entries `want` accepts, so a full owlet export (thousands of
 // signals, hundreds of MB) costs one pass over the record headers and little memory.
 // ---------------------------------------------------------------------------------------------
-function wantSignal(name) {
-  return /(?:^|\/)TalonFX-\d+\/(?:SupplyCurrent|SupplyVoltage)$/.test(name)
-    || name === "RobotEnable" || name === "RobotMode" || name === "BrownedOut"
-    || STATE_SPLITS.some(s => s.channel === name);
+// Both log formats onto one set of names. Robot .wpilog (Epilogue + Driver Station):
+// "Robot/.../Power/TalonFX-15/SupplyCurrent", "DS:enabled", "Robot/.../Flywheel/State".
+// owlet export of a hoot log: "Phoenix6/TalonFX-15/SupplyCurrent", "RobotEnable", "Flywheel/State".
+// Returns null for anything the dashboard does not use.
+function canonicalName(name) {
+  const m = name.match(/(?:^|\/)(TalonFX-\d+\/(?:SupplyCurrent|SupplyVoltage))$/);
+  if (m) return m[1];
+  if (name === "RobotEnable" || name === "DS:enabled") return "RobotEnable";
+  if (name === "DS:autonomous") return "Autonomous";
+  if (name === "RobotMode") return "RobotMode";
+  if (name === "BrownedOut" || name.endsWith("/BrownedOut")) return "BrownedOut";
+  const sp = STATE_SPLITS.find(s => name === s.channel || name.endsWith("/" + s.channel));
+  return sp ? sp.channel : null;
 }
 
 async function parseWpilog(buffer, onProgress) {
@@ -443,9 +452,10 @@ async function parseWpilog(buffer, onProgress) {
         const name = td.decode(u8.subarray(p + 9, p + 9 + nlen));
         const tl = dv.getUint32(p + 9 + nlen, true);
         const type = td.decode(u8.subarray(p + 13 + nlen, p + 13 + nlen + tl));
-        if (wantSignal(name)) {
-          let s = out.get(name);
-          if (!s) { s = { name, type, t: [], v: [] }; out.set(name, s); }
+        const key = canonicalName(name);
+        if (key) {
+          let s = out.get(key);
+          if (!s) { s = { name: key, type, t: [], v: [] }; out.set(key, s); }
           live.set(eid, s);
         } else {
           live.delete(eid);
@@ -525,6 +535,26 @@ function hold(s, t0, n, dflt) {
   return out;
 }
 
+/**
+ * Samples per second, or NaN when there are too few to tell. Skipped repeats (the robot log
+ * writes a value only when it changes) and idle stretches only ever lengthen gaps, so this
+ * averages the short ones: up to 1.5x the lower-quartile gap.
+ */
+function signalRate(s) {
+  if (!s) return NaN;
+  const gaps = [];
+  for (let k = 1; k < s.t.length; k++) {
+    const gap = s.t[k] - s.t[k - 1];
+    if (gap > 0 && gap < 0.5) gaps.push(gap);
+  }
+  if (gaps.length < 20) return NaN;
+  gaps.sort((a, b) => a - b);
+  const limit = 1.5 * gaps[Math.floor(gaps.length / 4)];
+  let sum = 0, count = 0;
+  for (const gap of gaps) { if (gap > limit) break; sum += gap; count++; }
+  return count / sum;
+}
+
 function median(arr) {
   if (!arr.length) return NaN;
   const a = arr.slice().sort((x, y) => x - y);
@@ -545,7 +575,7 @@ function buildModel(raw, sources) {
   let t0 = Infinity, t1 = -Infinity;
   for (const o of byId.values()) for (const s of [o.cur, o.volt]) if (s) { t0 = Math.min(t0, s.t[0]); t1 = Math.max(t1, s.t[s.t.length - 1]); }
   if (!Number.isFinite(t0)) {
-    throw new Error("No Talon FX SupplyCurrent/SupplyVoltage signals found. Was hoot logging on, and are these owlet exports?");
+    throw new Error("No Talon FX SupplyCurrent/SupplyVoltage signals found. Was Robot.kLoggingEnabled on in the deployed code?");
   }
   const n = Math.max(2, Math.floor((t1 - t0) / DT) + 1);
 
@@ -555,7 +585,10 @@ function buildModel(raw, sources) {
   }
   const motors = defs.map(def => {
     const o = byId.get(def.id) || {};
-    const rate = o.cur && o.cur.t.length > 2 ? (o.cur.t.length - 1) / Math.max(1e-6, o.cur.t[o.cur.t.length - 1] - o.cur.t[0]) : 0;
+    // New values per second. The robot log writes a value only when it changes, so an idle motor
+    // leaves long gaps; those are left out rather than read as a slow signal.
+    const rates = [signalRate(o.cur), signalRate(o.volt)].filter(Number.isFinite);
+    const rate = rates.length ? Math.max(...rates) : NaN;
     return {
       ...def,
       present: !!o.cur,
@@ -583,7 +616,9 @@ function buildModel(raw, sources) {
   if (enableS && enableS.type === "boolean") enabled = hold(enableS, t0, n, false).map(Boolean);
   else if (mode) enabled = mode.map(m => !/disabled/i.test(String(m)));
   else enabled = null;
-  const auto = mode ? mode.map(m => /auto/i.test(String(m))) : new Array(n).fill(false);
+  const autoS = raw.get("Autonomous");
+  const auto = autoS ? hold(autoS, t0, n, false).map(Boolean)
+    : mode ? mode.map(m => /auto/i.test(String(m))) : new Array(n).fill(false);
   const brownS = raw.get("BrownedOut");
   const browned = brownS ? hold(brownS, t0, n, false).map(Boolean) : new Array(n).fill(false);
   const states = {};
@@ -703,12 +738,12 @@ function analyze(model, opt) {
   const warnings = [];
   const missing = motors.filter(m => !m.present);
   if (missing.length) warnings.push({ level: "serious", text: `${missing.length} motor${missing.length > 1 ? "s" : ""} not in these files: ${missing.map(m => `${m.name} (${m.id})`).join(", ")}. If a whole CAN bus is missing, drop that bus's .wpilog in too.` });
-  const slow = present.filter(m => m.rateHz > 0 && m.rateHz < MIN_RATE_HZ);
-  if (slow.length) warnings.push({ level: "warn", text: `Slow supply current signal on ${slow.map(m => `${m.name} (${m.rateHz.toFixed(1)} Hz)`).join(", ")}. A brownout can fall between samples; check CtreUtil.setPowerSignalFrequency is called for that motor.` });
-  if (!model.enabled) warnings.push({ level: "warn", text: "No RobotEnable or RobotMode signal, so the whole log is analyzed." });
+  const slow = present.filter(m => Number.isFinite(m.rateHz) && m.rateHz < MIN_RATE_HZ);
+  if (slow.length) warnings.push({ level: "warn", text: `Slow supply current signal on ${slow.map(m => `${m.name} (${m.rateHz.toFixed(1)} Hz)`).join(", ")}. A brownout can fall between samples; check PowerLogging.register is called for that motor.` });
+  if (!model.enabled) warnings.push({ level: "warn", text: "No enable signal (DS:enabled or RobotEnable), so the whole log is analyzed." });
   else if (windowS === 0) warnings.push({ level: "warn", text: "The robot was never enabled in this log. Switch Window to “Whole log” to analyze it anyway." });
   const noStates = STATE_SPLITS.filter(s => !model.states[s.channel]).map(s => s.channel);
-  if (noStates.length) warnings.push({ level: "info", text: `No ${noStates.join(", ")} signal, so those per-state rows are skipped. They are written by HootLogging.java.` });
+  if (noStates.length) warnings.push({ level: "info", text: `No ${noStates.join(", ")} signal, so those per-state rows are skipped. They come from the robot code's Epilogue logging.` });
   const others = present.filter(m => m.group === "other");
   if (others.length) warnings.push({ level: "info", text: `Talon FX IDs not in this page's wiring map: ${others.map(m => m.id).join(", ")}. They are counted under “Unmapped”.` });
   if (!warnings.length) warnings.push({ level: "good", text: `All ${present.length} motors present, every supply current signal at ${MIN_RATE_HZ} Hz or faster.` });
@@ -861,7 +896,7 @@ function renderMotors(m, r) {
     if (!x.present) return `<tr class="missing"><td><span class="name"><span class="sw" style="background:${color(g)}"></span>${esc(x.name)}</span></td><td class="mono">${x.id}</td><td>${x.bus}</td><td colspan="5">not in these files</td></tr>`;
     let minV = Infinity;
     if (x.volt) for (let i = 0; i < m.n; i++) if (r.mask[i] && x.volt[i] < minV) minV = x.volt[i];
-    const rate = x.rateHz < MIN_RATE_HZ ? `<span class="chip warn">${fmt(x.rateHz, 1)}</span>` : fmt(x.rateHz, 0);
+    const rate = !Number.isFinite(x.rateHz) ? "–" : x.rateHz < MIN_RATE_HZ ? `<span class="chip warn">${fmt(x.rateHz, 1)}</span>` : fmt(x.rateHz, 0);
     return `<tr><td><span class="name"><span class="sw" style="background:${color(g)}"></span>${esc(x.name)}</span></td><td class="mono">${x.id}</td><td>${x.bus}</td><td>${fmt(x.stats.wh, 3)}</td><td>${fmt(x.stats.p90)}</td><td>${fmt(x.stats.peak)}</td><td>${fmt(minV, 2)}</td><td>${rate}</td></tr>`;
   }));
   $("motor-table").innerHTML = head + `<tbody>${rows.join("")}</tbody>`;

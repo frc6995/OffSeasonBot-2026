@@ -24,6 +24,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.intake.Intake.IntakeConstants;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.logging.PowerLogging;
 
 public class IntakeIOTalonFX implements IntakeIO {
     protected final TalonFX m_rollerLeadMotor
@@ -65,12 +66,12 @@ public class IntakeIOTalonFX implements IntakeIO {
         configureMotors();
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
-        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the power log.
         CtreUtil.setCurrentSignalFrequency(
             m_rollerStatorCurrent, m_rollerFollowerStatorCurrent,
             m_extensionStatorCurrent, m_extensionFollowerStatorCurrent,
             m_kickerStatorCurrent);
-        CtreUtil.setPowerSignalFrequency(
+        PowerLogging.register(
             m_rollerLeadMotor, m_rollerFollowerMotor,
             m_extensionLeadMotor, m_extensionFollowerMotor,
             m_kickerMotor);

@@ -24,6 +24,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.logging.PowerLogging;
 
 import static frc.robot.subsystems.turret.Turret.TurretConstants.*;
 
@@ -51,9 +52,9 @@ public class TurretIOTalonFX implements TurretIO {
 
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
-        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the power log.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal);
-        CtreUtil.setPowerSignalFrequency(m_turretMotor);
+        PowerLogging.register(m_turretMotor);
 
         // Must come before the optimize below, and must cover every signal updateInputs()
         // refreshes - anything left out silently drops to 4 Hz. For this motor that would mean

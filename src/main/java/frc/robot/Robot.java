@@ -12,6 +12,7 @@ import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.epilogue.logging.FileBackend;
 import edu.wpi.first.epilogue.logging.NTEpilogueBackend;
 import edu.wpi.first.epilogue.logging.errors.ErrorHandler;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -48,7 +49,14 @@ public class Robot extends TimedRobot {
     //         .withTimestampReplay()
     //         .withJoystickReplay();
 
+    /**
+     * Turns the .wpilog on or off: DataLogManager, Driver Station data and Epilogue, which carries
+     * the power data for tools/power_analysis (see PowerLogging). Change it and redeploy.
+     */
+    public static final boolean kLoggingEnabled = true;
+
     public Robot() {
+        // Hoot logging stays off; power data is in the .wpilog instead (kLoggingEnabled).
         // Must run before RobotContainer constructs any CTRE device. Phoenix starts hoot
         // auto-logging (on by default with a CANivore present) as soon as its backend comes up, so
         // disabling it from the end of the RobotContainer constructor - where this used to live -
@@ -68,15 +76,24 @@ public class Robot extends TimedRobot {
                 config.errorHandler = ErrorHandler.crashOnError();
             }
 
-            // Power data does not come from Epilogue - it is in the hoot log (see HootLogging) -
-            // so this floor has no effect on tools/power_analysis.
+            // PowerLogging writes regardless of this floor; it only limits the @Logged fields.
             config.minimumImportance = Logged.Importance.CRITICAL;
-            // Only write a value to the backend when it actually changes, to save
-            // bandwidth/log file size.
-            config.backend = config.backend.lazy();
         });
-        // DriverStation.startDataLog(DataLogManager.getLog());
-       // Epilogue.bind(this);
+
+        if (kLoggingEnabled) {
+            // Only what Epilogue writes. Recording every NetworkTables topic as well (vision,
+            // dashboards) would grow the file and the roboRIO's logging work; flip this to get it.
+            // Also starts DataLogManager: a USB stick's logs folder if present, else
+            // /home/lvuser/logs, deleting the oldest logs when space runs low.
+            DataLogManager.logNetworkTables(false);
+            // Enabled/autonomous for the dashboard. Joysticks off: they change every loop.
+            DriverStation.startDataLog(DataLogManager.getLog(), false);
+
+            // Straight to the log file. The default NetworkTables backend publishes every value
+            // and then DataLogManager records it again, which costs far more per loop.
+            // Lazy: only write a value when it changes, to save log file size.
+            Epilogue.getConfig().backend = new FileBackend(DataLogManager.getLog()).lazy();
+        }
     }
 
     @Override
@@ -96,7 +113,11 @@ public class Robot extends TimedRobot {
         // work + log spam this runbook tells you to hunt for elsewhere - removed rather than left
         // as a self-inflicted false lead. See tools/loop_overrun/README.md.
         CommandScheduler.getInstance().run();
-        m_robotContainer.hootLogging.periodic();
+        // Inside the timed section, so LoopTiming includes what logging costs. Epilogue also
+        // writes its own run time to Epilogue/Stats/Last Run.
+        if (kLoggingEnabled) {
+            Epilogue.update(this);
+        }
 
         LoopTiming.getInstance().end();
        // SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());

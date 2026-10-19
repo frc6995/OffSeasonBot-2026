@@ -34,6 +34,7 @@ import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.logging.PowerLogging;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -225,7 +226,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * not affected.
      *
      * <p>The eight motors' power signals are given an explicit rate first, so they survive the
-     * optimize and reach the hoot log - see {@link CtreUtil#setPowerSignalFrequency}.
+     * optimize at a rate the power log can use - see {@link PowerLogging#register}.
      */
     private void optimizeSignals() {
         // The Pigeon's QUATERNION signals, specifically. ATVision calls
@@ -240,7 +241,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 pigeon.getQuatW(), pigeon.getQuatX(), pigeon.getQuatY(), pigeon.getQuatZ());
 
         for (var module : getModules()) {
-            CtreUtil.setPowerSignalFrequency(module.getDriveMotor(), module.getSteerMotor());
+            PowerLogging.register(module.getDriveMotor(), module.getSteerMotor());
         }
 
         CtreUtil.reportIfNotOk("Drivetrain optimize bus utilization", optimizeBusUtilization());

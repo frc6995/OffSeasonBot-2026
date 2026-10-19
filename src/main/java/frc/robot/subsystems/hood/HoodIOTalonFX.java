@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.subsystems.hood.Hood.HoodConstants;
 import frc.robot.util.CtreUtil;
+import frc.robot.util.logging.PowerLogging;
 
 public class HoodIOTalonFX implements HoodIO {
 
@@ -38,9 +39,9 @@ public class HoodIOTalonFX implements HoodIO {
         configMotor();
         // Current signals are published at an explicit rate rather than Phoenix's default,
         // which is not guaranteed fast enough to resolve a brownout. See
-        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the hoot log.
+        // CtreUtil.kCurrentSignalFrequencyHz. Supply current/voltage are only for the power log.
         CtreUtil.setCurrentSignalFrequency(statorCurrentSignal);
-        CtreUtil.setPowerSignalFrequency(m_hoodMotor);
+        PowerLogging.register(m_hoodMotor);
 
         // Must come before the optimize below, and must cover every signal updateInputs()
         // refreshes - anything left out silently drops to 4 Hz.
