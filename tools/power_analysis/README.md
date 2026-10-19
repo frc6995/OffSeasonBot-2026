@@ -41,7 +41,9 @@ Drop the match's `.wpilog` onto it. It shows:
 - **Sags**: every dip below the sag threshold, worst first, with what each subsystem drew during it
   and in the half second before.
 - **Motors**: every Talon by CAN ID, with a check for missing motors and slow signals. Rate is new
-  values per second in the log, so 50 Hz (the loop) is the most it can show.
+  values per second in the log, so 50 Hz (the loop) is the most it can show. It also flags every
+  pause over 100 ms between the robot loop's log writes (usually a loop overrun) and hatches them on
+  the Timeline: current is held at its last value across one, so a spike inside it is missed.
 
 **Copy summary** puts a plain-text table on the clipboard for comparing matches.
 

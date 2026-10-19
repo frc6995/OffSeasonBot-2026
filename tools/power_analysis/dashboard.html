@@ -36,6 +36,7 @@
   --critical: #d03b3b; --critical-ink: #ef6b6b;
   --sag-fill: rgba(230, 103, 103, 0.16);
   --auto-band: rgba(142, 191, 43, 0.10);
+  --gap-fill: rgba(140, 146, 128, 0.18);
   --shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   /* Approved brand faces first, used wherever they are installed; Lexend is the web fallback. */
   --display: "Kabel", "ITC Kabel", "Kabel LT Std", "Century Gothic", "Lexend", system-ui, sans-serif;
@@ -386,6 +387,7 @@ const STATE_SPLITS = [
 ];
 const DT = 0.02;               // analysis grid, s - one robot loop
 const MIN_RATE_HZ = 15;        // below this a 200 ms brownout can fall between samples
+const LOG_GAP_S = 0.1;         // a longer pause between robot-loop log writes is flagged
 const LOOKBACK_S = 0.5;
 const MIN_SAG_S = 0.04;
 const MERGE_GAP_S = 0.25;
@@ -410,6 +412,8 @@ function canonicalName(name) {
   if (name === "RobotEnable" || name === "DS:enabled") return "RobotEnable";
   if (name === "DS:autonomous") return "Autonomous";
   if (name === "RobotMode") return "RobotMode";
+  // Written by Epilogue once per update, so its timestamps mark every loop that logged.
+  if (name === "Epilogue/Stats/Last Run") return "LoopTick";
   if (name === "BrownedOut" || name.endsWith("/BrownedOut")) return "BrownedOut";
   const sp = STATE_SPLITS.find(s => name === s.channel || name.endsWith("/" + s.channel));
   return sp ? sp.channel : null;
@@ -624,7 +628,24 @@ function buildModel(raw, sources) {
   const states = {};
   for (const sp of STATE_SPLITS) { const s = raw.get(sp.channel); if (s) states[sp.channel] = hold(s, t0, n, ""); }
 
-  return { t0, n, motors, battery, enabled, auto, browned, states, sources };
+  // Pauses in the robot loop's logging, usually overruns. Hoot exports have no loop signal, so
+  // gaps is null for them: Phoenix logged every frame on its own thread.
+  const tickS = raw.get("LoopTick");
+  let gaps = null;
+  const inGap = new Uint8Array(n);
+  if (tickS && tickS.t.length > 1) {
+    gaps = [];
+    const toBin = t => Math.max(0, Math.min(n - 1, Math.floor((t - t0) / DT)));
+    for (let k = 1; k < tickS.t.length; k++) {
+      const dur = tickS.t[k] - tickS.t[k - 1];
+      if (dur <= LOG_GAP_S) continue;
+      const a = toBin(tickS.t[k - 1]), b = Math.max(a + 1, toBin(tickS.t[k]));
+      gaps.push({ a, b, t: tickS.t[k - 1] - t0, dur });
+      for (let i = a; i < b; i++) inGap[i] = 1;
+    }
+  }
+
+  return { t0, n, motors, battery, enabled, auto, browned, states, sources, gaps, inGap };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -744,11 +765,17 @@ function analyze(model, opt) {
   else if (windowS === 0) warnings.push({ level: "warn", text: "The robot was never enabled in this log. Switch Window to “Whole log” to analyze it anyway." });
   const noStates = STATE_SPLITS.filter(s => !model.states[s.channel]).map(s => s.channel);
   if (noStates.length) warnings.push({ level: "info", text: `No ${noStates.join(", ")} signal, so those per-state rows are skipped. They come from the robot code's Epilogue logging.` });
+  const gaps = model.gaps ? model.gaps.filter(g => mask.slice(g.a, g.b).some(Boolean)) : [];
+  if (gaps.length) {
+    const worst = gaps.slice().sort((x, y) => y.dur - x.dur);
+    const list = worst.slice(0, 5).map(g => `${fmt(g.dur * 1000, 0)} ms at ${fmt(g.t, 1)} s`).join(", ");
+    warnings.push({ level: "warn", text: `${gaps.length} gap${gaps.length > 1 ? "s" : ""} over ${LOG_GAP_S * 1000} ms between log writes, most likely loop overruns: ${list}${gaps.length > 5 ? ", …" : ""}. Current is held at its last value across a gap, so a spike inside one is missed. They are hatched on the Timeline.` });
+  }
   const others = present.filter(m => m.group === "other");
   if (others.length) warnings.push({ level: "info", text: `Talon FX IDs not in this page's wiring map: ${others.map(m => m.id).join(", ")}. They are counted under “Unmapped”.` });
   if (!warnings.length) warnings.push({ level: "good", text: `All ${present.length} motors present, every supply current signal at ${MIN_RATE_HZ} Hz or faster.` });
 
-  return { mask, allTime, windowS, autoS, groups, stateRows, total, sags, minV, peakTotal, peakAt, warnings, totalWh: groups.reduce((a, g) => a + g.stats.wh, 0) };
+  return { mask, allTime, windowS, autoS, groups, stateRows, total, sags, minV, peakTotal, peakAt, warnings, gaps, totalWh: groups.reduce((a, g) => a + g.stats.wh, 0) };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -974,6 +1001,11 @@ function renderTimeline() {
     if (on && s0 < 0) s0 = i; else if (!on && s0 >= 0) { svg += band(s0, i, "var(--auto-band)"); s0 = -1; }
   }
   for (const s of r.sags) if (s.b > i0 && s.a < i1) svg += band(Math.max(s.a, i0), Math.min(s.b, i1), "var(--sag-fill)");
+  const gapsShown = (m.gaps || []).filter(g => g.b > i0 && g.a < i1);
+  if (gapsShown.length) {
+    svg += `<defs><pattern id="gap-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--gap-fill)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="1.5"/></pattern></defs>`;
+    for (const g of gapsShown) svg += band(Math.max(g.a, i0), Math.min(g.b, i1), "url(#gap-hatch)");
+  }
   // voltage grid
   for (let v = Math.ceil(vLo); v <= vHi; v += (vHi - vLo > 5 ? 2 : 1)) {
     svg += `<line x1="${ml}" x2="${W - mr}" y1="${vy(v)}" y2="${vy(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${ml - 6}" y="${vy(v) + 4}" text-anchor="end">${v}</text>`;
@@ -1007,7 +1039,8 @@ function renderTimeline() {
   host.innerHTML = svg;
 
   $("timeline-legend").innerHTML = r.groups.map(g => `<span><span class="sw" style="background:${color(g)}"></span>${esc(g.name)}</span>`).join("")
-    + `<span><span class="sw" style="background:var(--sag-fill);outline:1px solid var(--critical-ink)"></span>sag</span><span><span class="sw" style="background:var(--auto-band);outline:1px solid var(--accent)"></span>autonomous</span>`;
+    + `<span><span class="sw" style="background:var(--sag-fill);outline:1px solid var(--critical-ink)"></span>sag</span><span><span class="sw" style="background:var(--auto-band);outline:1px solid var(--accent)"></span>autonomous</span>`
+    + (m.gaps && m.gaps.length ? `<span><span class="sw" style="background:repeating-linear-gradient(45deg, var(--muted) 0 1.5px, var(--gap-fill) 1.5px 5px)"></span>log gap (no samples)</span>` : "");
   $("zoom-reset").hidden = !VIEW;
 
   const hit = host.querySelector("#hit"), cross = host.querySelector("#cross"), brush = host.querySelector("#brush"), tip = $("tip");
@@ -1028,7 +1061,7 @@ function renderTimeline() {
     const rows = r.groups.map(g => { tot += g.cur[i]; return g; }).slice().reverse().map(g =>
       `<div class="row"><span class="l"><span class="sw" style="background:${color(g)}"></span>${esc(g.name)}</span><span>${fmt(g.cur[i])} A</span></div>`).join("");
     const st = STATE_SPLITS.map(sp => m.states[sp.channel] ? `${sp.channel.replace("/State", "")}: ${m.states[sp.channel][i] || "–"}` : "").filter(Boolean).join(" · ");
-    tip.innerHTML = `<div class="head">t = ${fmt(i * DT, 2)} s · ${fmt(m.battery[i], 2)} V</div>${rows}<hr><div class="row"><span class="l">Total</span><b>${fmt(tot)} A</b></div>${st ? `<div class="row"><span class="l">${esc(st)}</span></div>` : ""}`;
+    tip.innerHTML = `<div class="head">t = ${fmt(i * DT, 2)} s · ${fmt(m.battery[i], 2)} V${m.inGap[i] ? " · log gap, last values held" : ""}</div>${rows}<hr><div class="row"><span class="l">Total</span><b>${fmt(tot)} A</b></div>${st ? `<div class="row"><span class="l">${esc(st)}</span></div>` : ""}`;
     tip.hidden = false;
     const hostRect = host.getBoundingClientRect();
     const px = ev.clientX - hostRect.left;
@@ -1063,7 +1096,7 @@ function summaryText() {
   const r = RESULT, o = opts();
   const pad = (s, n) => String(s).padEnd(n), lp = (s, n) => String(s).padStart(n);
   let t = `NOMAD Power — ${MODEL.sources.join(", ")}\n`;
-  t += `${r.allTime ? "Analyzed" : "Enabled"} ${fmt(r.windowS, 1)} s · ${fmt(r.totalWh, 2)} Wh · min ${fmt(r.minV, 2)} V · peak ${fmt(r.peakTotal, 0)} A · ${r.sags.length} sags < ${o.sagV} V (${r.sags.filter(s => s.brownout).length} brownouts)\n\n`;
+  t += `${r.allTime ? "Analyzed" : "Enabled"} ${fmt(r.windowS, 1)} s · ${fmt(r.totalWh, 2)} Wh · min ${fmt(r.minV, 2)} V · peak ${fmt(r.peakTotal, 0)} A · ${r.sags.length} sags < ${o.sagV} V (${r.sags.filter(s => s.brownout).length} brownouts)${r.gaps.length ? ` · ${r.gaps.length} log gaps > ${LOG_GAP_S * 1000} ms` : ""}\n\n`;
   t += pad("Subsystem", 26) + ["Wh", "On%", "P50", "P90", "P99", "Peak"].map(h => lp(h, 8)).join("") + "\n";
   for (const g of r.groups.slice().sort((a, b) => b.stats.wh - a.stats.wh)) {
     const rows = [[g.name, g.stats], ...(r.stateRows[g.key] || []).map(s => [`  ${g.name} · ${s.name}`, s])];
