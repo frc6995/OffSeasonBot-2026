@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "editor_config": {
+    "gui": {
+      "robot": {
+        "length_meters": 0.76,
+        "width_meters": 0.99
+      },
+      "protrusions": {
+        "enabled": true,
+        "distance_meters": 0.23,
+        "side": "front",
+        "default_state": "shown",
+        "show_on_event_keys": [],
+        "hide_on_event_keys": []
+      },
+      "field": {
+        "selected_field_id": "frc2026-rebuilt",
+        "custom_fields": []
+      }
+    },
+    "kinematic_constraints": {
+      "default_auto_velocity_velocity_safety_factor": 0.9,
+      "default_auto_velocity_acceleration_safety_factor": 0.8,
+      "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
+    }
+  },
+  "active_path_file_name": "right-center-line-swipe.json",
+  "active_path_group_id": "group-right-short-return",
+  "path_groups": [
+    {
+      "group_id": "group-right-short-return",
+      "display_name": "Right Short Return + Slow Shooting",
+      "path_file_names": [
+        "right-center-line-swipe.json",
+        "right-short-return-shoot.json",
+        "right-shoot-exit.json"
+      ]
+    }
+  ],
+  "linked_targets": [],
+  "paths": {
+    "right-center-line-swipe.json": {
+      "display_name": "Right Collection",
+      "editor_metadata": null
+    },
+    "right-short-return-shoot.json": {
+      "display_name": "Short Return + Shoot",
+      "editor_metadata": null
+    },
+    "right-shoot-exit.json": {
+      "display_name": "Slow Shooting Exit",
+      "editor_metadata": null
+    }
+  },
+  "field_assets": {}
+}

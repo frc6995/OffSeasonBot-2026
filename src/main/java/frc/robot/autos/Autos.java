@@ -42,6 +42,13 @@ public class Autos {
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
 
+    // Already mirrored in BLine; retain only the normal red-alliance flip at runtime.
+    private final Path RightCollectionPath = new Path("right-center-line-swipe");
+    private final Path RightShortReturnPath = new Path("right-short-return-shoot");
+    private final Path RightSlowShootingExitPath = new Path("right-shoot-exit");
+    private final Supplier<Pose2d> RIGHT_SHORT_RETURN_START =
+        AllianceFlipUtil.flipped(RightCollectionPath.getStartPose());
+
     private final Path LeftBump1Path = new Path("path-1".toLowerCase());
     private final Path LeftBump2Path = new Path("path-2".toLowerCase());
     private final Path RightBump1Path = mirroredCopy(LeftBump1Path);
@@ -121,6 +128,19 @@ public class Autos {
                     c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 12)); //tune timeouts
 
                     c.addCommands(Depot3);
+                }));
+
+        autos.put("Right Single Swipe",
+                () -> auto(RIGHT_SHORT_RETURN_START.get(), c -> {
+                    Command collection = pathBuilder.build(RightCollectionPath);
+                    Command shortReturn = pathBuilder.build(RightShortReturnPath);
+                    Command shootingExit = pathBuilder.build(RightSlowShootingExitPath);
+
+                    c.addCommands(untilCloseToWallAfterEvent(collection, "hubSensorActivation", 8)
+                            .alongWith(m_superstructure.requestIntakeActive()));
+                    // The return ends short of the wall, so no depot sensor termination.
+                    c.addCommands(shortReturn);
+                    c.addCommands(shootingExit);
                 }));
 
         autos.put("Left Double Swipe Bump",
