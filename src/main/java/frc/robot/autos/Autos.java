@@ -60,12 +60,19 @@ public class Autos {
         this.m_superstructure = superstructure;
 
         // ===== DEPOT AUTO EVENT TRIGGERS =====
-        FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
-//        FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
+        FollowPath.registerEventTrigger("Unwind", m_superstructure.requestTurretUnwind());
+
+        FollowPath.registerEventTrigger("outtakeEvent", 
+            Commands.sequence( m_superstructure.requestIntakeEject(),
+            Commands.waitSeconds(0.5),
+            m_superstructure.requestIntakeIdle()));
+
         FollowPath.registerEventTrigger("startShooting", m_superstructure.requestRobotScoring());
-        FollowPath.registerEventTrigger("Unwind", Commands.parallel(
-                m_superstructure.requestTurretUnwind()));
+
+
         FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeMiniAgitate());
+        
+       
         FollowPath.registerEventTrigger("stopScoring",
                 Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
 

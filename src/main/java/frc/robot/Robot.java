@@ -117,7 +117,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         // Shooting-based throttling is off for auto; the drive nominal still switches to its auto limit
-        m_robotContainer.currentLimitManager.setEnabled(false);
+        m_robotContainer.currentLimitManager.setEnabled(true);
 
         if (RobotBase.isSimulation()) {
             CommandScheduler.getInstance().schedule(

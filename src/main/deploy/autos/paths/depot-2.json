@@ -26,18 +26,13 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.35608,
+      "t_ratio": 0.35881,
       "lib_key": "Unwind"
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.77349,
+      "t_ratio": 0.76222,
       "lib_key": "outtakeEvent"
-    },
-    {
-      "type": "event_trigger",
-      "t_ratio": 0.55784,
-      "lib_key": "intakeIdle"
     },
     {
       "type": "waypoint",
@@ -53,18 +48,18 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.0697,
+      "t_ratio": 0.06678,
       "lib_key": "startShooting"
-    },
-    {
-      "type": "event_trigger",
-      "t_ratio": 0.51552,
-      "lib_key": "depotSensorActivation"
     },
     {
       "type": "event_trigger",
       "t_ratio": 0.4212,
       "lib_key": "startIntakingAgain"
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.51552,
+      "lib_key": "depotSensorActivation"
     },
     {
       "type": "waypoint",
