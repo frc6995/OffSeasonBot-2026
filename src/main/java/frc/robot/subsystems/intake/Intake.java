@@ -288,7 +288,7 @@ public class Intake extends SubsystemBase {
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
             case MINI_AGITATE -> IntakeConstants.kKickerForwardVoltage;
-            case FULL_AGITATE -> IntakeConstants.kKickerIdleVolts;
+            case FULL_AGITATE -> IntakeConstants.kKickerForwardVoltage;
             case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };
