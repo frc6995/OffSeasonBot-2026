@@ -23,7 +23,7 @@ public class Intake extends SubsystemBase {
        
         public static final double kIntakeSignalFrequencyHz = 100.0;
 
-        public static final double kKickerSupplyCurrentLimitAmps = 40;
+        public static final double kKickerSupplyCurrentLimitAmps = 30;
         public static final double kKickerStatorCurrentLimitAmps = 80;
         public static final double kKickerMaxVolts = 10;
         public static final double kKickerMinVolts = -10;

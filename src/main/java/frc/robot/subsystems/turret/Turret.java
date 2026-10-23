@@ -64,6 +64,7 @@ public class Turret extends SubsystemBase {
         public static final double kEChainBaseLength = 11.385 * 0.0254;
         public static final double kNMPerVolt = 48.9;
         public static final double kSpringForceN = 15 * 4.44822162;
+        public static final double[] kAltTurretAngles = {-720, -360, 360, 720};
     }
 
     public enum TurretState {
@@ -197,22 +198,13 @@ public class Turret extends SubsystemBase {
         double smallestAngle = angle;
         double smallestDifference = Math.abs(angle - currentAngle);
 
-        if (angle >= 0) {
-            double alt = angle - 360;
+        for(double offset : TurretConstants.kAltTurretAngles) {
+            double alt = angle + offset;
             double diff = Math.abs(alt - currentAngle);
             if ((diff < smallestDifference || !isValid) && withinBounds(alt)) {
                 smallestDifference = diff;
                 smallestAngle = alt;
                 isValid = true;
-            }
-        }
-
-        if (angle <= 0) {
-            double alt = angle + 360;
-            double diff = Math.abs(alt - currentAngle);
-            if ((diff < smallestDifference || !isValid) && withinBounds(alt)) {
-                smallestDifference = diff;
-                smallestAngle = alt;
             }
         }
 

@@ -136,6 +136,19 @@ public class Superstructure extends SubsystemBase {
                     goalPose.getX(),
                     POI.PASSING_ANGLE.get().getRadians());
 
+        } else if (robotState == RobotState.IDLE) {
+            // No shoot-on-the-move while idle: track the hub directly.
+            var pose = m_swerveState.get().Pose;
+            var wall = POI.PASSING_WALL_START.get();
+            var hub = POI.HUB_CENTER.get();
+            m_shotProjector.solveIdle(
+                    pose.getX(),
+                    pose.getY(),
+                    pose.getRotation().getRadians(),
+                    wall.getX(),
+                    hub.getX(),
+                    hub.getY());
+
         } else {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();

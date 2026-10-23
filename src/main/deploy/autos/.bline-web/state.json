@@ -84,25 +84,18 @@
       "target_id": "target-2f1e31fa",
       "display_name": "InDepot",
       "kind": "waypoint",
-      "x_meters": 0.25993,
-      "y_meters": 6.06897,
+      "x_meters": 0.59114,
+      "y_meters": 6.05687,
       "rotation_radians": -3.1381
     }
   ],
   "paths": {
-    "left-center-line-depot.json": {
-      "display_name": "(Left) Center Line+Depot",
-      "editor_metadata": {
-        "linked_targets": [
-          {
-            "element_index": 6.0,
-            "target_id": "target-418b4784"
-          }
-        ]
-      }
+    "depot-3.json": {
+      "display_name": "Depot 3",
+      "editor_metadata": null
     },
-    "path-2.json": {
-      "display_name": "Path 2",
+    "path-1.json": {
+      "display_name": "Path 1",
       "editor_metadata": null
     },
     "depot-2.json": {
@@ -116,12 +109,23 @@
         ]
       }
     },
-    "depot-3.json": {
-      "display_name": "Depot 3",
+    "test-canrange.json": {
+      "display_name": "Test-canrange",
       "editor_metadata": null
     },
-    "path-1.json": {
-      "display_name": "Path 1",
+    "left-center-line-depot.json": {
+      "display_name": "(Left) Center Line+Depot",
+      "editor_metadata": {
+        "linked_targets": [
+          {
+            "element_index": 6.0,
+            "target_id": "target-418b4784"
+          }
+        ]
+      }
+    },
+    "test-canrange2.json": {
+      "display_name": "Test-canrange2",
       "editor_metadata": null
     },
     "workshop-test-1.json": {
@@ -144,12 +148,8 @@
         ]
       }
     },
-    "test-canrange2.json": {
-      "display_name": "Test-canrange2",
-      "editor_metadata": null
-    },
-    "test-canrange.json": {
-      "display_name": "Test-canrange",
+    "path-2.json": {
+      "display_name": "Path 2",
       "editor_metadata": null
     }
   },
