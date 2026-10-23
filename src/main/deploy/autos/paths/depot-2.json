@@ -58,7 +58,7 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.51552,
+      "t_ratio": 0.90887,
       "lib_key": "depotSensorActivation"
     },
     {
