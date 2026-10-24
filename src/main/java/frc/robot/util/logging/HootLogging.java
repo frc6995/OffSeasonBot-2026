@@ -4,8 +4,11 @@ import java.io.File;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.util.CtreUtil;
 
@@ -17,15 +20,18 @@ public final class HootLogging {
     private static final String kUsbLogPath = "/u/logs";
 
     private final Superstructure m_superstructure;
+    private final CommandSwerveDrivetrain m_swerve;
 
     // Last value written of each custom signal. null forces a write on the first loop.
     private Enum<?> m_lastRobotState;
     private Enum<?> m_lastFlywheelState;
     private Enum<?> m_lastIntakeState;
+    private Enum<?> m_lastTurretState;
     private boolean m_lastBrownedOut;
 
-    public HootLogging(Superstructure superstructure) {
+    public HootLogging(Superstructure superstructure, CommandSwerveDrivetrain swerve) {
         m_superstructure = superstructure;
+        m_swerve = swerve;
 
         // This class decides whether logging runs; Phoenix's own auto-start would ignore kEnabled.
         SignalLogger.enableAutoLogging(false);
@@ -56,6 +62,8 @@ public final class HootLogging {
             m_lastBrownedOut = brownedOut;
         }
 
+        SignalLogger.writeStruct("Pose", Pose2d.struct, m_swerve.getState().Pose);
+
         // Enum identity compare: these are the same constants every loop, so this allocates nothing.
         Enum<?> robotState = m_superstructure.getRobotState();
         if (robotState != m_lastRobotState) {
@@ -71,6 +79,12 @@ public final class HootLogging {
         if (intakeState != m_lastIntakeState) {
             SignalLogger.writeString("Intake/State", intakeState.name());
             m_lastIntakeState = intakeState;
+        }
+
+        Enum<?> turretState = m_superstructure.m_turret.getState();
+        if (turretState != m_lastTurretState) {
+            SignalLogger.writeString("Turret/State", turretState.name());
+            m_lastTurretState = turretState;
         }
     }
 }

@@ -136,6 +136,19 @@ public class Superstructure extends SubsystemBase {
                     goalPose.getX(),
                     POI.PASSING_ANGLE.get().getRadians());
 
+        } else if (robotState == RobotState.IDLE) {
+            // No shoot-on-the-move while idle: track the hub directly.
+            var pose = m_swerveState.get().Pose;
+            var wall = POI.PASSING_WALL_START.get();
+            var hub = POI.HUB_CENTER.get();
+            m_shotProjector.solveIdle(
+                    pose.getX(),
+                    pose.getY(),
+                    pose.getRotation().getRadians(),
+                    wall.getX(),
+                    hub.getX(),
+                    hub.getY());
+
         } else {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
@@ -162,6 +175,8 @@ public class Superstructure extends SubsystemBase {
         }
 
 
+        m_dyeRotor.setReverseEnabled(m_intake.getState() == IntakeState.ACTIVE);
+
         if(robotState == RobotState.SCORING || robotState == RobotState.PASSING) {
             if(!m_turret.atSetpoint()) {
                 m_dyeRotor.requestIdle();
@@ -175,15 +190,11 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.requestActive());
     }
 
-    public Command requestIntakeRetracted() {
-        return Commands.runOnce(() -> m_intake.requestRetract());
-    }
-
     public Command requestIntakeMiniAgitate() {
         return Commands.runOnce(() -> m_intake.requestMiniAgitate());
     }
 
-    // Shoot-only: sweep+hold the extension; requestFullAgitate() always keeps the
+    // Shoot-only: continuously sweep the extension; requestFullAgitate() always keeps the
     // rollers/kicker idle.
     public Command requestIntakeFullAgitate() {
         return Commands.runOnce(() -> m_intake.requestFullAgitate());
@@ -217,6 +228,9 @@ public class Superstructure extends SubsystemBase {
 
     public Command requestFlywheelActive() {
         return Commands.runOnce(() -> m_flywheel.requestActive());
+    }
+    public Command requestTurretUnwind() {
+        return Commands.runOnce(() -> m_turret.requestUnwind());
     }
 
     public Command requestRobotIdle() {

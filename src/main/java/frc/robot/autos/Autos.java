@@ -41,6 +41,11 @@ public class Autos {
     public final Supplier<Pose2d> TRENCH_START_LEFT = AllianceFlipUtil.flipped(Depot1Path.getStartPose());
     private final Path Depot2Path = new Path("depot-2".toLowerCase());
     private final Path Depot3Path = new Path("depot-3".toLowerCase());
+    private final Path RightDepot1Path = mirroredCopy(Depot1Path);
+    private final Path RightDepot2Path = mirroredCopy(Depot2Path);
+    private final Path RightDepot3Path = mirroredCopy(Depot3Path);
+    private final Supplier<Pose2d> TRENCH_START_RIGHT_DEPOT =
+        AllianceFlipUtil.flipped(RightDepot1Path.getStartPose());
 
     private final Path LeftBump1Path = new Path("path-1".toLowerCase());
     private final Path LeftBump2Path = new Path("path-2".toLowerCase());
@@ -60,11 +65,18 @@ public class Autos {
         this.m_superstructure = superstructure;
 
         // ===== DEPOT AUTO EVENT TRIGGERS =====
-        FollowPath.registerEventTrigger("intakeIdle", m_superstructure.requestIntakeIdle());
-//        FollowPath.registerEventTrigger("startShooter", m_superstructure.requestFlywheelActive());
-        FollowPath.registerEventTrigger("startShooting", Commands.parallel(
-                m_superstructure.requestRobotScoring()));
+        FollowPath.registerEventTrigger("Unwind", m_superstructure.requestTurretUnwind());
+
+        FollowPath.registerEventTrigger("outtakeEvent", 
+            Commands.sequence( m_superstructure.requestIntakeEject(),
+            Commands.waitSeconds(0.5),
+            m_superstructure.requestIntakeIdle()));
+
+        FollowPath.registerEventTrigger("startShooting", m_superstructure.requestRobotScoring());
+
         FollowPath.registerEventTrigger("startIntakingAgain", m_superstructure.requestIntakeMiniAgitate());
+        
+    
         FollowPath.registerEventTrigger("stopScoring",
                 Commands.parallel(m_superstructure.requestRobotIdle(), superstructure.requestIntakeActive()));
 
@@ -101,7 +113,7 @@ public class Autos {
     /** Registers all autonomous routines with the auto chooser. */
     private void registerAutos() {
 
-        autos.put("Depot Auto",
+        autos.put("(Left) 1 Swipe + Depot",
                 () -> auto(TRENCH_START_LEFT.get(), c -> {
                     Command Depot1 = pathBuilder.build(Depot1Path);
                     Command Depot2 = pathBuilder.build(Depot2Path);
@@ -115,36 +127,42 @@ public class Autos {
                     c.addCommands(Depot3);
                 }));
 
-        autos.put("Left Double Swipe Bump",
-                () -> auto(TRENCH_START_LEFT.get(), c -> {
-                    Command LeftBump1Cmd = pathBuilder.build(LeftBump1Path);
-                    Command LeftBump2Cmd = pathBuilder.build(LeftBump2Path);
+        autos.put("(Right) 1 Swipe (Depot mirror)",
+                () -> auto(TRENCH_START_RIGHT_DEPOT.get(), c -> {
+                    Command Depot1 = pathBuilder.build(RightDepot1Path);
+                    Command Depot2 = pathBuilder.build(RightDepot2Path);
+                    Command Depot3 = pathBuilder.build(RightDepot3Path);
 
-                    c.addCommands(LeftBump1Cmd.alongWith(m_superstructure.requestIntakeActive(),
-                            m_superstructure.requestRobotIdle()));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot1, "hubSensorActivation", 8)
+                            .alongWith(m_superstructure.requestIntakeActive()));
 
-                    c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
+                    c.addCommands(untilCloseToWallAfterEvent(Depot2, "depotSensorActivation", 12)); //tune timeouts
+
+                    c.addCommands(Depot3);
                 }));
 
-                 autos.put("Right Double Swipe Bump",
-                () -> auto(TRENCH_START_RIGHT.get(), c -> {
-                    Command RightBump1Cmd = pathBuilder.build(RightBump1Path);
-                    Command RightBump2Cmd = pathBuilder.build(RightBump2Path);
+        // autos.put("Left Double Swipe Bump",
+        //         () -> auto(TRENCH_START_LEFT.get(), c -> {
+        //             Command LeftBump1Cmd = pathBuilder.build(LeftBump1Path);
+        //             Command LeftBump2Cmd = pathBuilder.build(LeftBump2Path);
 
-                    c.addCommands(RightBump1Cmd.alongWith(m_superstructure.requestIntakeActive(),
-                            m_superstructure.requestRobotIdle()));
+        //             c.addCommands(LeftBump1Cmd.alongWith(m_superstructure.requestIntakeActive(),
+        //                     m_superstructure.requestRobotIdle()));
 
-                    c.addCommands(RightBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
-                }));
+        //             c.addCommands(LeftBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
+        //         }));
 
-        autos.put("Bline_Workshop_Test_Canrange",
-                () -> auto(TEST_START_CANRANGE.get(), c -> {
-                    Command canRangeTestAuto1 = pathBuilder.build(Testcanrange);
-                    Command canRangeTestAuto2 = pathBuilder.build(Testcanrange2);
+        //          autos.put("Right Double Swipe Bump",
+        //         () -> auto(TRENCH_START_RIGHT.get(), c -> {
+        //             Command RightBump1Cmd = pathBuilder.build(RightBump1Path);
+        //             Command RightBump2Cmd = pathBuilder.build(RightBump2Path);
 
-                    c.addCommands(untilCloseToWallAfterEvent(canRangeTestAuto1, "testActivation", 6));
-                    c.addCommands((canRangeTestAuto2));
-                }));
+        //             c.addCommands(RightBump1Cmd.alongWith(m_superstructure.requestIntakeActive(),
+        //                     m_superstructure.requestRobotIdle()));
+
+        //             c.addCommands(RightBump2Cmd.alongWith(m_superstructure.requestIntakeActive()));
+        //         }));
+
 
         // Register all autos with the chooser for driver station selection
         autos.forEach(autoChooser::addCmd);

@@ -49,20 +49,14 @@ public class RealPhotonATVision {
         };
 
         public static final Transform3d[] PHOTON_OFFSETS = {
-            new Transform3d(
-                new Translation3d(Inches.of(0), Inches.of(0), Inches.of(0)),
-                new Rotation3d(Degrees.of(0), Degrees.of(0), Degrees.of(0))
-            ),
-            new Transform3d(
-                new Translation3d(Inches.of(0), Inches.of(0), Inches.of(0)),
-                new Rotation3d(Degrees.of(0), Degrees.of(0), Degrees.of(0))
-            )
+            new Transform3d(new Translation3d(Units.inchesToMeters(-9.61264), Units.inchesToMeters(9.23195), Units.inchesToMeters(21.35530)), new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-30), Units.degreesToRadians(-90))),
+            new Transform3d(new Translation3d(Units.inchesToMeters(-9.61264), Units.inchesToMeters(12.14763), Units.inchesToMeters(21.35530)), new Rotation3d(Units.degreesToRadians(180), Units.degreesToRadians(-30), Units.degreesToRadians(90)))
         };
         
         public static final AprilTagFieldLayout kTagLayout =
                 AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 
-        public static final double[] kStdDevCoefficients = {0.5, 1};
+        public static final double[] kStdDevCoefficients = {0.3, 0.5};
 
         public static final String TABLE_ID = "Photon";
     }

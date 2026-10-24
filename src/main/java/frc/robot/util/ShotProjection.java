@@ -157,4 +157,19 @@ public final class ShotProjection {
         rpm = passRPMLut.get(dist);
         hoodDeg = passHoodLut.get(dist);
     }
+
+    /**
+     * @param rx, ry       robot position, field frame, meters (ry unused: the passing wall is
+     *                     vertical, so only the x-distance to it matters)
+     * @param rtheta       robot heading, field frame, radians
+     * @param gx           wall x position, field frame, meters
+     * @param hubX, hubY   hub position, field frame, meters. The turret aims straight at it
+     *                     (no shoot-on-the-move compensation).
+     */
+    public void solveIdle(double rx, double ry, double rtheta, double gx, double hubX, double hubY) {
+        double dist = Math.abs(rx - gx);
+        robotAngleRad = Math.atan2(hubY - ry, hubX - rx) - rtheta;
+        rpm = passRPMLut.get(dist);
+        hoodDeg = passHoodLut.get(dist);
+    }
 }

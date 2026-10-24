@@ -20,17 +20,10 @@ public class Intake extends SubsystemBase {
         public static final int kROLLER_FOLLOWER_MOTOR_ID = 31;
         public static final int kEXTENSION_LEAD_MOTOR_ID = 32;
         public static final int kEXTENSION_FOLLOWER_MOTOR_ID = 33;
-
        
         public static final double kIntakeSignalFrequencyHz = 100.0;
 
-        // // Kicker PID Constants
-        // public static final double kKickerP = 0.2;
-        // // Kicker Feedforward Constants
-        // public static final double kKickerS = 0.25;
-        // public static final double kKickerV = 0.164;
-        // Kicker Config Constants
-        public static final double kKickerSupplyCurrentLimitAmps = 40;
+        public static final double kKickerSupplyCurrentLimitAmps = 30;
         public static final double kKickerStatorCurrentLimitAmps = 80;
         public static final double kKickerMaxVolts = 10;
         public static final double kKickerMinVolts = -10;
@@ -41,12 +34,6 @@ public class Intake extends SubsystemBase {
         public static final double kKickerForwardVoltage = 10.0;
         public static final double kKickerIdleVolts = 0.0;
 
-        // // Roller PID Constants
-        // public static final double kRollerP = 0.2;
-        // // Roller Feedforward Constants
-        // public static final double kRollerS = 0.25;
-        // public static final double kRollerV = 0.396;
-        // Roller Config Constants
         public static final double kRollerSupplyCurrentLimitAmps = 40;
         public static final double kRollerStatorCurrentLimitAmps = 80;
         public static final double kRollerMaxVolts = 10;
@@ -73,16 +60,16 @@ public class Intake extends SubsystemBase {
         public static final double kIntakeAngleDegrees = 10.8;
         public static final double kDrumCircumferenceMeters = 0.119;
         public static final double kExtensionAccelerationRotationsPerSec2 = 200.0;
-        public static final double kExtensionCruiseVelocityRotationsPerSec = 10.0;
+        public static final double kExtensionCruiseVelocityRotationsPerSec = 20.0;
 
-        // Full agitate sweeps down from 100% to 50% extension and holds once it arrives
-        // (shoot-only). Mini agitate oscillates between 70% and 100% every
-        // kMiniAgitateIntervalSeconds (both shoot+intake pressed while scoring).
-        public static final double kFullAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(2.45);
+
+        public static final double kFullAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(2.0);
         public static final double kFullAgitateFarMeters = kExtensionMaxMeters;
+        public static final double kMediumAgitateNearMeters = kFullAgitateNearMeters;
+        public static final double kMediumAgitateFarMeters = kFullAgitateNearMeters + 0.05;
         public static final double kMiniAgitateNearMeters = IntakeIOTalonFX.mechanismRotationsToMeters(3.4);
         public static final double kMiniAgitateFarMeters = kExtensionMaxMeters;
-        public static final double kMiniAgitateIntervalSeconds = 0.3;
+        public static final double kMiniAgitateIntervalSeconds = 0.15;
         public static final double kFullAgitateIntervalSeconds = 0.4;
         public static final double kAgitateToleranceMeters = 0.02;
     }
@@ -111,6 +98,7 @@ public class Intake extends SubsystemBase {
 
     private final Timer agitateTimer = new Timer();
     private boolean agitateAtNearPosition = false;
+    private boolean fullAgitateReachedSetpoint = false;
 
     public Intake() {
         this(new IntakeIO() {
@@ -130,13 +118,10 @@ public class Intake extends SubsystemBase {
     public void setState(IntakeState state) {
         if ((state == IntakeState.MINI_AGITATE || state == IntakeState.FULL_AGITATE) && intakeState != IntakeState.MINI_AGITATE && intakeState != IntakeState.FULL_AGITATE) {
             agitateAtNearPosition = false;
+            fullAgitateReachedSetpoint = false;
             agitateTimer.restart();
         }
         intakeState = state;
-    }
-
-    public void requestRetract() {
-        setState(IntakeState.RETRACTED);
     }
 
     public void requestActive() {
@@ -176,6 +161,10 @@ public class Intake extends SubsystemBase {
         io.setKickerCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
     }
 
+    public void setExtensionCurrentLimit(CurrentLimit limit) {
+        io.setExtensionCurrentLimits(limit.statorCurrentLimitAmps(), limit.supplyCurrentLimitAmps());
+    }
+
     @Logged(name = "State", importance = Importance.CRITICAL)
     public IntakeState getState() {
         return intakeState;
@@ -209,10 +198,6 @@ public class Intake extends SubsystemBase {
     @Logged(name = "Extension/Stator Current", importance =  Importance.DEBUG)
     public double getExtensionStatorCurrentAmps() {
         return inputs.extensionStatorCurrentAmps;
-    }
-
-    public boolean isDeployed() {
-        return getState() != IntakeState.RETRACTED;
     }
 
     @Override
@@ -256,8 +241,23 @@ public class Intake extends SubsystemBase {
         return agitateAtNearPosition ? IntakeConstants.kMiniAgitateNearMeters : IntakeConstants.kMiniAgitateFarMeters;
     }
 
+    private double resolveMediumAgitateTargetPosition() {
+        if (agitateTimer.advanceIfElapsed(IntakeConstants.kMiniAgitateIntervalSeconds)) {
+            agitateAtNearPosition = !agitateAtNearPosition;
+        }
+        return agitateAtNearPosition ? IntakeConstants.kMediumAgitateNearMeters : IntakeConstants.kMediumAgitateFarMeters;
+    }
+
     private double resolveFullAgitateTargetPosition() {
-        if (!MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters) && agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
+        if (!fullAgitateReachedSetpoint
+            && MathUtil.isNear(IntakeConstants.kFullAgitateNearMeters, inputs.extensionPositionMeters, IntakeConstants.kAgitateToleranceMeters)) {
+            fullAgitateReachedSetpoint = true;
+        }
+        // After the first full stroke reaches its setpoint, keep going with the smaller agitation.
+        if (fullAgitateReachedSetpoint) {
+            return resolveMediumAgitateTargetPosition();
+        }
+        if (agitateTimer.advanceIfElapsed(IntakeConstants.kFullAgitateIntervalSeconds)) {
             agitateAtNearPosition = !agitateAtNearPosition;
         }
         return agitateAtNearPosition ? IntakeConstants.kFullAgitateNearMeters : IntakeConstants.kFullAgitateFarMeters;
@@ -288,7 +288,7 @@ public class Intake extends SubsystemBase {
             case RETRACTED -> 0.0;
             case ACTIVE -> IntakeConstants.kKickerForwardVoltage;
             case MINI_AGITATE -> IntakeConstants.kKickerForwardVoltage;
-            case FULL_AGITATE -> IntakeConstants.kKickerIdleVolts;
+            case FULL_AGITATE -> IntakeConstants.kKickerForwardVoltage;
             case EJECTING -> IntakeConstants.kKickerEjectingVoltage;
 
         };
