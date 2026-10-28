@@ -30,8 +30,9 @@ public class Turret extends SubsystemBase {
         public static final double kStatorCurrentLimitAmps = 60;
         public static final double kSupplyCurrentLimitAmps = 40;
 
-        public static final double kMinAngleDeg = -288-135.612;
-        public static final double kMaxAngleDeg = 288-135.612;
+        public static final double kCentralAngleDeg = -135.612;
+        public static final double kMinAngleDeg = -288 + kCentralAngleDeg;
+        public static final double kMaxAngleDeg = 288 + kCentralAngleDeg;
         public static final double kSafeShotAngleDeg = 0;
         public static final double kToleranceDeg = 15;
 
@@ -213,7 +214,7 @@ public class Turret extends SubsystemBase {
     }
 
     private double selectCentralAngle(double angle) {
-        angle = MathUtil.inputModulus(angle, -180, 180);
+        angle = MathUtil.inputModulus(angle, -180+TurretConstants.kCentralAngleDeg, 180+TurretConstants.kCentralAngleDeg);
 
         io.setAngle(angle);
         return angle;
