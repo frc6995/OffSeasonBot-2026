@@ -8,15 +8,15 @@
         "intermediate_handoff_radius_meters": 0.45
       },
       "rotation_target": {
-        "rotation_radians": -3.02345,
+        "rotation_radians": 2.70339,
         "profiled_rotation": true
       }
     },
     {
       "type": "waypoint",
       "translation_target": {
-        "x_meters": 2.57678,
-        "y_meters": 7.73331,
+        "x_meters": 2.87989,
+        "y_meters": 7.4117,
         "intermediate_handoff_radius_meters": 0.39
       },
       "rotation_target": {
