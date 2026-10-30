@@ -33,6 +33,7 @@ public class DyeRotor extends SubsystemBase {
 
         public static final double kSpinForwardRPM = 120.0; 
         public static final double kSpinBackwardRPM = 30.0;
+        public static final double kSpinEjectBackwardRPM = 90.0;
         public static final double kSpinVelocityToleranceRPM = 20.0;
 
         public static final double kIndexForwardRPM = 2160.0;
@@ -66,6 +67,7 @@ public class DyeRotor extends SubsystemBase {
     private static final double kLoopPeriodSecs = 0.02;
 
     private boolean reverseEnabled = false;
+    private boolean ejecting = false;
 
     // Ticks remaining before the index (rollers) / spin motor are allowed to spin up.
     private int indexSpinUpTicksRemaining = 0;
@@ -78,6 +80,11 @@ public class DyeRotor extends SubsystemBase {
 
     public DyeRotor(DyeRotorIO io) {
         this.io = io;
+    }
+
+    /** While ejecting, the spin motor reverses faster. */
+    public void setEjecting(boolean ejecting) {
+        this.ejecting = ejecting;
     }
 
     /** The spin motor only runs in reverse while enabled (the intake is active); otherwise it holds at 0. */
@@ -175,7 +182,7 @@ public class DyeRotor extends SubsystemBase {
 
     private double resolveSpinTargetRPM(DyeRotorState state) {
         return switch (state) {
-            case IDLE, DELAYED -> reverseEnabled ? -DyeRotorConstants.kSpinBackwardRPM : -DyeRotorConstants.kSpinBackwardRPM;
+            case IDLE, DELAYED -> ejecting ? -DyeRotorConstants.kSpinEjectBackwardRPM : -DyeRotorConstants.kSpinBackwardRPM;
             case SPIN -> DyeRotorConstants.kSpinForwardRPM;
         };
     }
