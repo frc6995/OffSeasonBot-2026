@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
@@ -38,6 +39,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
+import frc.robot.subsystems.turret.Turret.UnwindTarget;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.util.ShotProjection;
 import frc.robot.util.ShotProjection.ShotConstants;
@@ -72,6 +74,7 @@ public class Superstructure extends SubsystemBase {
 
         m_neutralZoneTrigger = new Trigger(
                 () -> POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation()));
+        // m_neutralZoneTrigger = () -> POI.PASSING_ZONE.get().contains(m_swerveState.get().Pose.getTranslation());
 
         if (Robot.isSimulation()) {
             this.m_intake = new Intake(new IntakeIOSimTalonFX());
@@ -87,8 +90,11 @@ public class Superstructure extends SubsystemBase {
             this.m_turret = new Turret(new TurretIOTalonFX(), () -> Math.toDegrees(m_shotProjector.robotAngleRad));
             this.m_dyeRotor = new DyeRotor(new DyeRotorIOTalonFX());
         }
-        m_neutralZoneTrigger.debounce(0.5).onTrue(
-                Commands.runOnce(() -> m_turret.requestUnwind()));
+        m_neutralZoneTrigger.debounce(0.5)
+            .onTrue(
+                Commands.runOnce(() -> m_turret.requestAimCentral()))
+            .onFalse(
+                Commands.runOnce(() -> m_turret.requestAimClosest()));
 
         isZeroedPublisher = NetworkTableInstance.getDefault().getBooleanTopic("IsZeroed").publish();
 
@@ -136,6 +142,19 @@ public class Superstructure extends SubsystemBase {
                     goalPose.getX(),
                     POI.PASSING_ANGLE.get().getRadians());
 
+        } else if (robotState == RobotState.IDLE) {
+            // No shoot-on-the-move while idle: track the hub directly.
+            var pose = m_swerveState.get().Pose;
+            var wall = POI.PASSING_WALL_START.get();
+            var hub = POI.HUB_CENTER.get();
+            m_shotProjector.solveIdle(
+                    pose.getX(),
+                    pose.getY(),
+                    pose.getRotation().getRadians(),
+                    wall.getX(),
+                    hub.getX(),
+                    hub.getY());
+
         } else {
             var state = m_swerveState.get();
             var goalPose = POI.HUB_CENTER.get();
@@ -162,6 +181,9 @@ public class Superstructure extends SubsystemBase {
         }
 
 
+        m_dyeRotor.setReverseEnabled(m_intake.getState() == IntakeState.ACTIVE);
+        m_dyeRotor.setEjecting(m_intake.getState() == IntakeState.EJECTING);
+
         if(robotState == RobotState.SCORING || robotState == RobotState.PASSING) {
             if(!m_turret.atSetpoint()) {
                 m_dyeRotor.requestIdle();
@@ -175,15 +197,11 @@ public class Superstructure extends SubsystemBase {
         return Commands.runOnce(() -> m_intake.requestActive());
     }
 
-    public Command requestIntakeRetracted() {
-        return Commands.runOnce(() -> m_intake.requestRetract());
-    }
-
     public Command requestIntakeMiniAgitate() {
         return Commands.runOnce(() -> m_intake.requestMiniAgitate());
     }
 
-    // Shoot-only: sweep+hold the extension; requestFullAgitate() always keeps the
+    // Shoot-only: continuously sweep the extension; requestFullAgitate() always keeps the
     // rollers/kicker idle.
     public Command requestIntakeFullAgitate() {
         return Commands.runOnce(() -> m_intake.requestFullAgitate());
@@ -218,12 +236,19 @@ public class Superstructure extends SubsystemBase {
     public Command requestFlywheelActive() {
         return Commands.runOnce(() -> m_flywheel.requestActive());
     }
+    public Command requestTurretUnwind(UnwindTarget target) {
+        return Commands.runOnce(() -> m_turret.requestUnwind(target));
+    }
 
     public Command requestRobotIdle() {
         return Commands.runOnce(() -> {
             robotState = RobotState.IDLE;
             m_dyeRotor.requestIdle();
-            m_turret.requestAimClosest();
+            if(m_neutralZoneTrigger.getAsBoolean()) {
+                m_turret.requestAimCentral();
+            } else {
+                m_turret.requestAimClosest();
+            }
             m_flywheel.requestDisable();
             m_hood.requestDisable();
         });
@@ -266,8 +291,13 @@ public class Superstructure extends SubsystemBase {
 
     private void engageShootState(RobotState state) {
         switch (state) {
-            case SCORING, PASSING -> {
+            case SCORING -> {
                 m_turret.requestAimClosest();
+                m_flywheel.requestActive();
+                m_hood.requestActive();
+            }
+            case PASSING -> {
+                m_turret.requestAimCentral();
                 m_flywheel.requestActive();
                 m_hood.requestActive();
             }

@@ -191,6 +191,7 @@ public class AprilTagModule {
     public void updateOffset(Pose3d offset) {
         Rotation3d cameraRot = offset.getRotation();
         double handedness = LimelightConstants.kLimelightRobotSpaceIsYRight ? -1.0 : 1.0;
+        double yawSign = LimelightConstants.kLimelightYawIsInverted ? -1.0 : 1.0;
         // Mirroring about Y (M = diag(1,-1,1)) conjugates the rotation as M*R*M: roll (rotation
         // about X) and yaw (rotation about Z) flip sign, pitch (rotation about Y) is unchanged.
         LimelightHelpers.setCameraPose_RobotSpace(
@@ -200,7 +201,7 @@ public class AprilTagModule {
             offset.getZ(),
             handedness * Math.toDegrees(cameraRot.getX()),
             Math.toDegrees(cameraRot.getY()),
-            handedness * Math.toDegrees(cameraRot.getZ())
+            yawSign * handedness * Math.toDegrees(cameraRot.getZ())
         );
         robotToCameraPublisher.accept(offset);
     }

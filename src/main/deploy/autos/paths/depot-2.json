@@ -3,21 +3,31 @@
     {
       "type": "waypoint",
       "translation_target": {
-        "x_meters": 6.10645,
-        "y_meters": 4.37518,
+        "x_meters": 6.34132,
+        "y_meters": 5.4465,
         "intermediate_handoff_radius_meters": 0.45
       },
       "rotation_target": {
-        "rotation_radians": 3.13827,
+        "rotation_radians": 2.72519,
         "profiled_rotation": true
       }
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.35881,
+      "lib_key": "Unwind"
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.908,
+      "lib_key": "outtakeEvent"
+    },
+    {
       "type": "waypoint",
       "translation_target": {
-        "x_meters": 6.41331,
-        "y_meters": 5.53836,
-        "intermediate_handoff_radius_meters": 0.45
+        "x_meters": 3.06035,
+        "y_meters": 5.53397,
+        "intermediate_handoff_radius_meters": 0.8
       },
       "rotation_target": {
         "rotation_radians": -3.1381,
@@ -26,35 +36,8 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.61044,
-      "lib_key": "startShooter"
-    },
-    {
-      "type": "event_trigger",
-      "t_ratio": 0.5527,
-      "lib_key": "intakeIdle"
-    },
-    {
-      "type": "waypoint",
-      "translation_target": {
-        "x_meters": 2.92867,
-        "y_meters": 5.6705,
-        "intermediate_handoff_radius_meters": 0.45
-      },
-      "rotation_target": {
-        "rotation_radians": -3.1381,
-        "profiled_rotation": true
-      }
-    },
-    {
-      "type": "event_trigger",
-      "t_ratio": 0.0697,
+      "t_ratio": 0.0,
       "lib_key": "startShooting"
-    },
-    {
-      "type": "event_trigger",
-      "t_ratio": 0.51552,
-      "lib_key": "depotSensorActivation"
     },
     {
       "type": "event_trigger",
@@ -62,10 +45,15 @@
       "lib_key": "startIntakingAgain"
     },
     {
+      "type": "event_trigger",
+      "t_ratio": 0.90887,
+      "lib_key": "depotSensorActivation"
+    },
+    {
       "type": "waypoint",
       "translation_target": {
-        "x_meters": 0.25993,
-        "y_meters": 6.06897,
+        "x_meters": 0.59114,
+        "y_meters": 6.05687,
         "intermediate_handoff_radius_meters": 0.45
       },
       "rotation_target": {
@@ -79,17 +67,17 @@
       {
         "value": 2.0,
         "start_ordinal": 0,
+        "end_ordinal": 0
+      },
+      {
+        "value": 2.0,
+        "start_ordinal": 1,
         "end_ordinal": 1
       },
       {
-        "value": 2.5,
+        "value": 0.65,
         "start_ordinal": 2,
         "end_ordinal": 2
-      },
-      {
-        "value": 0.55,
-        "start_ordinal": 3,
-        "end_ordinal": 3
       }
     ]
   }

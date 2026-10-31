@@ -27,6 +27,8 @@ public class PhotonATModule {
     private final StructPublisher<Pose3d> posePublisher;
     private final BooleanPublisher connectedPublisher;
 
+    private EstimatedRobotPose lastResult = null;
+
     public PhotonATModule(String cameraID, Transform3d offset, NetworkTable visionTable) {
         camera = new PhotonCamera(cameraID);
         estimator = new PhotonPoseEstimator(PhotonVisionConstants.kTagLayout, offset);
@@ -49,12 +51,14 @@ public class PhotonATModule {
             estimate.ifPresent((e) -> estimates.add(e));
         }
 
+        if(!estimates.isEmpty()) lastResult = estimates.get(estimates.size() - 1);
+
         return estimates;
     }
 
     private void updateTelemetry() {
-        var estimate = estimator.estimateCoprocMultiTagPose(camera.getLatestResult());
-        estimate.ifPresent((e) -> posePublisher.accept(e.estimatedPose));
+        if(lastResult != null) {
+        }
 
         connectedPublisher.accept(camera.isConnected());
     }

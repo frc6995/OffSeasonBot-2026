@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import java.util.function.Supplier;
 
@@ -30,8 +31,9 @@ public class Turret extends SubsystemBase {
         public static final double kStatorCurrentLimitAmps = 60;
         public static final double kSupplyCurrentLimitAmps = 40;
 
-        public static final double kMinAngleDeg = -288-135.612;
-        public static final double kMaxAngleDeg = 288-135.612;
+        public static final double kCentralAngleDeg = -135.612;
+        public static final double kMinAngleDeg = -288 + kCentralAngleDeg;
+        public static final double kMaxAngleDeg = 288 + kCentralAngleDeg;
         public static final double kSafeShotAngleDeg = 0;
         public static final double kToleranceDeg = 15;
 
@@ -64,6 +66,7 @@ public class Turret extends SubsystemBase {
         public static final double kEChainBaseLength = 11.385 * 0.0254;
         public static final double kNMPerVolt = 48.9;
         public static final double kSpringForceN = 15 * 4.44822162;
+        public static final double[] kAltTurretAngles = {-720, -360, 360, 720};
     }
 
     public enum TurretState {
@@ -75,7 +78,14 @@ public class Turret extends SubsystemBase {
         UNWIND;
     }
 
+    public enum UnwindTarget {
+        CENTRAL,
+        LOWER,
+        UPPER;
+    }
+
     private TurretState turretState = TurretState.AIM_CLOSEST;
+    private UnwindTarget unwindTarget = UnwindTarget.CENTRAL;
     private TurretState turretStateBeforeUnwind = TurretState.AIM_CLOSEST;
     private double requestedAngleDeg = 0;
     // Which selection function MANUAL should re-apply each loop; set by setClosestAngleManual /
@@ -113,9 +123,14 @@ public class Turret extends SubsystemBase {
         turretState = TurretState.DISABLED;
     }
 
-    public void requestUnwind() {
+    public void requestUnwind(UnwindTarget target) {
         if(turretState != TurretState.UNWIND) turretStateBeforeUnwind = turretState;
+        unwindTarget = target;
         turretState = TurretState.UNWIND;
+    }
+
+    public void requestUnwind() {
+        requestUnwind(UnwindTarget.CENTRAL);
     }
 
     public void resetEncoder() {
@@ -143,7 +158,16 @@ public class Turret extends SubsystemBase {
                     ? selectCentralAngle(requestedAngleDeg)
                     : selectClosestAngle(requestedAngleDeg);
             case SAFE_SHOT -> commandedAngleDeg = selectClosestAngle(TurretConstants.kSafeShotAngleDeg);
-            case UNWIND -> commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
+            case UNWIND -> {
+                if(unwindTarget == UnwindTarget.CENTRAL) {
+                    commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
+                } else if(unwindTarget == UnwindTarget.LOWER) {
+                    commandedAngleDeg = selectLowerAngle(targetAngleDeg.get());
+                } else if(unwindTarget == UnwindTarget.UPPER) {
+                    commandedAngleDeg = selectUpperAngle(targetAngleDeg.get());
+                } else
+                commandedAngleDeg = selectCentralAngle(targetAngleDeg.get());
+            }
         }
 
         if(turretState == TurretState.UNWIND) {
@@ -151,6 +175,12 @@ public class Turret extends SubsystemBase {
                 turretState = turretStateBeforeUnwind;
             }
         }
+
+        publishTelemetry();
+    }
+
+    private void publishTelemetry() {
+        SmartDashboard.putString("Turret/State", turretState.name());
     }
 
     @Override
@@ -197,8 +227,8 @@ public class Turret extends SubsystemBase {
         double smallestAngle = angle;
         double smallestDifference = Math.abs(angle - currentAngle);
 
-        if (angle >= 0) {
-            double alt = angle - 360;
+        for(double offset : TurretConstants.kAltTurretAngles) {
+            double alt = angle + offset;
             double diff = Math.abs(alt - currentAngle);
             if ((diff < smallestDifference || !isValid) && withinBounds(alt)) {
                 smallestDifference = diff;
@@ -207,22 +237,25 @@ public class Turret extends SubsystemBase {
             }
         }
 
-        if (angle <= 0) {
-            double alt = angle + 360;
-            double diff = Math.abs(alt - currentAngle);
-            if ((diff < smallestDifference || !isValid) && withinBounds(alt)) {
-                smallestDifference = diff;
-                smallestAngle = alt;
-            }
-        }
-
         io.setAngle(smallestAngle);
         return smallestAngle;
     }
 
     private double selectCentralAngle(double angle) {
-        angle = MathUtil.inputModulus(angle, -180, 180);
+        angle = MathUtil.inputModulus(angle, -180+TurretConstants.kCentralAngleDeg, 180+TurretConstants.kCentralAngleDeg);
 
+        io.setAngle(angle);
+        return angle;
+    }
+
+    private double selectLowerAngle(double angle) {
+        angle = MathUtil.inputModulus(angle, TurretConstants.kMinAngleDeg, TurretConstants.kMinAngleDeg + 360.0);
+        io.setAngle(angle);
+        return angle;
+    }
+
+    private double selectUpperAngle(double angle) {
+        angle = MathUtil.inputModulus(angle, TurretConstants.kMaxAngleDeg - 360.0, TurretConstants.kMaxAngleDeg);
         io.setAngle(angle);
         return angle;
     }

@@ -42,8 +42,8 @@
       "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
     }
   },
-  "active_path_file_name": "path-1.json",
-  "active_path_group_id": "group-49956fb5-6115-4ba8-b5e1-7b0a0e92a4c8",
+  "active_path_file_name": "left-center-line-depot.json",
+  "active_path_group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
   "path_groups": [
     {
       "group_id": "group-e78263ab-116e-48f3-b2c3-d75d5134c4b3",
@@ -76,60 +76,37 @@
       "target_id": "target-418b4784",
       "display_name": "InFrontOfHub",
       "kind": "waypoint",
-      "x_meters": 5.64077,
-      "y_meters": 4.03516,
+      "x_meters": 5.70938,
+      "y_meters": 4.04823,
       "rotation_radians": 3.14148
     },
     {
       "target_id": "target-2f1e31fa",
       "display_name": "InDepot",
       "kind": "waypoint",
-      "x_meters": 0.25993,
-      "y_meters": 6.06897,
+      "x_meters": 0.59114,
+      "y_meters": 6.05687,
       "rotation_radians": -3.1381
     }
   ],
   "paths": {
-    "path-2.json": {
-      "display_name": "Path 2",
-      "editor_metadata": null
-    },
-    "depot-2.json": {
-      "display_name": "Depot 2",
-      "editor_metadata": {
-        "linked_targets": [
-          {
-            "element_index": 8.0,
-            "target_id": "target-2f1e31fa"
-          }
-        ]
-      }
-    },
-    "path-1.json": {
-      "display_name": "Path 1",
-      "editor_metadata": null
-    },
     "left-center-line-depot.json": {
       "display_name": "(Left) Center Line+Depot",
       "editor_metadata": {
         "linked_targets": [
           {
-            "element_index": 6.0,
+            "element_index": 7.0,
             "target_id": "target-418b4784"
           }
         ]
       }
     },
-    "depot-3.json": {
-      "display_name": "Depot 3",
-      "editor_metadata": null
-    },
-    "test-canrange.json": {
-      "display_name": "Test-canrange",
-      "editor_metadata": null
-    },
     "test-canrange2.json": {
       "display_name": "Test-canrange2",
+      "editor_metadata": null
+    },
+    "depot-3.json": {
+      "display_name": "Depot 3",
       "editor_metadata": null
     },
     "workshop-test-1.json": {
@@ -151,24 +128,47 @@
           }
         ]
       }
+    },
+    "depot-2.json": {
+      "display_name": "Depot 2",
+      "editor_metadata": {
+        "linked_targets": [
+          {
+            "element_index": 7.0,
+            "target_id": "target-2f1e31fa"
+          }
+        ]
+      }
+    },
+    "path-2.json": {
+      "display_name": "Path 2",
+      "editor_metadata": null
+    },
+    "test-canrange.json": {
+      "display_name": "Test-canrange",
+      "editor_metadata": null
+    },
+    "path-1.json": {
+      "display_name": "Path 1",
+      "editor_metadata": null
     }
   },
   "field_assets": {
-    "field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png": {
-      "file_name": "Choreo-v2026.0.3-macOS-aarch64.dmg",
-      "mime_type": "application/x-diskcopy"
+    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
+      "file_name": "DSCN8698.JPG",
+      "mime_type": "image/jpeg"
     },
     "field-02720075-4c8c-427c-8759-646c835cd666.png": {
       "file_name": "tempImageF3Xr1W.png",
       "mime_type": "image/png"
     },
+    "field-9e2cc0bb-c909-49f3-8450-1f8c54693186.png": {
+      "file_name": "Choreo-v2026.0.3-macOS-aarch64.dmg",
+      "mime_type": "application/x-diskcopy"
+    },
     "field-bd99cee4-7c44-4fb4-99ed-927e571ea999.png": {
       "file_name": "model_0.glb",
       "mime_type": "model/gltf-binary"
-    },
-    "field-ab60dbc7-e67f-4c73-bb9e-c6718527ff25.jpg": {
-      "file_name": "DSCN8698.JPG",
-      "mime_type": "image/jpeg"
     }
   }
 }

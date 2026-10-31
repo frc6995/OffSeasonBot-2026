@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -42,7 +43,7 @@ public class CurrentLimitManager extends SubsystemBase {
     private static final double kDefaultMinReapplyIntervalSeconds = 0.1;
 
     private static final class Target {
-        final CurrentLimit nominal;
+        final Supplier<CurrentLimit> nominal;
         final Consumer<CurrentLimit> apply;
         CurrentLimit lastApplied;
         double lastAppliedTimestamp = -Double.MAX_VALUE;
@@ -52,10 +53,10 @@ public class CurrentLimitManager extends SubsystemBase {
         // the lead was configured - stayed unlimited until the first rule fired and released.
         boolean everApplied = false;
 
-        Target(CurrentLimit nominal, Consumer<CurrentLimit> apply) {
+        Target(Supplier<CurrentLimit> nominal, Consumer<CurrentLimit> apply) {
             this.nominal = nominal;
             this.apply = apply;
-            this.lastApplied = nominal;
+            this.lastApplied = nominal.get();
         }
     }
 
@@ -101,6 +102,15 @@ public class CurrentLimitManager extends SubsystemBase {
      * {@code Intake.setRollerCurrentLimit}), keeping CAN/TalonFX details out of this class.
      */
     public void registerTarget(String name, CurrentLimit nominalLimit, Consumer<CurrentLimit> applyLimit) {
+        registerTarget(name, () -> nominalLimit, applyLimit);
+    }
+
+    /**
+     * Like {@link #registerTarget(String, CurrentLimit, Consumer)}, but the nominal limit is
+     * re-read every loop, so it can change with robot state (e.g. different auto and teleop
+     * limits). The supplier should return preallocated instances; it runs at 50Hz.
+     */
+    public void registerTarget(String name, Supplier<CurrentLimit> nominalLimit, Consumer<CurrentLimit> applyLimit) {
         targets.put(name, new Target(nominalLimit, applyLimit));
     }
 
@@ -149,8 +159,9 @@ public class CurrentLimitManager extends SubsystemBase {
             // doesn't hand the consumer a sentinel for the other - a config-group apply would
             // otherwise write it to hardware. See CurrentLimit's class docs. With no rule active
             // the nominal is already fully resolved, so that path allocates nothing.
+            CurrentLimit nominal = target.nominal.get();
             CurrentLimit ruled = desired.get(name);
-            CurrentLimit want = (ruled == null) ? target.nominal : ruled.resolvedAgainst(target.nominal);
+            CurrentLimit want = (ruled == null) ? nominal : ruled.resolvedAgainst(nominal);
             boolean dueForReapply = (now - target.lastAppliedTimestamp) >= minReapplyIntervalSeconds;
             if ((!target.everApplied || !want.equals(target.lastApplied)) && dueForReapply) {
                 // Bookkeeping updates immediately so reapply throttling/change-detection stays

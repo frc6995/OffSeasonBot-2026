@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.util.Map;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
@@ -26,7 +27,14 @@ public final class RobotCurrentLimits {
     // Tune these to taste.
     private static final CurrentLimit kShootingRollerLimit = new CurrentLimit(40, 20);
     private static final CurrentLimit kShootingKickerLimit = new CurrentLimit(40, 20);
+    private static final CurrentLimit kShootingExtensionLimit = new CurrentLimit(13, 20);
     private static final CurrentLimit kShootingDriveLimit = CurrentLimit.supplyOnly(10);
+
+    // Drive supply limits by mode. These are the drivetrain's nominal (unthrottled) limit, so
+    // unlike the shooting rule above they can be higher or lower than each other. Tune to taste.
+    private static final CurrentLimit kTeleopDriveLimit =
+            CurrentLimit.supplyOnly(TunerConstants.kDriveNominalSupplyCurrentLimitAmps);
+    private static final CurrentLimit kAutoDriveLimit = CurrentLimit.supplyOnly(50);
 
     public static void configure(
             CurrentLimitManager manager,
@@ -44,8 +52,13 @@ public final class RobotCurrentLimits {
                 superstructure.m_intake::setKickerCurrentLimit);
 
         manager.registerTarget(
+                "Intake/Extension",
+                new CurrentLimit(IntakeConstants.kExtensionStatorCurrentLimitAmps, IntakeConstants.kExtensionSupplyCurrentLimitAmps),
+                superstructure.m_intake::setExtensionCurrentLimit);
+
+        manager.registerTarget(
                 "Drivetrain/Drive",
-                CurrentLimit.supplyOnly(TunerConstants.kDriveNominalSupplyCurrentLimitAmps),
+                () -> DriverStation.isAutonomousEnabled() ? kAutoDriveLimit : kTeleopDriveLimit,
                 limit -> drivetrain.setDriveSupplyCurrentLimit(limit.supplyCurrentLimitAmps()));
 
         manager.addRule(
@@ -57,6 +70,7 @@ public final class RobotCurrentLimits {
                 Map.of(
                         "Intake/Roller", kShootingRollerLimit,
                         "Intake/Kicker", kShootingKickerLimit,
+                        "Intake/Extension", kShootingExtensionLimit,
                         "Drivetrain/Drive", kShootingDriveLimit));
     }
 }

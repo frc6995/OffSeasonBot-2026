@@ -32,12 +32,11 @@ import frc.robot.util.logging.HootLogging;
 import frc.robot.util.AutoAlign;
 import frc.robot.util.AutoAlignFixedHeading;
 import frc.robot.util.Elastic;
+import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Telemetry;
 import frc.robot.util.AutoAlign.RotationControlMode;
 import frc.robot.util.currentlimit.CurrentLimitManager;
 
-
-import java.util.Set;
 
 // @Logged
 public class RobotContainer {
@@ -50,6 +49,8 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private final Telemetry logger = new Telemetry();
     private final CommandXboxController joystick = new CommandXboxController(0);
@@ -69,7 +70,7 @@ public class RobotContainer {
             Utils.isSimulation()
                 ? new NoneATLimelightVision()
                 : new RealATLimelightVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
-            true //Utils.isSimulation()
+            Utils.isSimulation()
                 ? null
                 : new RealPhotonATVision(NetworkTableInstance.getDefault().getTable(ATVision.ATVisionConstants.NT_TABLE)),
             m_drivetrain::state,
@@ -83,7 +84,7 @@ public class RobotContainer {
     public final CurrentLimitManager currentLimitManager = new CurrentLimitManager();
 
     /** Hoot signal logging; on/off is HootLogging.kEnabled. */
-    public final HootLogging hootLogging = new HootLogging(m_superstructure);
+    public final HootLogging hootLogging = new HootLogging(m_superstructure, m_drivetrain);
 
     public RobotContainer() {
         VISUALIZER = RobotVisualizer.MECH_VISUALIZER;
@@ -151,8 +152,8 @@ public class RobotContainer {
         *
         */
 
-        joystick.rightBumper().onTrue(m_superstructure.requestIntakeEject());
-        joystick.rightBumper().onFalse(m_superstructure.requestIntakeIdle());
+        Trigger ejectButton = joystick.rightBumper();
+        ejectButton.onTrue(m_superstructure.requestIntakeEject());
 
         // Right bumper = shoot only (flywheel/hood/turret + dye rotor); left bumper = intake
         // only. Holding both drives the intake's agitation, but only while scoring -- passing
@@ -161,21 +162,24 @@ public class RobotContainer {
         // trigger just became true, regardless of the order the two bumpers were pressed in.
         Trigger shootButton = joystick.rightTrigger();
         Trigger intakeButton = joystick.leftTrigger();
-        Trigger shootAndIntake = shootButton.and(intakeButton);
-        Trigger shootOnly = shootButton.and(intakeButton.negate());
-        Trigger intakeOnly = intakeButton.and(shootButton.negate());
+        Trigger notEjecting = ejectButton.negate();
+        Trigger shootAndIntake = shootButton.and(intakeButton).and(notEjecting);
+        Trigger shootOnly = shootButton.and(intakeButton.negate()).and(notEjecting);
+        Trigger intakeOnly = intakeButton.and(shootButton.negate()).and(notEjecting);
 
         shootButton.onTrue(m_superstructure.requestRobotShooting());
         intakeOnly.onTrue(m_superstructure.requestIntakeActive());
         shootOnly.onTrue(m_superstructure.requestIntakeFullAgitate());
         shootAndIntake.onTrue(m_superstructure.requestIntakeForShootAndIntake());
 
-        // Once neither bumper is held, the intake is no longer explicitly running -- park it
+        // Once no button is held, the intake is no longer explicitly running -- park it
         // at IDLE so the roller/kicker voltages go to 0.
-        shootButton.or(intakeButton).onFalse(m_superstructure.requestIntakeIdle());
+        shootButton.or(intakeButton).or(ejectButton).negate().onTrue(m_superstructure.requestIntakeIdle());
 
         joystick.start().and(RobotModeTriggers.disabled()).onTrue(m_superstructure.requestHomeMechanisms());
 
+        joystick.povDown().onTrue(Commands.runOnce(this:: saveLimelightRewind)
+            .ignoringDisable(true));
         //Safe Shot
         joystick.y().onTrue(
             m_superstructure.requestRobotShootSafe());
@@ -185,10 +189,18 @@ public class RobotContainer {
         // let releasing one button cancel a shot still being held via the other.
         shootButton.or(joystick.y()).onFalse(m_superstructure.requestRobotIdle());
 
-        joystick.x().whileTrue(Commands.defer(
-                () -> new AutoAlign(autos.TRENCH_START_LEFT.get(), m_drivetrain, AutoAlign.slowCrawlProfile()),
-                Set.of(m_drivetrain)));
+        // Hold X to lock the wheels in an X pattern.
+        joystick.x().whileTrue(m_drivetrain.applyRequest(() -> brake));
 
+    }
+
+    public void saveLimelightRewind() {
+        if (!Utils.isSimulation()) {
+            for (String cameraName : RealATLimelightVision.LimelightConstants.LL_IDS) {
+                LimelightHelpers.triggerRewindCapture(cameraName, 165.0);
+            }
+            LimelightHelpers.Flush();
+        }
     }
   
     public Command getAutonomousCommand() {

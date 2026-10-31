@@ -33,6 +33,13 @@ public class RealATLimelightVision extends AprilTagVision {
          */
         public static final boolean kLimelightRobotSpaceIsYRight = false;
 
+        /**
+         * Whether the Limelight applies camerapose_robotspace_set yaw with the opposite sign from
+         * WPILib (CW positive). Observed on the robot: sending yaw -164.8 read back as +164.8 in
+         * camerapose_robotspace, while x/y/z/roll/pitch read back unchanged.
+         */
+        public static final boolean kLimelightYawIsInverted = true;
+
         /** How long the heartbeat may stall before the camera counts as disconnected. */
         public static final double kHeartbeatTimeoutSeconds = 0.25;
         /** Minimum spacing between repeated "not connected" driver station errors. */
@@ -49,6 +56,7 @@ public class RealATLimelightVision extends AprilTagVision {
         limelights = new AprilTagModule[LimelightConstants.LL_IDS.length];
 
         for (int i = 0; i < limelights.length; i++) {
+            LimelightHelpers.setRewindEnabled(LimelightConstants.LL_IDS[i], true);
             limelights[i] = new AprilTagModule(
                 LimelightConstants.LL_IDS[i],
                 LimelightConstants.LL_OFFSETS[i],
