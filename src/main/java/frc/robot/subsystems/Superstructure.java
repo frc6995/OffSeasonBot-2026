@@ -39,6 +39,7 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIOSimTalonFX;
 import frc.robot.subsystems.turret.TurretIOTalonFX;
 import frc.robot.subsystems.turret.Turret.TurretState;
+import frc.robot.subsystems.turret.Turret.UnwindTarget;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.util.ShotProjection;
 import frc.robot.util.ShotProjection.ShotConstants;
@@ -235,8 +236,8 @@ public class Superstructure extends SubsystemBase {
     public Command requestFlywheelActive() {
         return Commands.runOnce(() -> m_flywheel.requestActive());
     }
-    public Command requestTurretUnwind() {
-        return Commands.runOnce(() -> m_turret.requestUnwind());
+    public Command requestTurretUnwind(UnwindTarget target) {
+        return Commands.runOnce(() -> m_turret.requestUnwind(target));
     }
 
     public Command requestRobotIdle() {

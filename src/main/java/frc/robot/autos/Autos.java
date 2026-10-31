@@ -20,6 +20,7 @@ import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.turret.Turret.UnwindTarget;
 import frc.robot.util.AllianceFlipUtil;
 
 public class Autos {
@@ -65,7 +66,7 @@ public class Autos {
         this.m_superstructure = superstructure;
 
         // ===== DEPOT AUTO EVENT TRIGGERS =====
-        FollowPath.registerEventTrigger("Unwind", m_superstructure.requestTurretUnwind());
+        FollowPath.registerEventTrigger("Unwind", m_superstructure.requestTurretUnwind(UnwindTarget.LOWER));
 
         FollowPath.registerEventTrigger("outtakeEvent", 
             Commands.sequence( m_superstructure.requestIntakeEject(),
